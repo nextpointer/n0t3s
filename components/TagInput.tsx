@@ -150,7 +150,7 @@ export function TagInput({ value, onChange, suggestions }: Props) {
   return (
     // biome-ignore lint: due to usecase
     <div
-      className="relative flex flex-wrap gap-2 cursor-text items-start text-[12px] rounded-xl w-full"
+      className="relative flex flex-wrap gap-2 cursor-text items-start text-[12px] rounded-xl w-full border border-border p-2"
       onClick={handleContainerClick}
       onBlur={handleBlur}
     >
