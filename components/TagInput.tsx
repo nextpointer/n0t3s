@@ -23,7 +23,6 @@ export function TagInput({ value, onChange, suggestions }: Props) {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const spanRef = useRef<Array<HTMLSpanElement | null>>([]);
 
   // Filter suggestions based on input and existing tags
   const filteredSuggestions = suggestions.filter(
@@ -148,50 +147,29 @@ export function TagInput({ value, onChange, suggestions }: Props) {
   }, [input]);
 
   return (
-    // biome-ignore lint: due to usecase
     <div
       className="relative flex flex-wrap gap-2 cursor-text items-start text-[12px] rounded-xl w-full border border-border p-2"
       onClick={handleContainerClick}
       onBlur={handleBlur}
+      tabIndex={-1}
     >
       {/* Render tags */}
       {value.map((tag, index) => (
         <span
           key={tag}
-          className="flex items-center bg-border px-2 py-1 rounded-full "
+          className="flex items-center bg-border px-2 py-1 rounded-full"
         >
           {editingIndex === index ? (
-            <div className="relative">
-              <input
-                className="outline-none border-none bg-transparent"
-                value={tag}
-                onFocus={handleFocus}
-                onChange={(e) => updateTag(index, e.target.value)}
-                onKeyDown={(e) => handleEditKeyDown(e, index)}
-                onBlur={() => saveEditedTag(index)}
-                ref={(el) => {
-                  if (el) {
-                    requestAnimationFrame(() => {
-                      const span = spanRef.current[index];
-                      if (span) {
-                        el.style.width = `${span.offsetWidth + 5}px`;
-                      }
-                    });
-                  }
-                }}
-              />
-              <span
-                ref={(el) => {
-                  spanRef.current[index] = el;
-                }}
-                className="invisible whitespace-pre absolute"
-                aria-hidden="true"
-              >
-                {tag || "a"}
-              </span>
-            </div>
+            <input
+              className="outline-none border-none bg-transparent"
+              value={tag}
+              autoFocus
+              onFocus={handleFocus}
+              onChange={(e) => updateTag(index, e.target.value)}
+              onKeyDown={(e) => handleEditKeyDown(e, index)}
+              onBlur={() => saveEditedTag(index)}
+            />
           ) : (
-            // biome-ignore lint: due to usecase
             <span
               className="select-none"
               onDoubleClick={(e) => {
@@ -236,7 +214,6 @@ export function TagInput({ value, onChange, suggestions }: Props) {
         {showSuggestions && filteredSuggestions.length > 0 && (
           <div className="absolute z-10 mt-1 w-full rounded-md border border-border bg-popover shadow-md max-h-48 overflow-y-auto text-popover-foreground">
             {filteredSuggestions.map((sug, i) => (
-              // biome-ignore lint: due to usecase
               <div
                 key={sug}
                 className={`px-3 py-2 cursor-pointer hover:bg-muted ${
