@@ -1,5 +1,6 @@
 "use client";
 
+import { CommandMenu } from "@/components/CommandMenu";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { addNote, getNotes } from "@/lib/storage";
 import { Note } from "@/lib/types";
-import { Github, Loader2, NotebookPen } from "lucide-react";
+import { Github, Loader2, NotebookPen, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -21,6 +22,7 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [orderbyDate, setOrderbyDate] = useState<"newest" | "oldest">("newest");
   const [tagFilter, setTagFilter] = useState<string>("all");
+  const [searchOpen, setSearchopen] = useState<boolean>(false);
 
   useEffect(() => {
     setLoading(true);
@@ -80,14 +82,25 @@ export default function Home() {
             <Github />
           </Button>
           <Button onClick={handleNewNote}>
-            <NotebookPen className="mr-1" /> New Note
+            <NotebookPen className="sm:mr-1 " />{" "}
+            <span className="hidden sm:block">New Note</span>
           </Button>
         </div>
 
         {/* Filters */}
         <div className="flex flex-row w-full gap-2 mt-12 justify-start items-center">
+          {/*seach*/}
+          <Button
+            onClick={() => setSearchopen(true)}
+            variant={"outline"}
+            className="flex-1"
+          >
+            <Search />
+            <span className="hidden sm:block ">Click to search</span>
+          </Button>
+
           <Select value={tagFilter} onValueChange={setTagFilter}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="min-w-[130px] flex-1">
               <SelectValue placeholder="Filter by tag" />
             </SelectTrigger>
             <SelectContent>
@@ -107,7 +120,7 @@ export default function Home() {
               setOrderbyDate(value as "newest" | "oldest")
             }
           >
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="min-w-[130px] flex-1">
               <SelectValue placeholder="Sort by date" />
             </SelectTrigger>
             <SelectContent>
@@ -118,6 +131,8 @@ export default function Home() {
             </SelectContent>
           </Select>
         </div>
+        {/*seatch command*/}
+        <CommandMenu open={searchOpen} setOpen={setSearchopen} notes={notes} />
 
         {/* Content */}
         <div className="w-full mt-6 overflow-y-scroll">
@@ -149,7 +164,7 @@ export default function Home() {
                       {notes.map((note) => (
                         <div
                           key={note.id}
-                          onClick={() => router.push(`/new/${note.id}`)}
+                          onClick={() => router.push(`/note/${note.id}`)}
                           className="relative cursor-pointer p-3 hover:bg-muted flex flex-row justify-between items-center rounded-xl gap-6 before:content-[''] before:absolute before:-left-6 before:top-1/2 before:-translate-y-1/2 before:h-[1px] before:w-4 before:bg-border before:rounded"
                         >
                           <h3 className="font-medium">{note.title}</h3>
