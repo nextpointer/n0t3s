@@ -156,7 +156,7 @@ export function TagInput({ value, onChange, suggestions }: Props) {
       {/* Render tags */}
       {value.map((tag, index) => (
         <span
-          key={tag}
+          key={index}
           className="flex items-center bg-border px-2 py-1 rounded-full"
         >
           {editingIndex === index ? (
@@ -199,6 +199,7 @@ export function TagInput({ value, onChange, suggestions }: Props) {
       {/* Input field */}
       <div className="relative flex-grow min-w-[100px]">
         <input
+          enterKeyHint="done"
           ref={inputRef}
           className="outline-none border-none py-1 w-full bg-transparent"
           value={input}
