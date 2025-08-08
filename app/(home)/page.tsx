@@ -66,7 +66,7 @@ export default function Home() {
       createdAt: now,
       updatedAt: now,
     });
-    router.push(`/new/${id}`);
+    router.push(`/note/${id}`);
   }
 
   return (
