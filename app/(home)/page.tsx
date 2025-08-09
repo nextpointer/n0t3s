@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { addNote, getNotes } from "@/lib/storage";
 import { Note } from "@/lib/types";
 import { Github, Loader2, NotebookPen, Search } from "lucide-react";
@@ -90,46 +91,56 @@ export default function Home() {
         {/* Filters */}
         <div className="flex flex-row w-full gap-2 mt-12 justify-start items-center">
           {/*seach*/}
-          <Button
-            onClick={() => setSearchopen(true)}
-            variant={"outline"}
-            className="flex-1"
-          >
-            <Search />
-            <span className="hidden sm:block ">Click to search</span>
-          </Button>
-
-          <Select value={tagFilter} onValueChange={setTagFilter}>
-            <SelectTrigger className="min-w-[130px] flex-1">
-              <SelectValue placeholder="Filter by tag" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All tags</SelectItem>
-              <SelectItem value="untagged">Untagged</SelectItem>
-              {allTags.map((tag) => (
-                <SelectItem key={tag} value={tag}>
-                  {tag}
-                </SelectItem>
+          {loading ? (
+            <>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton className="flex-1 h-12 rounded-xl" key={index} />
               ))}
-            </SelectContent>
-          </Select>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={() => setSearchopen(true)}
+                variant={"outline"}
+                className="flex-1"
+              >
+                <Search />
+                <span className="hidden sm:block ">Click to search</span>
+              </Button>
 
-          <Select
-            value={orderbyDate}
-            onValueChange={(value) =>
-              setOrderbyDate(value as "newest" | "oldest")
-            }
-          >
-            <SelectTrigger className="min-w-[130px] flex-1">
-              <SelectValue placeholder="Sort by date" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="newest">Newer first</SelectItem>
-                <SelectItem value="oldest">Oldest first</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+              <Select value={tagFilter} onValueChange={setTagFilter}>
+                <SelectTrigger className="min-w-[130px] flex-1">
+                  <SelectValue placeholder="Filter by tag" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All tags</SelectItem>
+                  <SelectItem value="untagged">Untagged</SelectItem>
+                  {allTags.map((tag) => (
+                    <SelectItem key={tag} value={tag}>
+                      {tag}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={orderbyDate}
+                onValueChange={(value) =>
+                  setOrderbyDate(value as "newest" | "oldest")
+                }
+              >
+                <SelectTrigger className="min-w-[130px] flex-1">
+                  <SelectValue placeholder="Sort by date" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="newest">Newer first</SelectItem>
+                    <SelectItem value="oldest">Oldest first</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </>
+          )}
         </div>
         {/*seatch command*/}
         <CommandMenu open={searchOpen} setOpen={setSearchopen} notes={notes} />
@@ -137,8 +148,12 @@ export default function Home() {
         {/* Content */}
         <div className="w-full mt-6 overflow-y-scroll">
           {loading ? (
-            <div className="w-full flex justify-center items-center mt-16">
-              <Loader2 className="animate-spin h-6 w-6 text-gray-500" />
+            <div className="flex flex-col gap-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index}>
+                  <Skeleton className="w-full h-36 rounded-xl" />
+                </div>
+              ))}
             </div>
           ) : filteredNotes.length === 0 ? (
             <div className="w-full text-center mt-16 text-gray-500">

@@ -23,20 +23,21 @@ export default function Page() {
   const params = useParams<{ slug: string }>();
   const id = params.slug;
   const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
+  const [pageLoading, setpageLoading] = useState<boolean>(false);
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [tags, setTag] = useState<string[]>([]);
   const [allTag, setAllTag] = useState<string[]>([]);
   const [unsaved, setUnsaved] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
+    setpageLoading(true);
     const data = getNotes();
     const findingNote = data.find((note) => note.id === id);
     if (findingNote) {
@@ -46,7 +47,7 @@ export default function Page() {
       setTag(findingNote.tags || []);
     }
     setAllTag(Array.from(new Set(data.flatMap((note) => note.tags || []))));
-    setLoading(false);
+    setpageLoading(false);
   }, [id]);
 
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -56,6 +57,7 @@ export default function Page() {
 
   const handleSave = () => {
     if (!note) return;
+    setLoading(true);
     try {
       const updated = { ...note, title, content, tags, updatedAt: Date.now() };
       updateNote(updated);
@@ -64,6 +66,8 @@ export default function Page() {
       showToast.saved();
     } catch {
       showToast.error("Failed to save");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,7 +83,7 @@ export default function Page() {
 
   return (
     <div className="w-full h-[100dvh] max-h-[100dvh] md:w-2xl flex flex-col p-4 gap-4 overflow-hidden">
-      {loading ? (
+      {pageLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <Loader />
         </div>
@@ -142,11 +146,17 @@ export default function Page() {
           </div>
           {/* Save Button */}
           <Button
-            className="w-full text-base sm:text-lg"
+            className="w-full text-base sm:text-sm"
             onClick={handleSave}
             disabled={!unsaved}
           >
-            Save
+            {loading ? (
+              <>
+                <Loader className="text-background" /> saving
+              </>
+            ) : (
+              <>save</>
+            )}
           </Button>
         </>
       )}

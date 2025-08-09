@@ -11,6 +11,7 @@ import {
 import { Dispatch, SetStateAction, useState } from "react";
 import { Note } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { EmptyNote } from "./icons/EmptyNote";
 
 interface Props {
   open: boolean;
@@ -35,7 +36,10 @@ export function CommandMenu({ open, setOpen, notes }: Props) {
       />
       <CommandList>
         {filteredNotes.length === 0 ? (
-          <CommandEmpty>No matching notes.</CommandEmpty>
+          <CommandEmpty className="flex flex-col gap-2 p-4 items-center justify-center">
+            {" "}
+            <EmptyNote className="h-8 w-8" /> No matching notes.
+          </CommandEmpty>
         ) : (
           <CommandGroup heading="Notes">
             {filteredNotes.map((note) => (
