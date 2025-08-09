@@ -8,7 +8,6 @@ import { Note } from "@/lib/types";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { Loader } from "@/components/ui/loader";
-import { toast } from "sonner";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -28,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import toast from "react-hot-toast";
 
 // toast helper func
 const showToast = {
@@ -95,6 +95,7 @@ export default function Page() {
     try {
       deleteNote(id);
       router.push("/");
+      showToast.deleted();
     } catch {
       showToast.deleted();
     }

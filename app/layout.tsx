@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
 import { Space_Grotesk } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Next Notes",
@@ -24,8 +24,12 @@ export default function RootLayout({
           className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 p-2 overflow-hidden ${sg.className}`}
         >
           {children}
+          <Toaster
+            toastOptions={{
+              className: "text-sm",
+            }}
+          />
         </main>
-        <Toaster />
       </body>
     </html>
   );
