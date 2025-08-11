@@ -50,6 +50,7 @@ export default function Page() {
   const [tags, setTag] = useState<string[]>([]);
   const [allTag, setAllTag] = useState<string[]>([]);
   const [unsaved, setUnsaved] = useState<boolean>(false);
+  const [lastSavedNote, setLastSavedNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -61,6 +62,7 @@ export default function Page() {
     const findingNote = data.find((note) => note.id === id);
     if (findingNote) {
       setNote(findingNote);
+      setLastSavedNote(findingNote);
       setTitle(findingNote.title);
       setContent(findingNote.content);
       setTag(findingNote.tags || []);
@@ -69,9 +71,22 @@ export default function Page() {
     setpageLoading(false);
   }, [id]);
 
+  function checkIfUnsaved(
+    updatedTitle: string,
+    updatedContent: string,
+    updatedTags: string[],
+  ) {
+    if (!lastSavedNote) return;
+    const changed =
+      updatedTitle !== lastSavedNote.title ||
+      updatedContent !== lastSavedNote.content ||
+      JSON.stringify(updatedTags) !== JSON.stringify(lastSavedNote.tags || []);
+    setUnsaved(changed);
+  }
+
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setTitle(e.target.value);
-    setUnsaved(true);
+    checkIfUnsaved(e.target.value, content, tags);
   }
 
   const handleSave = () => {
@@ -81,6 +96,7 @@ export default function Page() {
       const updated = { ...note, title, content, tags, updatedAt: Date.now() };
       updateNote(updated);
       setNote(updated);
+      setLastSavedNote(updated);
       setUnsaved(false);
       showToast.saved();
     } catch {
@@ -224,7 +240,7 @@ export default function Page() {
           <TagInput
             onChange={(tag) => {
               setTag(tag);
-              setUnsaved(true);
+              checkIfUnsaved(title, content, tag);
             }}
             value={tags}
             suggestions={allTag}
@@ -248,7 +264,7 @@ export default function Page() {
               value={content}
               onChange={(e) => {
                 setContent(e.target.value);
-                setUnsaved(true);
+                checkIfUnsaved(title, e.target.value, tags);
               }}
               onBlur={(e) => setContent(e.target.value)}
             />
