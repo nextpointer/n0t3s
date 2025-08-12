@@ -1,8 +1,13 @@
 <h1 align="center">📝 Next Notes</h1>
+
+<div align="center">
+
 ![Bun](https://img.shields.io/badge/Bun-F472B6?style=flat&logo=bun&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=flat&logo=tailwind-css&logoColor=white)
+
+</div>
 
 <p align="center">
   <b>A fast, lightweight, and minimal note-taking app </b>
