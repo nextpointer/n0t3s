@@ -12,9 +12,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Trash2,
-  Sparkles,
   WandSparkles,
-  ChevronDown,
   FileText,
   PenLine,
   SpellCheck2,
