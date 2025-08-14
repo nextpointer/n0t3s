@@ -78,7 +78,7 @@ export default function Home() {
       <div className="w-full md:w-2xl h-screen flex flex-col justify-start items-start p-4 pt-8">
         {/* Top bar */}
         <div className="flex flex-row justify-end items-center w-full gap-2">
-          <h1 className="mr-auto text-2xl font-semibold">Next Notes</h1>
+          <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
           <Button variant={"outline"}>
             <Github />
           </Button>
