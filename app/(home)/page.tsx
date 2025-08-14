@@ -13,7 +13,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { addNote, getNotes } from "@/lib/storage";
 import { Note } from "@/lib/types";
-import { Github, Loader2, NotebookPen, Search } from "lucide-react";
+import { Github, NotebookPen, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 

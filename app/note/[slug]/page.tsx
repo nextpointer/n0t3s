@@ -178,7 +178,9 @@ export default function Page() {
         checkIfUnsaved(title, result, tags);
         showToast.aiSuccess(action);
       }
-    } catch (error: any) {
+    } catch (
+      error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+    ) {
       console.error("AI Error:", error);
       showToast.error(error.message || "Failed to process AI action");
     } finally {
