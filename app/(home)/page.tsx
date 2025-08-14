@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { addNote, getNotes } from "@/lib/storage";
 import { Note } from "@/lib/types";
 import { Github, NotebookPen, Search } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -80,7 +81,14 @@ export default function Home() {
         <div className="flex flex-row justify-end items-center w-full gap-2">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
           <Button variant={"outline"}>
-            <Github />
+            <Link
+              href="https://github.com/nextpointer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center"
+            >
+              <Github />
+            </Link>
           </Button>
           <Button onClick={handleNewNote}>
             <NotebookPen className="sm:mr-1 " />{" "}
