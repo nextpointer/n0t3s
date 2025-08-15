@@ -77,8 +77,8 @@ export default function Page() {
   const [askLoading, setAskLoading] = useState<boolean>(false);
   const [answer, setAnswer] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [history, setHistory] = useState<string[]>([content]);
-  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [autoSave, setAutoSave] = useState<boolean>(true);
   const [showSavePrompt, setShowSavePrompt] = useState<boolean>(false);
@@ -117,6 +117,8 @@ export default function Page() {
       setTitle(findingNote.title);
       setContent(findingNote.content);
       setTags(findingNote.tags || []);
+      setHistory([findingNote.content]);
+      setHistoryIndex(0);
     }
     setAllTags(Array.from(new Set(data.flatMap((note) => note.tags || []))));
     setPageLoading(false);
@@ -232,6 +234,10 @@ export default function Page() {
       if (action === "ask") {
         setAnswer(result);
       } else {
+        const newHistory = [...history.slice(0, historyIndex + 1), result];
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+
         setContent(result);
         checkIfUnsaved(title, result, tags);
         showToast.aiSuccess(action);
@@ -327,7 +333,7 @@ export default function Page() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               {unsaved && (
-                <span className="h-3 w-3 bg-violet-500 rounded-full animate-pulse"></span>
+                <span className="h-3 w-3 bg-blue-300 rounded-full animate-pulse"></span>
               )}
             </div>
 
@@ -419,7 +425,7 @@ export default function Page() {
                     <Settings className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 rounded-xl" align="end">
+                <DropdownMenuContent className="w-36 rounded-xl" align="end">
                   <div className="flex items-center justify-between px-2 py-1.5">
                     <Label htmlFor="auto-save" className="text-sm">
                       Auto Save
@@ -574,6 +580,7 @@ export default function Page() {
           <div className="flex-1 w-full rounded-md relative overflow-y-auto">
             <Textarea
               ref={textareaRef}
+              placeholder="start typing..."
               className="h-auto min-h-[calc(100vh-460px)] w-full flex-1 rounded-ele border-none bg-transparent p-0 px-0 py-2 text-base shadow-none focus:outline-none md:min-h-[calc(100dvh-320px)] pb-[calc(100vh-460px)]"
               style={{
                 boxShadow: "none",
