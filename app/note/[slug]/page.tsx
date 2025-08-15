@@ -479,11 +479,11 @@ export default function Page() {
                       >
                         {askLoading ? (
                           <>
-                            <Loader className="text-white" />
+                            <Loader className="text-background" />
                             Processing...
                           </>
                         ) : (
-                          <span className="bg-gradient-to-r from-white/90 to-white/70 bg-clip-text text-transparent">
+                          <span className="bg-gradient-to-r from-background/90 to-background/70 bg-clip-text text-transparent">
                             Ask AI
                           </span>
                         )}

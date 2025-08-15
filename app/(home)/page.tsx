@@ -174,7 +174,7 @@ export default function Home() {
               ))}
             </div>
           ) : sortedNotes.length === 0 ? (
-            <div className="w-full text-center mt-16 text-gray-500">
+            <div className="w-full text-center mt-16 text-border">
               No notes available.
             </div>
           ) : (
@@ -214,7 +214,7 @@ export default function Home() {
 
                               <div className="flex flex-wrap gap-1 items-center">
                                 {isPinned && (
-                                  <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">
+                                  <span className="text-xs bg-blue-500 text-background px-2 py-0.5 rounded-full">
                                     pin
                                   </span>
                                 )}
@@ -224,7 +224,7 @@ export default function Home() {
                                   .map((tag) => (
                                     <span
                                       key={tag}
-                                      className="text-xs bg-muted-foreground text-white px-2 py-0.5 rounded-full"
+                                      className="text-xs bg-muted-foreground text-background px-2 py-0.5 rounded-full"
                                     >
                                       {tag}
                                     </span>
@@ -232,13 +232,13 @@ export default function Home() {
                                 {note.tags &&
                                   note.tags.filter((tag) => tag !== "pin")
                                     .length > maxTagsToShow && (
-                                    <span className="text-xs text-gray-400">
+                                    <span className="text-xs text-zinc-400">
                                       ...
                                     </span>
                                   )}
                               </div>
                               <h3 className="font-medium mt-2">{note.title}</h3>
-                              <p className="text-xs text-gray-400 self-end">
+                              <p className="text-xs text-zinc-400 self-end">
                                 {new Date(note.createdAt).toLocaleDateString()}
                               </p>
                             </div>
@@ -262,7 +262,7 @@ export default function Home() {
                             className="relative cursor-pointer p-3 bg-muted hover:bg-border flex flex-row justify-between items-center rounded-xl gap-1 before:content-[''] before:absolute before:-left-6 before:top-1/2 before:-translate-y-1/2 before:h-[1px] before:w-4 before:bg-border before:rounded"
                           >
                             <h3 className="font-medium">{note.title}</h3>
-                            <p className="text-xs text-gray-400 ">
+                            <p className="text-xs text-zinc-400 ">
                               {new Date(note.createdAt).toLocaleDateString()}
                             </p>
                           </div>
@@ -291,8 +291,8 @@ export default function Home() {
                                 key={tag}
                                 className={`text-xs px-2 py-0.5 rounded-full ${
                                   tag === "pin"
-                                    ? "bg-blue-500 text-white"
-                                    : "bg-muted-foreground text-white"
+                                    ? "bg-blue-500 text-background"
+                                    : "bg-muted-foreground text-background"
                                 }`}
                               >
                                 {tag}
@@ -301,7 +301,7 @@ export default function Home() {
                           </div>
                         )}
                         <h3 className="font-medium mt-2">{note.title}</h3>
-                        <p className="text-xs text-gray-400 self-end">
+                        <p className="text-xs text-zinc-400 self-end">
                           {new Date(note.createdAt).toLocaleDateString()}
                         </p>
                       </div>
