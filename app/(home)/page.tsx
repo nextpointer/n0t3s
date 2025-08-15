@@ -129,7 +129,7 @@ export default function Home() {
                 <SelectTrigger className="min-w-[130px] flex-1">
                   <SelectValue placeholder="Filter by tag" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="shadow-none">
                   <SelectItem value="all">All tags</SelectItem>
                   <SelectItem value="untagged">Untagged</SelectItem>
                   {allTags.map((tag) => (
@@ -149,7 +149,7 @@ export default function Home() {
                 <SelectTrigger className="min-w-[130px] flex-1">
                   <SelectValue placeholder="Sort by date" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="shadow-none">
                   <SelectGroup>
                     <SelectItem value="newest">Newer first</SelectItem>
                     <SelectItem value="oldest">Oldest first</SelectItem>
