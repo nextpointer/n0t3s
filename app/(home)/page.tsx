@@ -1,7 +1,8 @@
 "use client";
 
 import { CommandMenu } from "@/components/CommandMenu";
-import { ModeToggle } from "@/components/theme-mode";
+import DownArrow from "@/components/icons/DownArrow";
+import { ModeToggle } from "@/components/Theme-Mode";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -176,8 +177,16 @@ export default function Home() {
               ))}
             </div>
           ) : sortedNotes.length === 0 ? (
-            <div className="w-full text-center mt-16 text-border">
-              No notes available.
+            <div className="w-full text-center mt-16 text-foreground flex flex-col gap-4 items-center justify-center">
+              No notes available : (
+              <DownArrow height={48} />
+              <Button
+                variant={"default"}
+                className="w-48"
+                onClick={handleNewNote}
+              >
+                <NotebookPen className="sm:mr-1 " /> create new note : )
+              </Button>
             </div>
           ) : (
             <div className="space-y-6">
