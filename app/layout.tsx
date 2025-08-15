@@ -5,8 +5,8 @@ import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Next Notes",
-  description: "simple open source ai integrated notes app",
+  title: "N0T3S",
+  description: "A simple, fast and minimal note-taking app",
 };
 
 const sg = Space_Grotesk({
