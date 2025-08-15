@@ -3,10 +3,18 @@ import "./globals.css";
 import { Space_Grotesk } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
+import type { Viewport } from "next";
 
 export const metadata: Metadata = {
   title: "N0T3S",
   description: "A simple, fast and minimal note-taking app",
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 const sg = Space_Grotesk({
