@@ -419,7 +419,7 @@ export default function Page() {
                     <Settings className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 shadow" align="end">
+                <DropdownMenuContent className="w-48 rounded-xl" align="end">
                   <div className="flex items-center justify-between px-2 py-1.5">
                     <Label htmlFor="auto-save" className="text-sm">
                       Auto Save
@@ -433,9 +433,9 @@ export default function Page() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => setDeleteDialogOpen(true)}
-                    className="text-destructive focus:text-destructive"
+                    className="text-destructive focus:text-destructive flex justify-center items-center rounded-2xl"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-4 h-4 " />
                     Delete Note
                   </DropdownMenuItem>
                 </DropdownMenuContent>
