@@ -92,12 +92,12 @@ export default function Home() {
         <div className="flex flex-row justify-end items-center w-full gap-2">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
           <ModeToggle />
-          <Button variant={"outline"}>
+          <Button variant={"outline"} className="p-3">
             <Link
-              href="https://github.com/nextpointer"
+              href="https://github.com/nextpointer/n0t3s?tab=readme-ov-file#-n0t3s"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center"
+              className="flex items-center m-0 p-0"
             >
               <Github />
             </Link>
