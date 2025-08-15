@@ -1,6 +1,7 @@
 "use client";
 
 import { CommandMenu } from "@/components/CommandMenu";
+import { ModeToggle } from "@/components/theme-mode";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -90,6 +91,7 @@ export default function Home() {
         {/* Top bar */}
         <div className="flex flex-row justify-end items-center w-full gap-2">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
+          <ModeToggle />
           <Button variant={"outline"}>
             <Link
               href="https://github.com/nextpointer"
