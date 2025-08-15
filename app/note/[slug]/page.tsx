@@ -9,7 +9,6 @@ import { Note } from "@/lib/types";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { Loader } from "@/components/ui/loader";
-import Link from "next/link";
 import {
   ArrowLeft,
   Trash2,
@@ -22,12 +21,14 @@ import {
   Sparkles,
   Undo2,
   Redo2,
+  Settings,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -35,7 +36,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
 
 const showToast = {
@@ -76,7 +80,32 @@ export default function Page() {
   const [history, setHistory] = useState<string[]>([content]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [autoSave, setAutoSave] = useState<boolean>(true);
+  const [showSavePrompt, setShowSavePrompt] = useState<boolean>(false);
+  const [navigationTarget, setNavigationTarget] = useState<string | null>(null);
 
+  useEffect(() => {
+    const savedAutoSave = localStorage.getItem("autoSave");
+    if (savedAutoSave !== null) {
+      setAutoSave(savedAutoSave === "true");
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("autoSave", autoSave.toString());
+  }, [autoSave]);
+
+  useEffect(() => {
+    if (autoSave && unsaved) {
+      const timer = setTimeout(() => {
+        handleSave(true);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [title, content, tags, autoSave, unsaved]);
+
+  // Load note data
   useEffect(() => {
     if (!id) return;
     setPageLoading(true);
@@ -92,6 +121,33 @@ export default function Page() {
     setAllTags(Array.from(new Set(data.flatMap((note) => note.tags || []))));
     setPageLoading(false);
   }, [id]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (unsaved && !autoSave) {
+        e.preventDefault();
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
+        return "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [unsaved, autoSave]);
+
+  // Handle navigation away with unsaved changes
+  const handleNavigation = (path: string) => {
+    if (unsaved && !autoSave) {
+      setNavigationTarget(path);
+      setShowSavePrompt(true);
+    } else {
+      router.push(path);
+    }
+  };
 
   function checkIfUnsaved(
     updatedTitle: string,
@@ -111,7 +167,7 @@ export default function Page() {
     checkIfUnsaved(e.target.value, content, tags);
   }
 
-  const handleSave = () => {
+  const handleSave = (isAutoSave = false) => {
     if (!note) return;
     setLoading(true);
     try {
@@ -120,7 +176,9 @@ export default function Page() {
       setNote(updated);
       setLastSavedNote(updated);
       setUnsaved(false);
-      showToast.saved();
+      if (!isAutoSave) {
+        showToast.saved();
+      }
     } catch {
       showToast.error("Failed to save");
     } finally {
@@ -236,6 +294,21 @@ export default function Page() {
     }
   };
 
+  const handleSaveAndNavigate = () => {
+    handleSave();
+    if (navigationTarget) {
+      router.push(navigationTarget);
+    }
+    setShowSavePrompt(false);
+  };
+
+  const handleDiscardAndNavigate = () => {
+    setShowSavePrompt(false);
+    if (navigationTarget) {
+      router.push(navigationTarget);
+    }
+  };
+
   return (
     <div className="w-full h-[100dvh] max-h-[100dvh] md:w-2xl flex flex-col p-4 gap-4 overflow-hidden relative">
       {pageLoading ? (
@@ -246,10 +319,12 @@ export default function Page() {
         <>
           <div className="flex justify-between items-center gap-2">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size={"icon"} asChild>
-                <Link href={`/`}>
-                  <ArrowLeft className="w-5 h-5" />
-                </Link>
+              <Button
+                variant="ghost"
+                size={"icon"}
+                onClick={() => handleNavigation("/")}
+              >
+                <ArrowLeft className="w-5 h-5" />
               </Button>
               {unsaved && (
                 <span className="h-3 w-3 bg-violet-500 rounded-full animate-pulse"></span>
@@ -337,6 +412,35 @@ export default function Page() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Settings dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1 pr-2">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 shadow" align="end">
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <Label htmlFor="auto-save" className="text-sm">
+                      Auto Save
+                    </Label>
+                    <Switch
+                      id="auto-save"
+                      checked={autoSave}
+                      onCheckedChange={setAutoSave}
+                    />
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Note
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {/*ask dialog*/}
               <Dialog open={askDialogOpen} onOpenChange={setAskDialogOpen}>
                 <DialogContent className="sm:max-w-[425px] p-0 border-0 bg-transparent shadow-none">
@@ -383,15 +487,6 @@ export default function Page() {
                 </DialogContent>
               </Dialog>
 
-              <Button
-                variant="ghost"
-                size={"icon"}
-                onClick={() => setDeleteDialogOpen(true)}
-                aria-label="Delete note"
-              >
-                <Trash2 className="w-5 h-5 text-destructive" />
-              </Button>
-
               {/*delete dialog*/}
               <Dialog
                 open={deleteDialogOpen}
@@ -425,6 +520,40 @@ export default function Page() {
               </Dialog>
             </div>
           </div>
+
+          {/* Save prompt dialog */}
+          <Dialog open={showSavePrompt} onOpenChange={setShowSavePrompt}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Unsaved Changes</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">
+                You have unsaved changes. Do you want to save before leaving?
+              </p>
+              <DialogFooter className="mt-4">
+                <Button
+                  variant="outline"
+                  onClick={handleDiscardAndNavigate}
+                  className="shadow-none rounded-2xl"
+                >
+                  Discard
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowSavePrompt(false)}
+                  className="shadow-none rounded-2xl"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveAndNavigate}
+                  className="shadow-none rounded-2xl"
+                >
+                  Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <input
             className="text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none border-none"
@@ -484,13 +613,15 @@ export default function Page() {
             </Dialog>
             <Button
               className="min-h-[calc(100%-5px)] min-w-[calc(100%-100px)] text-xs sm:text-sm rounded-full ml-auto"
-              onClick={handleSave}
+              onClick={() => handleSave(false)}
               disabled={!unsaved || loading}
             >
               {loading ? (
                 <>
                   <Loader className="text-background mr-2" /> Saving...
                 </>
+              ) : autoSave ? (
+                "Auto Save On"
               ) : (
                 "Save"
               )}
