@@ -581,7 +581,7 @@ export default function Page() {
             <Textarea
               ref={textareaRef}
               placeholder="start typing..."
-              className="h-auto min-h-[calc(100vh-460px)] w-full flex-1 rounded-ele border-none bg-transparent p-0 px-0 py-2 text-base shadow-none focus:outline-none md:min-h-[calc(100dvh-320px)] pb-[calc(100vh-460px)]"
+              className="h-auto min-h-[calc(100vh-460px)] w-full flex-1 rounded-ele border-none bg-transparent p-0 px-0 py-2 text-[14px] shadow-none focus:outline-none md:min-h-[calc(100dvh-320px)] pb-[calc(100vh-460px)]"
               style={{
                 boxShadow: "none",
                 border: "none",
