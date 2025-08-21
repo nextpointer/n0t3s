@@ -9,20 +9,30 @@ export type AIAction =
   | "grammar"
   | "expand"
   | "simplify"
-  | "ask";
+  | "ask"
+  | "todo";
 
 // Prompts per action
 const PROMPTS: Record<AIAction, string> = {
   summarize:
-    "Return only the summary in 2–3 sentences. No extra text:\n{content}",
-  rewrite: "Return only the rewritten version. No explanations:\n{content}",
+    "Return only the summary in 2–3 sentences. No extra text. If summarization is not possible, return the original text:\n{content}",
+  rewrite:
+    "Return only the rewritten version. No explanations. If rewriting is not possible, return the original text:\n{content}",
   grammar:
-    "Return only the corrected text. No explanations, no multiple options:\n{content}",
+    "Return only the corrected text. No explanations, no multiple options. If correction is not possible, return the original text:\n{content}",
   expand:
-    "Return only the expanded version with helpful details. No extra text:\n{content}",
+    "Return only the expanded version with helpful details. No extra text. If expansion is not possible, return the original text:\n{content}",
   simplify:
-    "Return only the simplified version for easy understanding. No extra text:\n{content}",
-  ask: "Return only the direct answer. No preamble, no extra text:\n{content}",
+    "Return only the simplified version for easy understanding. No extra text. If simplification is not possible, return the original text:\n{content}",
+  ask: `Return only the direct answer. No preamble, no extra text.
+You can also perform:
+- Math calculations
+- Date and time calculations (use google searched value for current date and time)
+If a direct answer is not possible, show some rudeness and say some slangs like u are very angry and create angry face with ascii art`,
+  todo: `Convert the following text into a clean plain-text todo list.
+- Each todo must start with "- " (bullet point) and end with [ ], if any todo is checked it should be checked
+- Keep it short and clear.
+If it cannot be converted into a todo list, just return the text as it is, without saying anything extra:\n{content}`,
 };
 
 // Cache responses for 1 hour
@@ -33,7 +43,7 @@ const responseCache = new LRUCache<string, string>({
 
 // Gemini setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const MODEL_NAME = process.env.GOOGLE_GENAI_MODEL ?? "gemini-2.5-flash-lite";
+const MODEL_NAME = process.env.GOOGLE_GENAI_MODEL ?? "gemini-2.5-flash";
 
 // Clean up AI output
 function cleanOutput(text: string): string {

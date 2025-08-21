@@ -22,6 +22,7 @@ import {
   Undo2,
   Redo2,
   Settings,
+  ListTodo,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -56,7 +57,8 @@ type AIAction =
   | "grammar"
   | "expand"
   | "simplify"
-  | "ask";
+  | "ask"
+  | "todo";
 
 export default function Page() {
   const params = useParams<{ slug: string }>();
@@ -414,6 +416,13 @@ export default function Page() {
                   >
                     <BookOpenCheck className="w-4 h-4 mr-2" />
                     Simplify
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleAIAction("todo")}
+                    disabled={aiLoading}
+                  >
+                    <ListTodo className="w-4 h-4 mr-2" />
+                    todo
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
