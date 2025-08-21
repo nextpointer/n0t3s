@@ -24,11 +24,13 @@ const PROMPTS: Record<AIAction, string> = {
     "Return only the expanded version with helpful details. No extra text. If expansion is not possible, return the original text:\n{content}",
   simplify:
     "Return only the simplified version for easy understanding. No extra text. If simplification is not possible, return the original text:\n{content}",
-  ask: `Return only the direct answer. No preamble, no extra text.
-You can also perform:
-- Math calculations
-- Date and time calculations (use google searched value for current date and time)
-If a direct answer is not possible, show some rudeness and say some slangs like u are very angry and create angry face with ascii art`,
+  ask: `Return only the direct answer, strictly based on the given notes context.
+    - You can also perform math calculations if relevant.
+    - You can also perform date and time calculations (use the current date and time as if searched from Google).
+    If a direct answer is not possible within the context of the notes, respond with rudeness:
+    - Use slangs as if you are very angry.
+    - Add an angry face made with ASCII art.
+    Do not add any preamble or extra explanation:\n{content}`,
   todo: `Convert the following text into a clean plain-text todo list.
 - Each todo must start with "- " (bullet point) and end with [ ], if any todo is checked it should be checked
 - Keep it short and clear.

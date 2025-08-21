@@ -422,7 +422,7 @@ export default function Page() {
                     disabled={aiLoading}
                   >
                     <ListTodo className="w-4 h-4 mr-2" />
-                    todo
+                    Todo
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
