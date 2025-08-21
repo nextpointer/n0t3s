@@ -12,7 +12,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.fixedWindow(10, "5 m"), // 10 requests / 5 min per IP
+  limiter: Ratelimit.fixedWindow(5, "5 m"), // 10 requests / 5 min per IP
 });
 
 // Extract client IP
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     if (!rl.success) {
       return NextResponse.json(
-        { error: "Rate limit exceeded. Try again later." },
+        { error: "Rate limit exceeded. Try again 3-4 min later." },
         { status: 429, headers },
       );
     }
