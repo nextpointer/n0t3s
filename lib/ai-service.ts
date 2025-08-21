@@ -26,15 +26,20 @@ const PROMPTS: Record<AIAction, string> = {
     "Return only the simplified version for easy understanding. No extra text. If simplification is not possible, return the original text:\n{content}",
   ask: `Return only the direct answer, strictly based on the given notes context.
     - You can also perform math calculations if relevant.
-    - You can also perform date and time calculations (use the current date and time as if searched from Google).
     If a direct answer is not possible within the context of the notes, respond with rudeness:
     - Use slangs as if you are very angry.
     - Add an angry face made with ASCII art.
     Do not add any preamble or extra explanation:\n{content}`,
-  todo: `Convert the following text into a clean plain-text todo list.
-- Each todo must start with "- " (bullet point) and end with [ ], if any todo is checked it should be checked
-- Keep it short and clear.
-If it cannot be converted into a todo list, just return the text as it is, without saying anything extra:\n{content}`,
+  todo: `Convert the following text into a clean plain-text (don't use markdown syntax) todo list.
+    - Each todo must start with "- " (bullet point) and end with [ ].
+    - If a todo is marked as checked or there is any indication it is done, always keep it as done [x].
+    - Keep it short and clear.
+    - If any date is mentioned, group todos under that date as a heading (e.g., "22aug").
+    - Always sort the date groups in descending order (latest/newest date at the top).
+    - Add a clear separator (e.g., "-----") and some blank lines between different date sections for readability.
+    - Always leave 2–3 blank lines between the todo list of a date and its "experiences:" section for better readability.
+    - After the todo list for each date, always add a section called "experiences:" where the user can write about experiences, remaining tasks, or anything else. Keep this section even if it's empty.
+    If it cannot be converted into a todo list, just return the text as it is, without saying anything extra:\n{content}`,
 };
 
 // Cache responses for 1 hour
