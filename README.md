@@ -35,6 +35,7 @@
   - ✍️ Rewrite with better phrasing
   - 🔍 Expand with more details
   - ✅ Fix grammar & spelling
+  - [*] format in todo style
   - ❓ Ask questions about your notes
 
 ---
