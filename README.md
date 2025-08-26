@@ -18,7 +18,7 @@
 ---
 
 ## 🚀 Tech Stack
-| **Frontend** | **Backend** | **Styling** | **Build Tool** |
+| **Frontend** | **Runtime** | **Styling** | **Build Tool** |
 |--------------|-------------|-------------|----------------|
 | ⚡ Next.js 15 | ⚡ Bun       | 🎨 Tailwind | ⚡ Bun         |
 
@@ -35,7 +35,7 @@
   - ✍️ Rewrite with better phrasing
   - 🔍 Expand with more details
   - ✅ Fix grammar & spelling
-  - [*] format in todo style
+  - [*] Format in todo style
   - ❓ Ask questions about your notes
 
 ---
