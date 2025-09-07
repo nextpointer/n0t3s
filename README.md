@@ -18,9 +18,9 @@
 ---
 
 ## 🚀 Tech Stack
-| **Frontend** | **Runtime** | **Styling** | **Build Tool** |
-|--------------|-------------|-------------|----------------|
-| ⚡ Next.js 15 | ⚡ Bun       | 🎨 Tailwind | ⚡ Bun         |
+| **Frontend** | **Styling** | **Build Tool**|
+|--------------|-------------|------------- |
+| ⚡ Next.js 15| 🎨 Tailwind | ⚡ Bun      |
 
 ---
 
