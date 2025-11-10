@@ -1,7 +1,7 @@
 import { Note } from "./types";
 
 // Storage keys
-const NOTES_KEY = "next-notes-storage";
+const NOTES_KEY = "n0t3s-storage";
 
 // get the Notes
 export const getNotes = (): Note[] => {

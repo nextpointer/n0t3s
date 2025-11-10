@@ -6,3 +6,12 @@ export interface Note {
   createdAt: number;
   updatedAt: number;
 }
+
+export type AIAction =
+  | "summarize"
+  | "rewrite"
+  | "grammar"
+  | "expand"
+  | "simplify"
+  | "ask"
+  | "todo";

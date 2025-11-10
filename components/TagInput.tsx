@@ -34,7 +34,7 @@ export function TagInput({ value, onChange, suggestions }: Props) {
 
   // Add a new tag
   function addTag(tag: string) {
-    const newTag = tag.trim();
+    const newTag = tag.trim().toLowerCase();
     if (!newTag) return;
     onChange([...value, newTag]);
     setInput("");
