@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Space_Grotesk } from "next/font/google";
+import { Space_Grotesk, Space_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Viewport } from "next";
@@ -36,6 +36,13 @@ const sg = Space_Grotesk({
   subsets: ["latin"],
 });
 
+const sm = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--space-mono",
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,7 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className={`${sm.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -51,7 +58,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <main
-            className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 p-2 overflow-hidden ${sg.className}`}
+            className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 p-2 overflow-hidden ${sg.className} `}
           >
             {children}
             <Toaster

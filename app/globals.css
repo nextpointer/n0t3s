@@ -57,6 +57,22 @@
     --shadow-2xl: 0.5px 0.5px 0px 1px hsl(0 0% 10.1961% / 1.63);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
+
+    /*for notes text*/
+    --editor-text: #0a0a0a;
+    --editor-h1: #000000;
+    --editor-h2: #1a1a1a;
+    --editor-h3: #333333;
+    --editor-strong: #000000;
+    --editor-em: #404040;
+    --editor-link: #171717;
+    --editor-code: #0f0f0f;
+    --editor-code-bg: rgba(0, 0, 0, 0.03);
+    --editor-blockquote: #4a4a4a;
+    --editor-hr: rgba(0, 0, 0, 0.08);
+    --editor-syntax: rgba(0, 0, 0, 0.2);
+    --editor-cursor: #000000;
+    --editor-selection: rgba(0, 0, 0, 0.06);
 }
 
 .dark {
@@ -114,6 +130,22 @@
         0.5px 0.5px 0px 1px hsl(0 0% 10.1961% / 0.65),
         0.5px 8px 10px 0px hsl(0 0% 10.1961% / 0.65);
     --shadow-2xl: 0.5px 0.5px 0px 1px hsl(0 0% 10.1961% / 1.63);
+
+    /*for notes text*/
+    --editor-text: #e5e5e5;
+    --editor-h1: #ffffff;
+    --editor-h2: #f5f5f5;
+    --editor-h3: #d4d4d4;
+    --editor-strong: #ffffff;
+    --editor-em: #c4c4c4;
+    --editor-link: #e8e8e8;
+    --editor-code: #f0f0f0;
+    --editor-code-bg: rgba(255, 255, 255, 0.05);
+    --editor-blockquote: #a3a3a3;
+    --editor-hr: rgba(255, 255, 255, 0.12);
+    --editor-syntax: rgba(255, 255, 255, 0.3);
+    --editor-cursor: #ffffff;
+    --editor-selection: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
@@ -163,6 +195,18 @@
     --shadow-lg: var(--shadow-lg);
     --shadow-xl: var(--shadow-xl);
     --shadow-2xl: var(--shadow-2xl);
+
+    /*for notes text*/
+    --color-editor-text: var(--editor-text);
+    --color-editor-h1: var(--editor-h1);
+    --color-editor-h2: var(--editor-h2);
+    --color-editor-h3: var(--editor-h3);
+    --color-editor-strong: var(--editor-strong);
+    --color-editor-em: var(--editor-em);
+    --color-editor-link: var(--editor-link);
+    --color-editor-code: var(--editor-code);
+    --color-editor-blockquote: var(--editor-blockquote);
+    --color-editor-cursor: var(--editor-cursor);
 }
 
 @layer base {
@@ -200,5 +244,37 @@
     *:hover::-webkit-scrollbar {
         width: 10px;
         height: 10px;
+    }
+
+    .note-editor-container {
+        scrollbar-width: thin;
+        scrollbar-color: var(--editor-syntax) transparent;
+    }
+
+    .note-editor-container::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .note-editor-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .note-editor-container::-webkit-scrollbar-thumb {
+        background: var(--editor-syntax);
+        border-radius: 3px;
+        transition: background 0.15s ease;
+    }
+
+    .note-editor-container::-webkit-scrollbar-thumb:hover {
+        background: var(--editor-blockquote);
+    }
+
+    .note-editor-container textarea {
+        resize: none !important;
+        box-sizing: border-box;
+    }
+    .note-editor-container * {
+        font-family: inherit !important;
     }
 }
