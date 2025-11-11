@@ -14,7 +14,6 @@ import {
   savePromptDialogOpenAtom,
   navigationTargetAtom,
 } from "@/store/noteAtom";
-import { ColorPicker } from "../ColorPicker";
 
 export const NoteHeader = memo(function NoteHeader() {
   //getter
