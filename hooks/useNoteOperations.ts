@@ -25,7 +25,9 @@ export function useNoteOperations() {
 
   // Ref to store timeout ID
   // have to clear the previous timer if user write anything before autosave
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   // manual save handler
   const save = useCallback(

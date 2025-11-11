@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { performAIAction, type AIAction } from "@/lib/ai-service";
+import { performAIAction } from "@/lib/ai-service";
+import { type AIAction } from "@/lib/types";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 

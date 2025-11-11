@@ -16,10 +16,13 @@ export const NoteContent = memo(
     const containerRef = useRef<HTMLDivElement | null>(null);
 
     // Editor instance ref
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const editorRef = useRef<any>(null);
 
     // Timeout ref for debounced sync
-    const syncTimeoutRef = useRef<NodeJS.Timeout>();
+    const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+      undefined,
+    );
 
     // Flag to prevent sync loop during external updates
     const isExternalUpdateRef = useRef(false);
