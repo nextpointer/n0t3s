@@ -28,7 +28,7 @@ export const NoteTitle = memo(function NoteTitle() {
 
   return (
     <input
-      className="text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none border-none"
+      className="text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none border-none mt-10"
       ref={titleInputRef}
       value={title}
       onChange={handleChange}

@@ -90,7 +90,7 @@ export default function Page() {
   }
 
   return (
-    <div className="w-full h-[100dvh] max-h-[100dvh] md:w-3xl flex flex-col p-4 gap-4 overflow-hidden relative">
+    <div className="w-full h-[100dvh] max-h-[100dvh] md:w-3xl flex flex-col p-4 gap-4 overflow-hidden relative md:border-l-1 md:border-r-1 md:border-dashed">
       {/* Note header with actions */}
       <NoteHeader />
 

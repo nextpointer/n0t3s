@@ -88,7 +88,7 @@ export default function Home() {
   return (
     <>
       <title>Next Notes</title>
-      <div className="w-full md:w-2xl h-screen flex flex-col justify-start items-start p-4 pt-8">
+      <div className="w-full md:w-2xl h-screen flex flex-col justify-start items-start p-4 pt-8 ">
         {/* Top bar */}
         <div className="flex flex-row justify-end items-center w-full gap-2">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
@@ -195,7 +195,7 @@ export default function Home() {
                   {/* Tagged notes section (now includes pinned notes at top) */}
                   {taggedNotes.length > 0 && (
                     <div className="mt-6 w-full p-2 pl-8 border-l border-border rounded-xl relative">
-                      <h2 className="text-sm text-muted mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
+                      <h2 className="text-sm text-background mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
                         Tagged Notes
                       </h2>
                       <div className="space-y-2 text-sm">
@@ -209,7 +209,7 @@ export default function Home() {
                             <div
                               key={note.id}
                               onClick={() => router.push(`/note/${note.id}`)}
-                              className="relative cursor-pointer p-3 bg-muted hover:bg-border flex flex-col rounded-xl gap-1"
+                              className="relative cursor-pointer p-3 bg-secondary hover:bg-accent transition-colors duration-200 flex flex-col rounded-xl gap-1"
                             >
                               {/* Stack effect lines */}
                               {hasMultipleTags && (
@@ -225,7 +225,7 @@ export default function Home() {
 
                               <div className="flex flex-wrap gap-1 items-center">
                                 {isPinned && (
-                                  <span className="text-xs bg-blue-500 text-background px-2 py-0.5 rounded-full">
+                                  <span className="text-xs bg-foreground text-background px-2 py-0.5 rounded-full font-medium">
                                     pin
                                   </span>
                                 )}
@@ -235,7 +235,7 @@ export default function Home() {
                                   .map((tag) => (
                                     <span
                                       key={tag}
-                                      className="text-xs bg-muted-foreground text-background px-2 py-0.5 rounded-full"
+                                      className="text-xs bg-background text-foreground px-2 py-0.5 rounded-full"
                                     >
                                       {tag}
                                     </span>
@@ -243,13 +243,15 @@ export default function Home() {
                                 {note.tags &&
                                   note.tags.filter((tag) => tag !== "pin")
                                     .length > maxTagsToShow && (
-                                    <span className="text-xs text-zinc-400">
+                                    <span className="text-xs text-muted-foreground">
                                       ...
                                     </span>
                                   )}
                               </div>
-                              <h3 className="font-medium mt-2">{note.title}</h3>
-                              <p className="text-xs text-zinc-400 self-end">
+                              <h3 className="font-medium mt-2 text-foreground">
+                                {note.title}
+                              </h3>
+                              <p className="text-xs text-muted-foreground self-end">
                                 {new Date(note.createdAt).toLocaleDateString()}
                               </p>
                             </div>
@@ -262,7 +264,7 @@ export default function Home() {
                   {/* Untagged notes section */}
                   {untaggedNotes.length > 0 && (
                     <div className="mt-6 w-full p-2 pl-8 border-l border-border rounded-xl relative">
-                      <h2 className="text-sm text-muted mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
+                      <h2 className="text-sm text-background mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
                         Untagged Notes
                       </h2>
                       <div className="space-y-2 text-sm">
@@ -270,10 +272,12 @@ export default function Home() {
                           <div
                             key={note.id}
                             onClick={() => router.push(`/note/${note.id}`)}
-                            className="relative cursor-pointer p-3 bg-muted hover:bg-border flex flex-row justify-between items-center rounded-xl gap-1 before:content-[''] before:absolute before:-left-6 before:top-1/2 before:-translate-y-1/2 before:h-[1px] before:w-4 before:bg-border before:rounded"
+                            className="relative cursor-pointer p-3 bg-secondary hover:bg-accent transition-colors duration-200 flex flex-row justify-between items-center rounded-xl gap-1 before:content-[''] before:absolute before:-left-6 before:top-1/2 before:-translate-y-1/2 before:h-[1px] before:w-4 before:bg-border before:rounded"
                           >
-                            <h3 className="font-medium">{note.title}</h3>
-                            <p className="text-xs text-zinc-400 ">
+                            <h3 className="font-medium text-foreground">
+                              {note.title}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
                               {new Date(note.createdAt).toLocaleDateString()}
                             </p>
                           </div>
@@ -285,7 +289,7 @@ export default function Home() {
               ) : (
                 // Show filtered notes (single tag or untagged)
                 <div className="mt-6 w-full p-2 pl-8 border-l border-border rounded-xl relative">
-                  <h2 className="text-sm text-muted mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
+                  <h2 className="text-sm text-background mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
                     {tagFilter === "untagged" ? "Untagged" : `#${tagFilter}`}
                   </h2>
                   <div className="space-y-2 text-sm">
@@ -293,7 +297,7 @@ export default function Home() {
                       <div
                         key={note.id}
                         onClick={() => router.push(`/note/${note.id}`)}
-                        className="relative cursor-pointer p-3 bg-muted hover:bg-border flex flex-col rounded-xl gap-1 before:content-[''] before:absolute before:-left-6 before:top-1/2 before:-translate-y-1/2 before:h-[1px] before:w-4 before:bg-border before:rounded"
+                        className="relative cursor-pointer p-3 bg-secondary hover:bg-accent transition-colors duration-200 flex flex-col rounded-xl gap-1 before:content-[''] before:absolute before:-left-6 before:top-1/2 before:-translate-y-1/2 before:h-[1px] before:w-4 before:bg-border before:rounded"
                       >
                         {note.tags && note.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1">
@@ -302,8 +306,8 @@ export default function Home() {
                                 key={tag}
                                 className={`text-xs px-2 py-0.5 rounded-full ${
                                   tag === "pin"
-                                    ? "bg-blue-500 text-background"
-                                    : "bg-muted-foreground text-background"
+                                    ? "bg-foreground text-background font-medium"
+                                    : "bg-muted text-foreground"
                                 }`}
                               >
                                 {tag}
@@ -311,8 +315,10 @@ export default function Home() {
                             ))}
                           </div>
                         )}
-                        <h3 className="font-medium mt-2">{note.title}</h3>
-                        <p className="text-xs text-zinc-400 self-end">
+                        <h3 className="font-medium mt-2 text-foreground">
+                          {note.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground self-end">
                           {new Date(note.createdAt).toLocaleDateString()}
                         </p>
                       </div>
