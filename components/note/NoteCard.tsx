@@ -1,4 +1,5 @@
 import { Note } from "@/lib/types";
+import { Pin } from "lucide-react";
 
 type Props = {
   note: Note;
@@ -31,7 +32,7 @@ export default function NoteCard({ note, onClick }: Props) {
           <div className="flex flex-wrap gap-1 items-start justify-end max-w-[120px] sm:max-w-[140px] flex-shrink-0">
             {isPinned && (
               <span className="text-[9px] sm:text-[10px] bg-foreground text-background px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-semibold tracking-wider uppercase whitespace-nowrap">
-                PIN
+                <Pin className="h-3 w-3" />
               </span>
             )}
             {otherTags.slice(0, maxTagsToShow).map((tag) => (

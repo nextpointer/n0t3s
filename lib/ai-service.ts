@@ -4,13 +4,24 @@ import { LRUCache } from "lru-cache";
 import { AIAction } from "./types";
 
 const PROMPTS: Record<AIAction, string> = {
-  summarize: "Summarize in markdown or return original:\n{content}",
-  rewrite: "Rewrite in markdown or return original:\n{content}",
-  grammar: "Fix grammar in markdown or return original:\n{content}",
-  expand: "Expand in markdown or return original:\n{content}",
-  simplify: "Simplify in markdown or return original:\n{content}",
-  ask: "Plain answer based on notes or be rude:\n{content}",
-  todo: "Convert to:\n- [ ] task\n- [x] done\nOr return original:\n{content}",
+  summarize:
+    "Summarize this content. If unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+
+  rewrite:
+    "Rewrite for clarity. If content is unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+
+  grammar:
+    "Fix grammar and spelling. If content is unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+
+  expand:
+    "Expand with more detail. If content is unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+
+  simplify:
+    "Simplify this content. If content is unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+
+  ask: "Answer based on the notes. If question is unclear or you cannot answer, be rood",
+
+  todo: "Convert to markdown checklist format:\n- [ ] task\n- [x] completed\n\nIf unclear or not convertible, return the original unchanged:\n\n{content}",
 };
 
 // Cache responses for 1 hour
