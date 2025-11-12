@@ -20,7 +20,7 @@ export default function Home() {
   const setAllTags = useSetAtom(allTagsAtom);
 
   const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [orderBy, setOrderBy] = useState<"newest" | "oldest">("newest");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
