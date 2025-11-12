@@ -19,12 +19,14 @@ const PROMPTS: Record<AIAction, string> = {
   simplify:
     "Simplify this content. If unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
 
-  ask: "Answer based on the notes. If question is unclear or cannot be answered, reply briefly and politely.",
+  ask: `Return only the direct answer from the given notes. Do math if needed.
+  If not answerable, reply rudely with slangs and an ASCII angry face.
+  No preamble or extra text:{content}`,
 
   todo: "Convert content context to a markdown checklist. If unclear or not convertible, return the original unchanged:\n\n{content}",
 
   prompt:
-    "Parse text and detect inline instructions inside /[...]. Apply each instruction precisely to the referenced content and rewrite accordingly. For large outputs, always respond concisely. Output only markdown, no explanations:\n\n{content}",
+    "Parse text and detect inline instructions inside /[...]. Apply each instruction to the referenced content. For Q&A, keep both question and answer; expand answers for detailed ones. Be concise for large outputs. Output only markdown, no explanations:{content}",
 };
 
 // Cache responses for 1 hour
