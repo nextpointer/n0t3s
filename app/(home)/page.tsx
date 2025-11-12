@@ -1,76 +1,43 @@
 "use client";
 
-import { CommandMenu } from "@/components/CommandMenu";
-import DownArrow from "@/components/icons/DownArrow";
-import { ModeToggle } from "@/components/Theme-Mode";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { addNote, getNotes } from "@/lib/storage";
+import { useEffect, useState } from "react";
+import { useSetAtom } from "jotai";
+import { allTagsAtom } from "@/store/noteAtom";
+import { getNotes, addNote } from "@/lib/storage";
 import { Note } from "@/lib/types";
-import { Github, NotebookPen, Search } from "lucide-react";
+import { ModeToggle } from "@/components/Theme-Mode";
+import { Github, NotebookPen } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+
+import NotesFilters from "@/components/note/NoteFilters";
+import NotesList from "@/components/note/NoteList";
+import { CommandMenu } from "@/components/CommandMenu";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const router = useRouter();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [orderbyDate, setOrderbyDate] = useState<"newest" | "oldest">("newest");
-  const [tagFilter, setTagFilter] = useState<string>("all");
-  const [searchOpen, setSearchopen] = useState<boolean>(false);
+  const setAllTags = useSetAtom(allTagsAtom);
 
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [orderBy, setOrderBy] = useState<"newest" | "oldest">("newest");
+  const [tagFilter, setTagFilter] = useState<string>("all");
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
+
+  // Initial load
   useEffect(() => {
     setLoading(true);
     const allNotes = getNotes();
     setNotes(allNotes);
     setLoading(false);
-  }, []);
 
-  const allTags = Array.from(new Set(notes.flatMap((note) => note.tags || [])));
-
-  // Filter notes based on selected tag
-  const filteredNotes = notes.filter((note) => {
-    if (tagFilter === "all") return true;
-    if (tagFilter === "untagged") return !note.tags || note.tags.length === 0;
-    return note.tags?.includes(tagFilter);
-  });
-
-  // Separate pinned notes (those with "pin" tag)
-  const pinnedNotes = filteredNotes.filter((note) =>
-    note.tags?.includes("pin"),
-  );
-  const nonPinnedNotes = filteredNotes.filter(
-    (note) => !note.tags?.includes("pin"),
-  );
-
-  // Sort non-pinned notes properly
-  const sortedNonPinnedNotes = [...nonPinnedNotes].sort((a, b) => {
-    if (orderbyDate === "newest") {
-      return b.createdAt - a.createdAt;
-    } else {
-      return a.createdAt - b.createdAt;
-    }
-  });
-
-  // Combine pinned notes (always first) with sorted non-pinned notes
-  const sortedNotes = [...pinnedNotes, ...sortedNonPinnedNotes];
-
-  // Separate tagged and untagged notes (including pinned notes in tagged)
-  const taggedNotes = sortedNotes.filter(
-    (note) => note.tags && note.tags.length > 0,
-  );
-  const untaggedNotes = sortedNotes.filter(
-    (note) => !note.tags || note.tags.length === 0,
-  );
+    // Collect all tags for filter dropdown
+    const tags = Array.from(
+      new Set(allNotes.flatMap((note) => note.tags || [])),
+    );
+    setAllTags(tags);
+  }, [setAllTags]);
 
   function handleNewNote() {
     const id = crypto.randomUUID();
@@ -87,10 +54,10 @@ export default function Home() {
 
   return (
     <>
-      <title>Next Notes</title>
-      <div className="w-full md:w-2xl h-screen flex flex-col justify-start items-start p-4 pt-8 ">
+      <title>n0t3s</title>
+      <div className="md:w-3xl w-full h-screen flex flex-col justify-start items-start p-4 pt-8 md:border-l-1 md:border-r-1 md:border-dashed ">
         {/* Top bar */}
-        <div className="flex flex-row justify-end items-center w-full gap-2">
+        <div className="flex flex-row justify-end items-center gap-2 md:fixed md:top-0 left-0 w-full  md:w-3xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed sm:p-4">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
           <ModeToggle />
           <Button variant={"outline"} className="p-3">
@@ -111,223 +78,30 @@ export default function Home() {
 
         {/* Filters */}
         <div className="flex flex-row w-full gap-2 mt-12 justify-start items-center">
-          {loading ? (
-            <>
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton className="flex-1 h-12 rounded-xl" key={index} />
-              ))}
-            </>
-          ) : (
-            <>
-              <Button
-                onClick={() => setSearchopen(true)}
-                variant={"outline"}
-                className="flex-1"
-              >
-                <Search />
-                <span className="hidden sm:block ">Click to search</span>
-              </Button>
-
-              <Select value={tagFilter} onValueChange={setTagFilter}>
-                <SelectTrigger className="min-w-[130px] flex-1">
-                  <SelectValue placeholder="Filter by tag" />
-                </SelectTrigger>
-                <SelectContent className="shadow-none">
-                  <SelectItem value="all">All tags</SelectItem>
-                  <SelectItem value="untagged">Untagged</SelectItem>
-                  {allTags.map((tag) => (
-                    <SelectItem key={tag} value={tag}>
-                      {tag}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={orderbyDate}
-                onValueChange={(value) =>
-                  setOrderbyDate(value as "newest" | "oldest")
-                }
-              >
-                <SelectTrigger className="min-w-[130px] flex-1">
-                  <SelectValue placeholder="Sort by date" />
-                </SelectTrigger>
-                <SelectContent className="shadow-none">
-                  <SelectGroup>
-                    <SelectItem value="newest">Newer first</SelectItem>
-                    <SelectItem value="oldest">Oldest first</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </>
-          )}
+          <NotesFilters
+            loading={loading}
+            allTags={Array.from(
+              new Set(notes.flatMap((note) => note.tags || [])),
+            )}
+            orderBy={orderBy}
+            setOrderBy={setOrderBy}
+            tagFilter={tagFilter}
+            setTagFilter={setTagFilter}
+            setSearchOpen={setSearchOpen}
+          />
         </div>
 
         {/* Search command */}
-        <CommandMenu open={searchOpen} setOpen={setSearchopen} notes={notes} />
+        <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} />
 
         {/* Content */}
-        <div className="w-full mt-6 overflow-y-scroll">
-          {loading ? (
-            <div className="flex flex-col gap-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index}>
-                  <Skeleton className="w-full h-36 rounded-xl" />
-                </div>
-              ))}
-            </div>
-          ) : sortedNotes.length === 0 ? (
-            <div className="w-full text-center mt-16 text-foreground flex flex-col gap-4 items-center justify-center">
-              No notes available : (
-              <DownArrow height={48} />
-              <Button
-                variant={"default"}
-                className="w-48"
-                onClick={handleNewNote}
-              >
-                <NotebookPen className="sm:mr-1 " /> create new note : )
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {tagFilter === "all" ? (
-                <>
-                  {/* Tagged notes section (now includes pinned notes at top) */}
-                  {taggedNotes.length > 0 && (
-                    <div className="mt-6 w-full p-2 pl-8 border-l border-border rounded-xl relative">
-                      <h2 className="text-sm text-background mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
-                        Tagged Notes
-                      </h2>
-                      <div className="space-y-2 text-sm">
-                        {taggedNotes.map((note) => {
-                          const hasMultipleTags =
-                            note.tags && note.tags.length > 1;
-                          const isPinned = note.tags?.includes("pin");
-                          const maxTagsToShow = 1;
-
-                          return (
-                            <div
-                              key={note.id}
-                              onClick={() => router.push(`/note/${note.id}`)}
-                              className="relative cursor-pointer p-3 bg-secondary hover:bg-accent transition-colors duration-200 flex flex-col rounded-xl gap-1"
-                            >
-                              {/* Stack effect lines */}
-                              {hasMultipleTags && (
-                                <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5">
-                                  {note.tags?.slice(0, 3).map((_, i) => (
-                                    <div
-                                      key={i}
-                                      className="w-4 h-[1px] bg-border"
-                                    ></div>
-                                  ))}
-                                </div>
-                              )}
-
-                              <div className="flex flex-wrap gap-1 items-center">
-                                {isPinned && (
-                                  <span className="text-xs bg-foreground text-background px-2 py-0.5 rounded-full font-medium">
-                                    pin
-                                  </span>
-                                )}
-                                {note.tags
-                                  ?.filter((tag) => tag !== "pin")
-                                  .slice(0, maxTagsToShow)
-                                  .map((tag) => (
-                                    <span
-                                      key={tag}
-                                      className="text-xs bg-background text-foreground px-2 py-0.5 rounded-full"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                                {note.tags &&
-                                  note.tags.filter((tag) => tag !== "pin")
-                                    .length > maxTagsToShow && (
-                                    <span className="text-xs text-muted-foreground">
-                                      ...
-                                    </span>
-                                  )}
-                              </div>
-                              <h3 className="font-medium mt-2 text-foreground">
-                                {note.title}
-                              </h3>
-                              <p className="text-xs text-muted-foreground self-end">
-                                {new Date(note.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Untagged notes section */}
-                  {untaggedNotes.length > 0 && (
-                    <div className="mt-6 w-full p-2 pl-8 border-l border-border rounded-xl relative">
-                      <h2 className="text-sm text-background mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
-                        Untagged Notes
-                      </h2>
-                      <div className="space-y-2 text-sm">
-                        {untaggedNotes.map((note) => (
-                          <div
-                            key={note.id}
-                            onClick={() => router.push(`/note/${note.id}`)}
-                            className="relative cursor-pointer p-3 bg-secondary hover:bg-accent transition-colors duration-200 flex flex-row justify-between items-center rounded-xl gap-1 before:content-[''] before:absolute before:-left-6 before:top-1/2 before:-translate-y-1/2 before:h-[1px] before:w-4 before:bg-border before:rounded"
-                          >
-                            <h3 className="font-medium text-foreground">
-                              {note.title}
-                            </h3>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(note.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                // Show filtered notes (single tag or untagged)
-                <div className="mt-6 w-full p-2 pl-8 border-l border-border rounded-xl relative">
-                  <h2 className="text-sm text-background mb-2 relative left-0 -top-5 bg-muted-foreground inline-block py-1 px-3 rounded-2xl">
-                    {tagFilter === "untagged" ? "Untagged" : `#${tagFilter}`}
-                  </h2>
-                  <div className="space-y-2 text-sm">
-                    {sortedNotes.map((note) => (
-                      <div
-                        key={note.id}
-                        onClick={() => router.push(`/note/${note.id}`)}
-                        className="relative cursor-pointer p-3 bg-secondary hover:bg-accent transition-colors duration-200 flex flex-col rounded-xl gap-1 before:content-[''] before:absolute before:-left-6 before:top-1/2 before:-translate-y-1/2 before:h-[1px] before:w-4 before:bg-border before:rounded"
-                      >
-                        {note.tags && note.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {note.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className={`text-xs px-2 py-0.5 rounded-full ${
-                                  tag === "pin"
-                                    ? "bg-foreground text-background font-medium"
-                                    : "bg-muted text-foreground"
-                                }`}
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        <h3 className="font-medium mt-2 text-foreground">
-                          {note.title}
-                        </h3>
-                        <p className="text-xs text-muted-foreground self-end">
-                          {new Date(note.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+        <div className="w-full mt-6 overflow-y-scroll overflow-x-hidden px-4 py-4">
+          <NotesList
+            notes={notes}
+            orderBy={orderBy}
+            tagFilter={tagFilter}
+            loading={loading}
+          />
         </div>
       </div>
     </>

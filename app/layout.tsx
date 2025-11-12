@@ -58,7 +58,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <main
-            className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 p-2 overflow-hidden ${sg.className} `}
+            className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 overflow-hidden ${sg.className} `}
           >
             {children}
             <Toaster
