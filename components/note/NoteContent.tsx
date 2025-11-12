@@ -87,7 +87,7 @@ export const NoteContent = memo(
         // Handle changes
         onChange: handleChange,
         placeholder: "Start writing...",
-        autofocus: true,
+        autofocus: false,
 
         // Typography
         fontSize: "14px",

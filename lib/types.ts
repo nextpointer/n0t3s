@@ -14,4 +14,5 @@ export type AIAction =
   | "expand"
   | "simplify"
   | "ask"
-  | "todo";
+  | "todo"
+  | "prompt";

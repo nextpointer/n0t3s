@@ -55,7 +55,7 @@ export default function Home() {
   return (
     <>
       <title>n0t3s</title>
-      <div className="md:w-3xl w-full h-screen flex flex-col justify-start items-start p-4 pt-8 md:border-l-1 md:border-r-1 md:border-dashed ">
+      <div className="md:w-3xl w-full h-screen flex flex-col justify-start items-start p-4 pt-8 md:border-l-1 md:border-r-1 md:border-dashed">
         {/* Top bar */}
         <div className="flex flex-row justify-end items-center gap-2 md:fixed md:top-0 left-0 w-full  md:w-3xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed sm:p-4">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>

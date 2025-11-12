@@ -8,20 +8,23 @@ const PROMPTS: Record<AIAction, string> = {
     "Summarize this content. If unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
 
   rewrite:
-    "Rewrite for clarity. If content is unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+    "Rewrite for clarity. If unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
 
   grammar:
-    "Fix grammar and spelling. If content is unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+    "Fix grammar and spelling. If unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
 
   expand:
-    "Expand with more detail. If content is unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+    "Expand with more detail. If unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
 
   simplify:
-    "Simplify this content. If content is unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
+    "Simplify this content. If unclear or unintelligible, return the original unchanged. Output only markdown:\n\n{content}",
 
-  ask: "Answer based on the notes. If question is unclear or you cannot answer, be rood",
+  ask: "Answer based on the notes. If question is unclear or cannot be answered, reply briefly and politely.",
 
-  todo: "Convert to markdown checklist format:\n- [ ] task\n- [x] completed\n\nIf unclear or not convertible, return the original unchanged:\n\n{content}",
+  todo: "Convert content context to a markdown checklist. If unclear or not convertible, return the original unchanged:\n\n{content}",
+
+  prompt:
+    "Parse text and detect inline instructions inside /[...]. Apply each instruction precisely to the referenced content and rewrite accordingly. For large outputs, always respond concisely. Output only markdown, no explanations:\n\n{content}",
 };
 
 // Cache responses for 1 hour

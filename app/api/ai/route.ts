@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("AI API Error:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "AI service is currently unavailable. Please try again later." },
       { status: 500 },
     );
   }

@@ -27,6 +27,7 @@ import {
 } from "@/store/noteAtom";
 import { useAIActions } from "@/hooks/useAIActions";
 import toast from "react-hot-toast";
+import { Prompt } from "../icons/Prompt";
 
 const AI_ACTIONS = [
   { id: "summarize", label: "Summarize", icon: FileText },
@@ -35,6 +36,7 @@ const AI_ACTIONS = [
   { id: "expand", label: "Expand", icon: Maximize2 },
   { id: "simplify", label: "Simplify", icon: BookOpenCheck },
   { id: "todo", label: "Todo", icon: ListTodo },
+  { id: "prompt", label: "Prompt", icon: Prompt },
 ] as const;
 
 export const AIMenu = memo(function AIMenu() {

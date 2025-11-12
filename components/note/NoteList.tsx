@@ -110,7 +110,7 @@ export default function NotesList({
     const isExpanded = expandedSections[sectionKey] ?? true;
 
     return (
-      <div className="w-full rounded-2xl border border-dashed border-border/30 overflow-hidden backdrop-blur-sm bg-card/20 ">
+      <div className="w-full rounded-2xl border border-dashed  overflow-hidden backdrop-blur-sm bg-card/20 ">
         <button
           onClick={() => toggleSection(sectionKey)}
           className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 hover:bg-accent/20 transition-all duration-200 group"
