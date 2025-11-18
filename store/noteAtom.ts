@@ -76,6 +76,12 @@ export const askDialogOpenAtom = atom<boolean>(false);
 export const savePromptDialogOpenAtom = atom<boolean>(false);
 
 /**
+ * Controls import/export dialog visibility
+ */
+export const importDialogOpenAtom = atom<boolean>(false);
+export const exportDialogOpenAtom = atom<boolean>(false);
+
+/**
  * Stores target route when user tries to navigate with unsaved changes
  * Used to redirect after save/discard decision
  */

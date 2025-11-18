@@ -22,6 +22,7 @@ import {
 import { getNotes } from "@/lib/storage";
 import { useNoteOperations } from "@/hooks/useNoteOperations";
 import { Note } from "@/lib/types";
+import { ExportDialog } from "@/components/dialogs/ExportDialog";
 
 export default function Page() {
   // Get note ID from URL
@@ -113,6 +114,7 @@ export default function Page() {
       {/* Modal dialogs */}
       <AskAIDialog />
       <DeleteDialog />
+      <ExportDialog />
       <SavePromptDialog />
     </div>
   );
