@@ -1,7 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createHash } from "node:crypto";
 import { LRUCache } from "lru-cache";
 import { AIAction } from "./types";
+import { groq } from "@ai-sdk/groq";
+import { generateText } from "ai";
 
 const PROMPTS: Record<AIAction, string> = {
   summarize:
@@ -26,7 +27,7 @@ const PROMPTS: Record<AIAction, string> = {
   todo: "Convert content context to a markdown checklist. If unclear or not convertible, return the original unchanged:\n\n{content}",
 
   prompt:
-    "Parse text and detect inline instructions inside /[...]. Apply each instruction to the referenced content. For Q&A, keep both question and answer; expand answers for detailed ones. Be concise for large outputs. Output only markdown, no explanations:{content}",
+    "Parse text and detect inline instructions inside /[...]. Apply each instruction to the referenced content. For Q&A, keep both question and answer; expand answers for detailed ones. Be concise for large outputs. Output only markdown,just corrected text, no explanations:{content}",
 };
 
 // Cache responses for 1 hour
@@ -35,9 +36,8 @@ const responseCache = new LRUCache<string, string>({
   ttl: 60 * 60 * 1000,
 });
 
-// Gemini setup
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const MODEL_NAME = process.env.GOOGLE_GENAI_MODEL ?? "gemini-2.5-flash";
+// model
+const MODEL_NAME = process.env.GENAI_MODEL ?? "llama-3.1-8b-instant";
 
 // Clean up AI output
 function cleanOutput(text: string): string {
@@ -68,11 +68,12 @@ export async function performAIAction(
   const cached = responseCache.get(cacheKey);
   if (cached) return cached;
 
-  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  const text = cleanOutput(response.text() || "");
+  const { text } = await generateText({
+    model: groq(MODEL_NAME),
+    prompt: prompt,
+  });
+  const output = cleanOutput(text || "");
 
-  responseCache.set(cacheKey, text || content.trim());
-  return text || content.trim();
+  responseCache.set(cacheKey, output || content.trim());
+  return output || content.trim();
 }
