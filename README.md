@@ -37,6 +37,7 @@
   - ✅ Fix grammar & spelling
   - [*] Format in todo style
   - ❓ Ask questions about your notes
+  - /[..prompt] prompt mode
 
 ---
 
