@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@ai-sdk/groq": "^2.0.32",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-label": "^2.1.7",
@@ -19,9 +19,11 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.3",
+    "ai": "^5.0.108",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "groq-sdk": "^0.37.0",
     "jotai": "^2.15.1",
     "lru-cache": "^11.1.0",
     "lucide-react": "^0.534.0",
