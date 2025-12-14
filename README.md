@@ -12,7 +12,7 @@
 </div>
 
 <p align="center">
-  <b>A simple, fast and minimal note-taking app </b>
+  <b>A simple,ai-integrated fast and minimal note-taking app </b>
 </p>
 
 ---
