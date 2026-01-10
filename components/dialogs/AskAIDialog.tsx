@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { askDialogOpenAtom, contentAtom } from "@/store/noteAtom";
-import { useAIActions } from "@/hooks/useAIActions";
+import { UseAIActions } from "@/hooks/useAIActions";
 import toast from "react-hot-toast";
 
 export const AskAIDialog = memo(function AskAIDialog() {
@@ -22,7 +22,7 @@ export const AskAIDialog = memo(function AskAIDialog() {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { executeAction } = useAIActions();
+  const { executeAction } = UseAIActions();
 
   // handler for asking question
   const handleSubmit = useCallback(

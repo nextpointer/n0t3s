@@ -23,6 +23,7 @@ import { getNotes } from "@/lib/storage";
 import { useNoteOperations } from "@/hooks/useNoteOperations";
 import { Note } from "@/lib/types";
 import { ExportDialog } from "@/components/dialogs/ExportDialog";
+import { UseAIShortcuts } from "@/hooks/useAIshortcuts";
 
 export default function Page() {
   // Get note ID from URL
@@ -50,6 +51,7 @@ export default function Page() {
 
   // Initialize auto-save functionality
   useNoteOperations();
+  UseAIShortcuts();
 
   useEffect(() => {
     if (!id) return;

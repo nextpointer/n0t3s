@@ -25,18 +25,33 @@ import {
   addToHistoryAtom,
   checkUnsavedAtom,
 } from "@/store/noteAtom";
-import { useAIActions } from "@/hooks/useAIActions";
+import { UseAIActions } from "@/hooks/useAIActions";
 import toast from "react-hot-toast";
 import { Prompt } from "../icons/Prompt";
 
 const AI_ACTIONS = [
-  { id: "summarize", label: "Summarize", icon: FileText },
-  { id: "rewrite", label: "Rewrite", icon: PenLine },
-  { id: "grammar", label: "Fix Grammar", icon: SpellCheck2 },
-  { id: "expand", label: "Expand", icon: Maximize2 },
-  { id: "simplify", label: "Simplify", icon: BookOpenCheck },
-  { id: "todo", label: "Todo", icon: ListTodo },
-  { id: "prompt", label: "Prompt", icon: Prompt },
+  {
+    id: "summarize",
+    label: "Summarize",
+    shortcut: "ctrl+shift+s",
+    icon: FileText,
+  },
+  { id: "rewrite", label: "Rewrite", shortcut: "ctrl+shift+r", icon: PenLine },
+  {
+    id: "grammar",
+    label: "Fix Grammar",
+    shortcut: "ctrl+shift+g",
+    icon: SpellCheck2,
+  },
+  { id: "expand", label: "Expand", shortcut: "ctrl+shift+e", icon: Maximize2 },
+  {
+    id: "simplify",
+    label: "Simplify",
+    shortcut: "ctrl+shift+i",
+    icon: BookOpenCheck,
+  },
+  { id: "todo", label: "Todo", shortcut: "ctrl+shift+q", icon: ListTodo },
+  { id: "prompt", label: "Prompt", shortcut: "ctrl+shift+p", icon: Prompt },
 ] as const;
 
 export const AIMenu = memo(function AIMenu() {
@@ -45,7 +60,7 @@ export const AIMenu = memo(function AIMenu() {
   const setContent = useSetAtom(contentAtom);
   const addToHistory = useSetAtom(addToHistoryAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
-  const { executeAction } = useAIActions();
+  const { executeAction } = UseAIActions();
 
   // hnadler for execute AI actions
   const handleAction = useCallback(
@@ -83,12 +98,12 @@ export const AIMenu = memo(function AIMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-36 shadow"
+        className="w-38 md:w-64 shadow"
         align="end"
         side="bottom"
         collisionPadding={16}
       >
-        {AI_ACTIONS.map(({ id, label, icon: Icon }) => (
+        {AI_ACTIONS.map(({ id, label, shortcut, icon: Icon }) => (
           <DropdownMenuItem
             key={id}
             onClick={() => handleAction(id)}
@@ -96,6 +111,9 @@ export const AIMenu = memo(function AIMenu() {
           >
             <Icon className="w-4 h-4 mr-2" />
             {label}
+            <div className="hidden md:inline-block ml-auto px-2 py-1 bg-muted/60 rounded-full text-xs font-mono text-muted-foreground/80 border border-border/50 transition-all shrink-0">
+              {shortcut}
+            </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

@@ -4,7 +4,7 @@ import { aiLoadingAtom } from "@/store/noteAtom";
 import toast from "react-hot-toast";
 import { AIAction } from "@/lib/types";
 
-export function useAIActions() {
+export function UseAIActions() {
   const setAiLoading = useSetAtom(aiLoadingAtom);
 
   // handler for execute the action and get response
