@@ -63,21 +63,20 @@
     --tracking-normal: -0.025em;
     --spacing: 0.27rem;
 
-    /*for notes text*/
-    --editor-text: #0a0a0a;
-    --editor-h1: #000000;
-    --editor-h2: #1a1a1a;
-    --editor-h3: #333333;
-    --editor-strong: #000000;
-    --editor-em: #404040;
-    --editor-link: #171717;
-    --editor-code: #0f0f0f;
+    --editor-text: #1a1a1a;
+    --editor-h1: #7c3aed; /* Soft violet */
+    --editor-h2: #3b82f6; /* Soft blue */
+    --editor-h3: #10b981; /* Soft green */
+    --editor-strong: #ec4899; /* Soft pink */
+    --editor-em: #06b6d4; /* Soft cyan */
+    --editor-link: #f59e0b; /* Soft amber */
+    --editor-code: #6366f1; /* Soft indigo */
     --editor-code-bg: rgba(0, 0, 0, 0.03);
-    --editor-blockquote: #4a4a4a;
-    --editor-hr: rgba(0, 0, 0, 0.08);
-    --editor-syntax: rgba(0, 0, 0, 0.2);
+    --editor-blockquote: #84cc16; /* Soft lime */
+    --editor-hr: rgba(26, 26, 26, 0.12);
+    --editor-syntax: rgba(0, 0, 0, 0.25);
     --editor-cursor: #000000;
-    --editor-selection: rgba(0, 0, 0, 0.06);
+    --editor-selection: rgba(124, 58, 237, 0.15);
 }
 
 .dark {
@@ -139,20 +138,20 @@
     --shadow-2xl: 0px 2px 3px -2.5px hsl(0 0% 0% / 0.4);
 
     /*for notes text*/
-    --editor-text: #e5e5e5;
-    --editor-h1: #ffffff;
-    --editor-h2: #f5f5f5;
-    --editor-h3: #d4d4d4;
-    --editor-strong: #ffffff;
-    --editor-em: #c4c4c4;
-    --editor-link: #e8e8e8;
-    --editor-code: #f0f0f0;
+    --editor-text: #e2e8f0;
+    --editor-h1: #c084fc; /* Light violet */
+    --editor-h2: #93c5fd; /* Light blue */
+    --editor-h3: #86efac; /* Light green */
+    --editor-strong: #f472b6; /* Light pink */
+    --editor-em: #67e8f9; /* Light cyan */
+    --editor-link: #fcd34d; /* Light amber */
+    --editor-code: #a5b4fc; /* Light indigo */
     --editor-code-bg: rgba(255, 255, 255, 0.05);
-    --editor-blockquote: #a3a3a3;
-    --editor-hr: rgba(255, 255, 255, 0.12);
-    --editor-syntax: rgba(255, 255, 255, 0.3);
+    --editor-blockquote: #bef264; /* Light lime */
+    --editor-hr: rgba(226, 232, 240, 0.2);
+    --editor-syntax: rgba(255, 255, 255, 0.35);
     --editor-cursor: #ffffff;
-    --editor-selection: rgba(255, 255, 255, 0.08);
+    --editor-selection: rgba(192, 132, 252, 0.2);
 }
 
 @theme inline {
