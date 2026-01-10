@@ -13,7 +13,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.fixedWindow(5, "5 m"), // 5 requests / 5 min per IP
+  limiter: Ratelimit.fixedWindow(10, "5 m"), // 5 requests / 5 min per IP
 });
 
 // Extract client IP
