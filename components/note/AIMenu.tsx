@@ -51,7 +51,12 @@ const AI_ACTIONS = [
     icon: BookOpenCheck,
   },
   { id: "todo", label: "Todo", shortcut: "ctrl+shift+q", icon: ListTodo },
-  { id: "prompt", label: "Prompt", shortcut: "ctrl+shift+p", icon: Prompt },
+  {
+    id: "prompt",
+    label: "/ [ Prompt ]",
+    shortcut: "ctrl+shift+p",
+    icon: Prompt,
+  },
 ] as const;
 
 export const AIMenu = memo(function AIMenu() {
@@ -98,7 +103,7 @@ export const AIMenu = memo(function AIMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-38 md:w-64 shadow"
+        className="w-38 md:w-68 shadow"
         align="end"
         side="bottom"
         collisionPadding={16}
