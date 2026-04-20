@@ -69,4 +69,4 @@ bun dev
 - 🖊 Write your note & add tags
 - 💾 Save Note
 
-<p align="center"> Made with ❤️ using <b>Next</b> & <b>Bun</b> </p> ```
+<p align="center"> Made with ❤️ using <b>Next</b> & <b>Bun</b> </p>
