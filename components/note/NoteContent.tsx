@@ -72,6 +72,30 @@ export const NoteContent = memo(
       [debouncedSync],
     );
 
+    useEffect(() => {
+      const vv = window.visualViewport;
+      if (!vv) return;
+
+      const handler = () => {
+        const focused = document.activeElement as HTMLElement;
+        if (!focused || !containerRef.current) return;
+        const rect = focused.getBoundingClientRect();
+        if (rect.bottom > vv.height) {
+          window.scrollBy({
+            top: rect.bottom - vv.height + 24,
+            behavior: "smooth",
+          });
+        }
+      };
+
+      vv.addEventListener("resize", handler);
+      vv.addEventListener("scroll", handler);
+      return () => {
+        vv.removeEventListener("resize", handler);
+        vv.removeEventListener("scroll", handler);
+      };
+    }, []);
+
     //init the overtype
     useEffect(() => {
       // Skip if already initialized or container not ready
@@ -174,13 +198,7 @@ export const NoteContent = memo(
         style={{
           width: "100%",
           height: "100%",
-          maxHeight: "calc(100vh - 150px)",
-          overflow: "auto",
           backgroundColor: "transparent",
-          scrollBehavior: "smooth",
-          WebkitOverflowScrolling: "touch",
-          display: "flex",
-          flexDirection: "column",
           fontFamily: "'Space Mono', 'Courier New', monospace",
         }}
       />

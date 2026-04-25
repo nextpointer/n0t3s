@@ -261,6 +261,10 @@ export const redoAtom = atom(null, (get, set) => {
  *
  * @param newContent - Latest content from editor
  */
+
+// how many histories are capturing
+const HISTORY_CAP = 10;
+
 export const syncEditorToContentAtom = atom(
   null,
   (get, set, newContent: string) => {
@@ -277,8 +281,9 @@ export const syncEditorToContentAtom = atom(
     const index = get(historyIndexAtom);
 
     if (history[index] !== newContent) {
+      const sliceStart = Math.max(0, index + 1 - HISTORY_CAP);
       // Truncate forward history
-      const newHistory = history.slice(0, index + 1);
+      const newHistory = history.slice(sliceStart, index + 1);
 
       // Add new state
       newHistory.push(newContent);
