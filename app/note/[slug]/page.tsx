@@ -93,7 +93,7 @@ export default function Page() {
   }
 
   return (
-    <div className="w-full h-[100dvh] max-h-[100dvh] md:w-4xl flex flex-col p-4 gap-4 overflow-hidden relative md:border-l-1 md:border-r-1 md:border-dashed">
+    <div className="w-full h-dvh md:w-4xl flex flex-col p-4 gap-4 relative md:border-l-1 md:border-r-1 md:border-dashed">
       {/* Note header with actions */}
       <NoteHeader />
 
@@ -108,7 +108,9 @@ export default function Page() {
       />
 
       {/* Node Editor */}
-      <NoteContent key={id} initialContent={loadedNote.content} />
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <NoteContent key={id} initialContent={loadedNote.content} />
+      </div>
 
       {/* Footer actions (save, delete, etc.) */}
       <NoteActions />

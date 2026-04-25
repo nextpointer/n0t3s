@@ -8,7 +8,7 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState, useMemo } from "react";
 import { Note } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { EmptyNote } from "./icons/EmptyNote";
@@ -23,9 +23,51 @@ export function CommandMenu({ open, setOpen, notes }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
-  const filteredNotes = notes.filter((note) =>
-    note.title.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // 1. Add Ctrl+P / Cmd+P Keybind
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "p" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setOpen((prev) => !prev);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [setOpen]);
+
+  // 2. Filter, Reverse, and Apply Counters for duplicate names
+  const displayNotes = useMemo(() => {
+    // Filter matching notes
+    const filtered = notes.filter((note) =>
+      (note.title || "Untitled Note")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()),
+    );
+
+    // Reverse the order
+    filtered.reverse();
+
+    // Count how many times each title appears to handle duplicates
+    const titleCounts: Record<string, number> = {};
+    filtered.forEach((note) => {
+      const title = note.title || "Untitled Note";
+      titleCounts[title] = (titleCounts[title] || 0) + 1;
+    });
+
+    const runningCounts: Record<string, number> = {};
+
+    return filtered.map((note) => {
+      const title = note.title || "Untitled Note";
+      runningCounts[title] = (runningCounts[title] || 0) + 1;
+
+      // If a title appears more than once, add (1), (2), etc.
+      const displayTitle =
+        titleCounts[title] > 1 ? `${title} (${runningCounts[title]})` : title;
+
+      return { ...note, displayTitle };
+    });
+  }, [notes, searchTerm]);
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
@@ -35,22 +77,23 @@ export function CommandMenu({ open, setOpen, notes }: Props) {
         onValueChange={setSearchTerm}
       />
       <CommandList>
-        {filteredNotes.length === 0 ? (
+        {displayNotes.length === 0 ? (
           <CommandEmpty className="flex flex-col gap-2 p-4 items-center justify-center">
-            {" "}
             <EmptyNote className="h-8 w-8" /> No matching notes.
           </CommandEmpty>
         ) : (
           <CommandGroup heading="Notes">
-            {filteredNotes.map((note) => (
+            {displayNotes.map((note) => (
               <CommandItem
                 key={note.id}
+                // Supplying a unique value prevents CommandItem from multi-selecting identical titles
+                value={`${note.displayTitle}-${note.id}`}
                 onSelect={() => {
                   setOpen(false);
                   router.push(`/note/${note.id}`);
                 }}
               >
-                {note.title || "Untitled Note"}
+                {note.displayTitle}
               </CommandItem>
             ))}
           </CommandGroup>

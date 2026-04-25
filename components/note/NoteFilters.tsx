@@ -47,7 +47,12 @@ export default function NotesFilters({
         className="flex-1"
       >
         <Search />
-        <span className="hidden sm:block">Click to search</span>
+        <span className="hidden sm:flex items-center gap-2">
+          Search
+          <kbd className="px-2 py-0.5 bg-muted/60 rounded-md text-[10px] font-mono text-muted-foreground border border-border/50">
+            Ctrl+P
+          </kbd>
+        </span>
       </Button>
 
       <Select value={tagFilter} onValueChange={setTagFilter}>
