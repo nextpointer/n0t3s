@@ -62,14 +62,14 @@ export const SettingsMenu = memo(function SettingsMenu() {
           />
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
+        {/*<DropdownMenuItem
           onClick={() => setZenMode((prev) => !prev)}
           className="flex justify-center items-center rounded-xs"
         >
           <Zen className="size-4" />
           Zen Mode
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator />*/}
         {/*<DropdownMenuItem
           onClick={handleImport}
           className="flex justify-center items-center  rounded-xs"

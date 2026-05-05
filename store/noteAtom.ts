@@ -8,6 +8,9 @@ export const autoSaveAtom = atomWithStorage<boolean>("autoSave", true);
 // zen mode for editor
 export const zenMode = atomWithStorage<boolean>("zenMode", true);
 
+//for search pallate state
+export const search = atom<boolean>(false);
+
 // NOTE DATA ATOMS
 // Currently active note being viewed/edited
 export const currentNoteAtom = atom<Note | null>(null);

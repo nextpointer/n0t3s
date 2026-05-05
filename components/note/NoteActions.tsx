@@ -4,18 +4,20 @@ import { memo, useCallback } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/loader";
-import { Sparkles } from "lucide-react";
 import {
   unsavedAtom,
   saveLoadingAtom,
   autoSaveAtom,
   askDialogOpenAtom,
   zenMode,
+  search,
 } from "@/store/noteAtom";
 import { useNoteOperations } from "@/hooks/useNoteOperations";
 import { Cross } from "../icons/Cross";
 import { Saved } from "../icons/Saved";
 import { Spark } from "../icons/Spark";
+import { Zen } from "../icons/Zen";
+import { Search } from "../icons/Search";
 
 export const NoteActions = memo(function NoteActions() {
   // zen mode state
@@ -27,6 +29,7 @@ export const NoteActions = memo(function NoteActions() {
 
   // setter
   const setAskDialogOpen = useSetAtom(askDialogOpenAtom);
+  const setSearchOpen = useSetAtom(search);
 
   const { save } = useNoteOperations();
   const handleSave = useCallback(() => {
@@ -39,22 +42,34 @@ export const NoteActions = memo(function NoteActions() {
   }, [setAskDialogOpen]);
 
   return (
-    <div className="relative flex flex-row h-16 pb-1 gap-2 items-center justify-end z-50">
-      {zen && (
+    <div className="relative flex flex-row h-16 pb-1 gap-4 items-center justify-end z-50">
+      <button
+        onClick={() => setSearchOpen(true)}
+        className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+      >
+        <Search className="size-4 pointer-events-none text-foreground/70" />
+      </button>
+      {zen ? (
         <button
           onClick={() => setZenMode((prev) => !prev)}
-          className="mt-10 cursor-pointer bg-foreground/20 py-0.5 p-0.5 rounded-full"
+          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
         >
-          <Cross className="size-4 pointer-events-none" />
+          <Cross className="size-4 pointer-events-none text-foreground/70" />
+        </button>
+      ) : (
+        <button
+          onClick={() => setZenMode((prev) => !prev)}
+          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+        >
+          <Zen className="size-4 pointer-events-none" />
         </button>
       )}
-      <Button
+      <button
         onClick={handleOpenAskDialog}
-        className="h-none text-xs sm:text-sm flex justify-center items-center mt-10"
-        variant={"ghost"}
+        className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
       >
         <Spark className="size-4 mr-1 text-foreground/50" />
-      </Button>
+      </button>
       <Button
         variant={unsaved ? "default" : "ghost"}
         className="text-xs sm:text-sm rounded-full py-0.1 mt-10"

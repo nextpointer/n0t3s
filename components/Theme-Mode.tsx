@@ -1,8 +1,9 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Sun, Moon } from "lucide-react";
+import { Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dark } from "./icons/Dark";
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme();
@@ -18,7 +19,7 @@ export function ModeToggle() {
           theme === "dark" ? "hidden" : "block"
         }`}
       />
-      <Moon
+      <Dark
         className={`h-[1.2rem] w-[1.2rem] transition-all ${
           theme === "dark" ? "block" : "hidden"
         }`}

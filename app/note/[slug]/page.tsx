@@ -19,6 +19,7 @@ import {
   initializeNoteAtom,
   checkUnsavedAtom,
   zenMode,
+  search,
 } from "@/store/noteAtom";
 import { getNotes } from "@/lib/storage";
 import { useNoteOperations } from "@/hooks/useNoteOperations";
@@ -38,7 +39,7 @@ export default function Page() {
    * component doesn't render until note is fully loaded
    */
   const [loadedNote, setLoadedNote] = useState<Note | null>(null);
-  const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  const [searchOpen, setSearchOpen] = useAtom(search);
   const [notes, setNotes] = useState<Note[]>([]);
   const [zen, setZenMode] = useAtom(zenMode);
 

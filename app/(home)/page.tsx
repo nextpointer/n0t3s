@@ -6,7 +6,7 @@ import { allTagsAtom } from "@/store/noteAtom";
 import { getNotes, addNote } from "@/lib/storage";
 import { Note } from "@/lib/types";
 import { ModeToggle } from "@/components/Theme-Mode";
-import { Github, NotebookPen } from "lucide-react";
+import { Github } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -14,6 +14,7 @@ import NotesFilters from "@/components/note/NoteFilters";
 import NotesList from "@/components/note/NoteList";
 import { CommandMenu } from "@/components/CommandMenu";
 import { Button } from "@/components/ui/button";
+import { NewNote } from "@/components/icons/NewNote";
 
 export default function Home() {
   const router = useRouter();
@@ -71,7 +72,7 @@ export default function Home() {
             </Link>
           </Button>
           <Button onClick={handleNewNote}>
-            <NotebookPen className="sm:mr-1 " />{" "}
+            <NewNote className="sm:mr-1 " />{" "}
             <span className="hidden sm:block">New Note</span>
           </Button>
         </div>
