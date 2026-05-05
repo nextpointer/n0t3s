@@ -20,10 +20,13 @@ import {
   deleteDialogOpenAtom,
   exportDialogOpenAtom,
   importDialogOpenAtom,
+  zenMode,
 } from "@/store/noteAtom";
+import { Zen } from "../icons/Zen";
 
 export const SettingsMenu = memo(function SettingsMenu() {
   const [autoSave, setAutoSave] = useAtom(autoSaveAtom);
+  const [zen, setZenMode] = useAtom(zenMode);
   const setDeleteDialogOpen = useSetAtom(deleteDialogOpenAtom);
   const setImportDialogOpen = useSetAtom(importDialogOpenAtom);
   const setExportDialogOpen = useSetAtom(exportDialogOpenAtom);
@@ -58,6 +61,14 @@ export const SettingsMenu = memo(function SettingsMenu() {
             onCheckedChange={setAutoSave}
           />
         </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => setZenMode((prev) => !prev)}
+          className="flex justify-center items-center rounded-xs"
+        >
+          <Zen className="size-4" />
+          Zen Mode
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/*<DropdownMenuItem
           onClick={handleImport}

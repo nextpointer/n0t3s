@@ -1,0 +1,19 @@
+import React from "react";
+import type { SVGProps } from "react";
+
+export function Spark(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={24}
+      height={24}
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="m21.45 11.11l-3-1.5l-2.68-1.34l-.03-.03l-1.34-2.68l-1.5-3c-.34-.68-1.45-.68-1.79 0l-1.5 3l-1.34 2.68l-.03.03l-2.68 1.34l-3 1.5c-.34.17-.55.52-.55.89s.21.72.55.89l3 1.5l2.68 1.34l.03.03l1.34 2.68l1.5 3c.17.34.52.55.89.55s.72-.21.89-.55l1.5-3l1.34-2.68l.03-.03l2.68-1.34l3-1.5c.34-.17.55-.52.55-.89s-.21-.72-.55-.89Z"
+      ></path>
+    </svg>
+  );
+}

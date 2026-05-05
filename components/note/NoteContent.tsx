@@ -1,58 +1,42 @@
 "use client";
 
-import { useEffect, useRef, memo, useCallback } from "react";
+import { useEffect, useRef, memo, useCallback, useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { OverType } from "overtype";
 import { syncEditorToContentAtom, contentAtom } from "@/store/noteAtom";
 
 interface NoteContentProps {
-  // static props
   initialContent: string;
 }
 
 export const NoteContent = memo(
   function NoteContent({ initialContent }: NoteContentProps) {
-    // Container ref for OverType initialization
     const containerRef = useRef<HTMLDivElement | null>(null);
-
-    // Editor instance ref
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const editorRef = useRef<any>(null);
-
-    // Timeout ref for debounced sync
     const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
       undefined,
     );
-
-    // Flag to prevent sync loop during external updates
     const isExternalUpdateRef = useRef(false);
-
-    // Flag to indicate user is actively typing
     const isTypingRef = useRef(false);
 
-    // Debug counter for tracking re-renders
-    const renderCountRef = useRef(0);
+    const [stats, setStats] = useState({ words: 0, chars: 0 });
 
-    // Write-only atom setter for syncing editor changes to app state
     const syncToContent = useSetAtom(syncEditorToContentAtom);
-
-    // Read-only atom for external content changes
     const externalContent = useAtomValue(contentAtom);
 
-    // Track re-renders in development
-    renderCountRef.current++;
+    // Helper to calculate stats
+    const calculateStats = (text: string) => {
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      setStats({ words, chars });
+    };
 
-    // debounce sync callback
     const debouncedSync = useCallback(
       (content: string) => {
-        // Clear existing timeout
-        if (syncTimeoutRef.current) {
-          clearTimeout(syncTimeoutRef.current);
-        }
+        if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
 
-        // Set new timeout
         syncTimeoutRef.current = setTimeout(() => {
-          // Sync to atoms (triggers save, history, unsaved check)
           syncToContent(content);
           isTypingRef.current = false;
         }, 500);
@@ -60,13 +44,13 @@ export const NoteContent = memo(
       [syncToContent],
     );
 
-    // Handle editor changes (user typing)
     const handleChange = useCallback(
       (newValue: string) => {
         if (isExternalUpdateRef.current) return;
         isTypingRef.current = true;
 
-        // Debounce sync to atoms
+        // Update stats immediately for UI responsiveness
+        calculateStats(newValue);
         debouncedSync(newValue);
       },
       [debouncedSync],
@@ -75,7 +59,6 @@ export const NoteContent = memo(
     useEffect(() => {
       const vv = window.visualViewport;
       if (!vv) return;
-
       const handler = () => {
         const focused = document.activeElement as HTMLElement;
         if (!focused || !containerRef.current) return;
@@ -87,7 +70,6 @@ export const NoteContent = memo(
           });
         }
       };
-
       vv.addEventListener("resize", handler);
       vv.addEventListener("scroll", handler);
       return () => {
@@ -96,34 +78,20 @@ export const NoteContent = memo(
       };
     }, []);
 
-    //init the overtype
+    // Initialize OverType
     useEffect(() => {
-      // Skip if already initialized or container not ready
       if (!containerRef.current || editorRef.current) return;
 
       const styles = getComputedStyle(document.documentElement);
 
-      // Initialize OverType
       const [editorInstance] = OverType.init(containerRef.current, {
-        // Use prop (not atom) - prevents race conditions
         value: initialContent,
-
-        // Handle changes
         onChange: handleChange,
         placeholder: "Start writing...",
         autofocus: false,
-
-        // Typography
-        fontSize: "14px",
-        lineHeight: 1.75,
-
-        // Mobile responsive
-        mobile: {
-          fontSize: "12px",
-          lineHeight: 1.7,
-        },
-
-        // Theme colors from CSS variables
+        fontSize: "15px",
+        lineHeight: 1.7,
+        mobile: { fontSize: "12px", lineHeight: 1.3 },
         theme: {
           name: "minimal-hierarchy",
           colors: {
@@ -146,21 +114,16 @@ export const NoteContent = memo(
           },
         },
         smartLists: true,
-        textareaProps: {
-          spellCheck: true,
-        },
+        textareaProps: { spellCheck: false },
       });
 
-      // Store instance in ref
       editorRef.current = editorInstance;
 
-      return () => {
-        // Clear pending sync
-        if (syncTimeoutRef.current) {
-          clearTimeout(syncTimeoutRef.current);
-        }
+      // Set initial stats
+      calculateStats(initialContent);
 
-        // Destroy editor
+      return () => {
+        if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         if (editorRef.current) {
           editorRef.current.destroy();
           editorRef.current = null;
@@ -170,21 +133,17 @@ export const NoteContent = memo(
 
     // Sync external changes to editor
     useEffect(() => {
-      if (!editorRef.current) return;
-      if (isTypingRef.current) return;
+      if (!editorRef.current || isTypingRef.current) return;
 
-      // Get current editor value
       const currentEditorValue = editorRef.current.getValue();
 
-      // Check if external content is different
       if (externalContent !== currentEditorValue) {
-        // Set flag to prevent sync loop
         isExternalUpdateRef.current = true;
-
-        // Update editor
         editorRef.current.setValue(externalContent);
 
-        // Clear flag after update completes
+        // Update stats for external changes (like undo/redo or loading)
+        calculateStats(externalContent);
+
         requestAnimationFrame(() => {
           isExternalUpdateRef.current = false;
         });
@@ -192,23 +151,47 @@ export const NoteContent = memo(
     }, [externalContent]);
 
     return (
-      <div
-        ref={containerRef}
-        className="note-editor-container"
-        style={{
-          width: "100%",
-          height: "100%",
-          backgroundColor: "transparent",
-          fontFamily: "'Space Mono', 'Courier New', monospace",
-        }}
-      />
+      <div className="relative flex flex-col w-full h-full">
+        {/* Editor Container */}
+        <div
+          ref={containerRef}
+          className="note-editor-container flex-1"
+          style={{
+            width: "100%",
+            height: "100%",
+            fontFamily: "'Jetbrains Mono', 'Space Mono', monospace",
+            fontWeight: "800",
+          }}
+        />
+
+        <div
+          className="fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3"
+          style={{
+            width: containerRef.current
+              ? `${containerRef.current.offsetWidth}px`
+              : "100%",
+            zIndex: 10,
+            fontFamily: "'Jetbrains Mono', 'Space Mono', monospace",
+          }}
+        >
+          <div
+            className="flex flex-col xl:flex-row gap-1 xl:gap-4 text-[8px] xl:text-[10px] tracking-[0.2em] pointer-events-auto"
+            style={{ color: "var(--editor-text)", opacity: 0.4 }}
+          >
+            <div className="flex flex-row items-center">
+              <span>{stats.words} words</span>
+            </div>
+            <div
+              className="flex flex-row items-center"
+              style={{ borderColor: "var(--editor-text)" }}
+            >
+              <span>{stats.chars} characters</span>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   },
-
-  /**
-   * @returns true if props are equal (skip re-render)
-   */
-  (prevProps, nextProps) => {
-    return prevProps.initialContent === nextProps.initialContent;
-  },
+  (prevProps, nextProps) =>
+    prevProps.initialContent === nextProps.initialContent,
 );

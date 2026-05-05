@@ -46,7 +46,7 @@ export const NoteHeader = memo(function NoteHeader() {
   }, [unsaved, autoSave, router, setTarget, setShowPrompt]);
 
   return (
-    <div className="fixed top-0 left-0 w-screen md:w-4xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed flex justify-between items-center gap-2 p-2">
+    <div className="fixed top-0 left-0 w-screen xl:w-5xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed flex justify-between items-center gap-2 p-2">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={handleNavigateBack}>
           <ArrowLeft className="w-5 h-5" />
@@ -69,9 +69,6 @@ export const NoteHeader = memo(function NoteHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Search command */}
-
-        <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} />
         <HistoryControls />
         <AIMenu />
         <SettingsMenu />

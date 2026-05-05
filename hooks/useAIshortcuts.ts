@@ -36,7 +36,6 @@ export function UseAIShortcuts() {
 
   useEffect(() => {
     if (loading) return;
-    console.count("hello");
 
     const SHORTCUTS: Record<string, string> = {
       "Control+Shift+s": "summarize",

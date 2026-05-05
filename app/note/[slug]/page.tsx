@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useSetAtom, useAtomValue } from "jotai";
+import { useSetAtom, useAtomValue, useAtom } from "jotai";
 import { Loader } from "@/components/ui/loader";
 import { TagInput } from "@/components/TagInput";
 import { NoteHeader } from "@/components/note/NoteHeader";
@@ -18,12 +18,14 @@ import {
   tagsAtom,
   initializeNoteAtom,
   checkUnsavedAtom,
+  zenMode,
 } from "@/store/noteAtom";
 import { getNotes } from "@/lib/storage";
 import { useNoteOperations } from "@/hooks/useNoteOperations";
 import { Note } from "@/lib/types";
 import { ExportDialog } from "@/components/dialogs/ExportDialog";
 import { UseAIShortcuts } from "@/hooks/useAIshortcuts";
+import { CommandMenu } from "@/components/CommandMenu";
 
 export default function Page() {
   // Get note ID from URL
@@ -36,6 +38,9 @@ export default function Page() {
    * component doesn't render until note is fully loaded
    */
   const [loadedNote, setLoadedNote] = useState<Note | null>(null);
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [zen, setZenMode] = useAtom(zenMode);
 
   // Read-only atoms
   const pageLoading = useAtomValue(pageLoadingAtom);
@@ -52,6 +57,28 @@ export default function Page() {
   // Initialize auto-save functionality
   useNoteOperations();
   UseAIShortcuts();
+
+  // for fetching the notes
+  useEffect(() => {
+    const allNotes = getNotes();
+    setNotes(allNotes);
+  }, [searchOpen]);
+
+  // zen mode keybinding
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "z"
+      ) {
+        setZenMode((prev) => !prev);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [setZenMode]);
 
   useEffect(() => {
     if (!id) return;
@@ -93,22 +120,26 @@ export default function Page() {
   }
 
   return (
-    <div className="w-full h-dvh md:w-4xl flex flex-col p-4 gap-4 relative md:border-l-1 md:border-r-1 md:border-dashed">
+    <div
+      className={`relative w-full h-dvh flex flex-col p-4 gap-4 ${!zen ? "xl:w-5xl md:border-l-1 md:border-r-1 md:border-dashed" : "xl:w-[72rem]"}`}
+    >
       {/* Note header with actions */}
-      <NoteHeader />
+      {!zen && <NoteHeader />}
 
       {/* Note title editor */}
       <NoteTitle />
 
       {/* Tag input with suggestions */}
-      <TagInput
-        onChange={handleTagsChange}
-        value={tags}
-        suggestions={allTags}
-      />
+      {!zen && (
+        <TagInput
+          onChange={handleTagsChange}
+          value={tags}
+          suggestions={allTags}
+        />
+      )}
 
       {/* Node Editor */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto ">
         <NoteContent key={id} initialContent={loadedNote.content} />
       </div>
 
@@ -116,6 +147,7 @@ export default function Page() {
       <NoteActions />
 
       {/* Modal dialogs */}
+      <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} />
       <AskAIDialog />
       <DeleteDialog />
       <ExportDialog />
