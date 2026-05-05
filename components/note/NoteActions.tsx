@@ -43,7 +43,7 @@ export const NoteActions = memo(function NoteActions() {
   }, [setAskDialogOpen]);
 
   return (
-    <div className="relative flex flex-row h-16 pb-1 gap-4 items-center justify-end z-50">
+    <div className="md:relative fixed right-8 bottom-3 md:bottom-0 left-0 flex flex-row h-16 pb-1 gap-4 items-center justify-end z-30 bg-background/80 backdrop-blur-md">
       <button
         onClick={() => setSearchOpen(true)}
         className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"

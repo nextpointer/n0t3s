@@ -30,6 +30,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#71717b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Prevents iOS from zooming in on input focus
+  interactiveWidget: "resizes-content",
 };
 
 const sg = Space_Grotesk({

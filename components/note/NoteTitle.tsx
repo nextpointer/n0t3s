@@ -28,12 +28,16 @@ export const NoteTitle = memo(function NoteTitle() {
   );
 
   return (
-    <input
-      className={`${zen ? "ml-3" : ""} text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none border-none mt-10`}
-      ref={titleInputRef}
-      value={title}
-      onChange={handleChange}
-      placeholder="Title..."
-    />
+    <div className="sticky top-0 z-40 w-full bg-background pt-10 pb-2">
+      <input
+        className={`${
+          zen ? "ml-3" : ""
+        } text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none bg-transparent border-none`}
+        ref={titleInputRef}
+        value={title}
+        onChange={handleChange}
+        placeholder="Title..."
+      />
+    </div>
   );
 });
