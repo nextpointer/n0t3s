@@ -4,13 +4,22 @@ import { useEffect, useRef, memo, useCallback, useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { OverType } from "overtype";
 import { syncEditorToContentAtom, contentAtom } from "@/store/noteAtom";
+import { codeToHtml } from "shiki";
+import { useTheme } from "next-themes";
 
 interface NoteContentProps {
   initialContent: string;
 }
 
+// Global cache remains the same
+const highlightCache = new Map<string, string>();
+const pendingHighlights = new Set<string>();
+
 export const NoteContent = memo(
   function NoteContent({ initialContent }: NoteContentProps) {
+    // 2. Extract resolvedTheme (handles "system" preference correctly)
+    const { resolvedTheme } = useTheme();
+
     const containerRef = useRef<HTMLDivElement | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const editorRef = useRef<any>(null);
@@ -49,7 +58,6 @@ export const NoteContent = memo(
         if (isExternalUpdateRef.current) return;
         isTypingRef.current = true;
 
-        // Update stats immediately for UI responsiveness
         calculateStats(newValue);
         debouncedSync(newValue);
       },
@@ -78,7 +86,7 @@ export const NoteContent = memo(
       };
     }, []);
 
-    // Initialize OverType
+    // 3. INITIALIZATION EFFECT: Only sets up the editor once
     useEffect(() => {
       if (!containerRef.current || editorRef.current) return;
 
@@ -118,8 +126,6 @@ export const NoteContent = memo(
       });
 
       editorRef.current = editorInstance;
-
-      // Set initial stats
       calculateStats(initialContent);
 
       return () => {
@@ -129,7 +135,68 @@ export const NoteContent = memo(
           editorRef.current = null;
         }
       };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // 4. THEME EFFECT: Updates the highlighter when the theme changes
+    useEffect(() => {
+      if (!editorRef.current) return;
+
+      // Determine correct Shiki theme
+      const shikiTheme =
+        resolvedTheme === "dark" ? "github-dark" : "github-light";
+
+      const syncShikiHighlighter = (code: string, language: string) => {
+        // Add theme to cache key so toggling doesn't load the old colored cache
+        const cacheKey = `${language}:${shikiTheme}:${code}`;
+
+        if (highlightCache.has(cacheKey)) {
+          return highlightCache.get(cacheKey)!;
+        }
+
+        if (!pendingHighlights.has(cacheKey)) {
+          pendingHighlights.add(cacheKey);
+
+          const langMap: Record<string, string> = {
+            js: "javascript",
+            ts: "typescript",
+            py: "python",
+            rs: "rust",
+          };
+
+          const normalizedLang = langMap[language] || language || "text";
+
+          codeToHtml(code, {
+            lang: normalizedLang,
+            theme: shikiTheme, // Apply dynamic theme
+          })
+            .then((highlighted) => {
+              const match = highlighted.match(/<code[^>]*>([\s\S]*?)<\/code>/);
+              const resultHtml = match ? match[1] : code;
+
+              highlightCache.set(cacheKey, resultHtml);
+
+              if (editorRef.current) {
+                editorRef.current.updatePreview();
+              }
+            })
+            .catch((error) => {
+              console.warn("Shiki highlighting failed:", error);
+            })
+            .finally(() => {
+              pendingHighlights.delete(cacheKey);
+            });
+        }
+
+        return code;
+      };
+
+      // Update the highlighter function dynamically
+      editorRef.current.setCodeHighlighter(syncShikiHighlighter);
+
+      // Force immediate re-render so existing code blocks update color
+      editorRef.current.updatePreview();
+    }, [resolvedTheme]); // This effect runs whenever the theme changes
 
     // Sync external changes to editor
     useEffect(() => {
@@ -141,7 +208,6 @@ export const NoteContent = memo(
         isExternalUpdateRef.current = true;
         editorRef.current.setValue(externalContent);
 
-        // Update stats for external changes (like undo/redo or loading)
         calculateStats(externalContent);
 
         requestAnimationFrame(() => {

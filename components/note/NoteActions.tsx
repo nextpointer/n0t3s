@@ -18,6 +18,7 @@ import { Saved } from "../icons/Saved";
 import { Spark } from "../icons/Spark";
 import { Zen } from "../icons/Zen";
 import { Search } from "../icons/Search";
+import { ModeToggle } from "../Theme-Mode";
 
 export const NoteActions = memo(function NoteActions() {
   // zen mode state
