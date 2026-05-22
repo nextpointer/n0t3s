@@ -28,7 +28,7 @@ export const NoteTitle = memo(function NoteTitle() {
   );
 
   return (
-    <div className="sticky top-0 z-40 w-full bg-background pt-10 pb-2">
+    <div className="sticky top-0 z-40 w-full bg-transparent pt-13 pb-2">
       <input
         className={`${
           zen ? "ml-3" : ""

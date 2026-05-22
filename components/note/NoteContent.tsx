@@ -231,7 +231,7 @@ export const NoteContent = memo(
         />
 
         <div
-          className="fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3 bg-background/80 backdrop-blur-md "
+          className="fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3 "
           style={{
             width: containerRef.current
               ? `${containerRef.current.offsetWidth}px`
@@ -241,7 +241,7 @@ export const NoteContent = memo(
           }}
         >
           <div
-            className="flex flex-col xl:flex-row gap-1 xl:gap-4 text-[8px] xl:text-[10px] tracking-[0.2em] pointer-events-auto xl:w-full w-32"
+            className="flex flex-col xl:flex-row gap-1 xl:gap-4 text-[8px] xl:text-[10px] tracking-[0.2em] pointer-events-auto xl:w-full w-32 "
             style={{ color: "var(--editor-text)", opacity: 0.4 }}
           >
             <div className="flex flex-row items-center">
