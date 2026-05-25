@@ -55,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${sm.variable}`}>
+      <body className={`${sm.variable} overflow-hidden`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

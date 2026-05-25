@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Note } from "@/lib/types";
 import NoteCard from "./NoteCard";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, HelpCircle } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import DownArrow from "../icons/DownArrow";
 import { Button } from "../ui/button";
@@ -85,12 +85,42 @@ export default function NotesList({
 
   if (sortedNotes.length === 0) {
     return (
-      <div className="w-full text-center mt-4 text-muted-foreground/50  flex justify-center items-center flex-col">
-        <DownArrow className="w-4" />
-        <p className="text-sm font-medium ">No notes available : (</p>
-        <Button className="mt-4" onClick={handleNewNote}>
-          Create new Note : )
-        </Button>
+      <div className="flex w-full flex-col items-center justify-center px-4 mt-30 text-center sm:mt-24 select-none">
+        <h1 className="mb-4 text-3xl font-thin leading-tight tracking-tight text-foreground md:text-5xl text-balance ">
+          Your{" "}
+          <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-[length:200%_auto] bg-clip-text text-transparent">
+            privacy
+          </span>
+          -first
+          <br className="block sm:hidden" />{" "}
+          <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-[length:200%_auto] bg-clip-text text-transparent">
+            AI
+          </span>{" "}
+          <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-[length:200%_auto]  bg-clip-text text-transparent">
+            markdown
+          </span>{" "}
+          note editor
+        </h1>
+        <h2 className="absolute -bottom-8 md:-bottom-10 opacity-25 text-9xl md:text-[12rem] bg-gradient-to-b from-foreground to-transparent bg-clip-text text-transparent select-none">
+          N0T3S
+        </h2>
+
+        <div className="flex flex-row items-center justify-center w-full gap-3 mt-2 sm:w-auto sm:flex-row">
+          <Button
+            variant="outline"
+            onClick={() => router.push("/help")}
+            className="w-auto shadow-none"
+          >
+            Help : ?
+          </Button>
+
+          <Button
+            onClick={handleNewNote}
+            className="w-auto transition-shadow  sm:w-auto shadow-primary/20 hover:shadow-primary/40"
+          >
+            Create new Note : )
+          </Button>
+        </div>
       </div>
     );
   }
@@ -110,7 +140,7 @@ export default function NotesList({
     const isExpanded = expandedSections[sectionKey] ?? true;
 
     return (
-      <div className="w-full rounded-2xl border border-dashed  overflow-hidden backdrop-blur-sm bg-card/20 ">
+      <div className="w-full rounded-2xl border border-dashed  overflow-hidden backdrop-blur-sm bg-card/20">
         <button
           onClick={() => toggleSection(sectionKey)}
           className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 hover:bg-accent/20 transition-all duration-200 group"

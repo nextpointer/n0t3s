@@ -140,7 +140,7 @@ export default function Page() {
       )}
 
       {/* Node Editor */}
-      <div className="flex-1 min-h-0 overflow-y-auto ">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-28 sm:pb-0">
         <NoteContent key={id} initialContent={loadedNote.content} />
       </div>
 

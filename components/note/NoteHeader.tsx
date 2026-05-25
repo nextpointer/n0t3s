@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, HelpCircle, Search } from "lucide-react";
 import { HistoryControls } from "./HistoryControls";
 import { AIMenu } from "./AIMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -50,6 +50,13 @@ export const NoteHeader = memo(function NoteHeader() {
       </div>
 
       <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/help")}
+          className="w-auto shadow-none "
+        >
+          <HelpCircle />
+        </Button>
         <HistoryControls />
         <AIMenu />
         <SettingsMenu />
