@@ -44,12 +44,15 @@ export const NoteActions = memo(function NoteActions() {
 
   return (
     <div className="md:relative fixed right-8 bottom-3 md:bottom-0 left-0 flex flex-row h-16 pb-1 gap-4 items-center justify-end z-30 ">
-      <button
-        onClick={() => setSearchOpen(true)}
-        className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
-      >
-        <Search className="size-4 pointer-events-none text-foreground/70" />
-      </button>
+      {!zen && (
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+        >
+          <Search className="size-4 pointer-events-none text-foreground/70" />
+        </button>
+      )}
+
       {zen ? (
         <button
           onClick={() => setZenMode((prev) => !prev)}
@@ -65,28 +68,32 @@ export const NoteActions = memo(function NoteActions() {
           <Zen className="size-4 pointer-events-none" />
         </button>
       )}
-      <button
-        onClick={handleOpenAskDialog}
-        className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
-      >
-        <Spark className="size-4 mr-1 text-foreground/50" />
-      </button>
-      <Button
-        variant={unsaved ? "default" : "ghost"}
-        className="text-xs sm:text-sm rounded-full py-0.1 mt-10"
-        onClick={handleSave}
-        disabled={!unsaved || loading}
-      >
-        {loading ? (
-          <>
-            <Loader className="text-background mr-2" /> ...
-          </>
-        ) : autoSave ? (
-          <Saved className="size-4 text-foreground/30" />
-        ) : (
-          "Save"
-        )}
-      </Button>
+
+      {!zen && (
+        <button
+          onClick={handleOpenAskDialog}
+          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+        >
+          <Spark className="size-4 mr-1 text-foreground/50" />
+        </button>
+      )}
+
+      {!zen && !autoSave && (
+        <Button
+          variant={unsaved ? "default" : "ghost"}
+          className="text-xs sm:text-sm rounded-full py-0.1 mt-10"
+          onClick={handleSave}
+          disabled={!unsaved || loading}
+        >
+          {loading ? (
+            <>
+              <Loader className="text-background mr-2" /> ...
+            </>
+          ) : (
+            "Save"
+          )}
+        </Button>
+      )}
     </div>
   );
 });
