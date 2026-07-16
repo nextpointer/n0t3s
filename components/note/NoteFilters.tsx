@@ -1,3 +1,6 @@
+"use client";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -19,7 +22,7 @@ type Props = {
   setSearchOpen: (v: boolean) => void;
 };
 
-export default function NotesFilters({
+const NotesFilters = React.memo(function NotesFilters({
   loading,
   allTags,
   orderBy,
@@ -86,4 +89,6 @@ export default function NotesFilters({
       </Select>
     </>
   );
-}
+});
+
+export default NotesFilters;

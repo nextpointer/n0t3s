@@ -2,6 +2,14 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { Note } from "@/lib/types";
 
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 // PERSISTED SETTINGS ATOM
 export const autoSaveAtom = atomWithStorage<boolean>("autoSave", true);
 
@@ -82,9 +90,8 @@ export const askDialogOpenAtom = atom<boolean>(false);
 export const savePromptDialogOpenAtom = atom<boolean>(false);
 
 /**
- * Controls import/export dialog visibility
+ * Controls export dialog visibility
  */
-export const importDialogOpenAtom = atom<boolean>(false);
 export const exportDialogOpenAtom = atom<boolean>(false);
 
 /**
@@ -144,7 +151,7 @@ export const checkUnsavedAtom = atom(null, (get, set) => {
   const changed =
     title !== note.title ||
     content !== note.content ||
-    JSON.stringify(tags) !== JSON.stringify(note.tags || []);
+    !arraysEqual(tags, note.tags || []);
 
   set(unsavedAtom, changed);
 });
@@ -309,7 +316,7 @@ export const syncEditorToContentAtom = atom(
     const changed =
       title !== note.title ||
       newContent !== note.content ||
-      JSON.stringify(tags) !== JSON.stringify(note.tags || []);
+      !arraysEqual(tags, note.tags || []);
 
     set(unsavedAtom, changed);
   },

@@ -13,7 +13,6 @@
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-label": "^2.1.8",
-    "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",
@@ -26,14 +25,13 @@
     "jotai": "^2.16.1",
     "lru-cache": "^11.2.4",
     "lucide-react": "^0.534.0",
-    "next": "15.5.7",
+    "next": "^15.0.0",
     "next-themes": "^0.4.6",
     "overtype": "^2.1.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
     "shiki": "^4.0.2",
-    "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

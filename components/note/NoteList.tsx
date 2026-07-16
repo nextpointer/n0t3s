@@ -1,13 +1,61 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Note } from "@/lib/types";
 import NoteCard from "./NoteCard";
-import { ChevronDown, HelpCircle } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
-import DownArrow from "../icons/DownArrow";
 import { Button } from "../ui/button";
 import { addNote } from "@/lib/storage";
+
+function CollapsibleSection({
+  title,
+  notes,
+  isExpanded,
+  onToggle,
+  onNoteClick,
+}: {
+  title: string;
+  notes: Note[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  onNoteClick: (id: string) => void;
+}) {
+  return (
+    <div className="w-full rounded-2xl border border-dashed  overflow-hidden backdrop-blur-sm bg-card/20">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 hover:bg-accent/20 transition-all duration-200 group"
+      >
+        <div className="flex items-center gap-2">
+          <h2 className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
+            {title}
+          </h2>
+          <span className="text-[9px] sm:text-[10px] text-muted-foreground/50 bg-muted/30 px-1.5 py-0.5 rounded-full font-medium min-w-[20px] text-center">
+            {notes.length}
+          </span>
+        </div>
+        <ChevronDown
+          className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground/50 transition-transform duration-300 ease-out ${
+            isExpanded ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isExpanded && (
+        <div className="space-y-1 px-1.5 sm:px-2 pb-1.5 sm:pb-2">
+          {notes.map((note) => (
+            <NoteCard
+              key={note.id}
+              note={note}
+              onClick={() => onNoteClick(note.id)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type Props = {
   notes: Note[];
@@ -16,7 +64,7 @@ type Props = {
   loading: boolean;
 };
 
-export default function NotesList({
+const NotesList = React.memo(function NotesList({
   notes,
   orderBy,
   tagFilter,
@@ -57,6 +105,23 @@ export default function NotesList({
 
   const sortedNotes = [...pinnedNotes, ...sortedNonPinned];
 
+  const navigateToNote = useCallback((id: string) => {
+    router.push(`/note/${id}`);
+  }, [router]);
+
+  const handleNewNote = useCallback(() => {
+    const id = crypto.randomUUID();
+    const now = Date.now();
+    addNote({
+      id,
+      title: "Untitled Note",
+      content: "",
+      createdAt: now,
+      updatedAt: now,
+    });
+    router.push(`/note/${id}`);
+  }, [router]);
+
   if (loading) {
     return (
       <div className="flex flex-col gap-2">
@@ -68,19 +133,6 @@ export default function NotesList({
         ))}
       </div>
     );
-  }
-
-  function handleNewNote() {
-    const id = crypto.randomUUID();
-    const now = Date.now();
-    addNote({
-      id,
-      title: "Untitled Note",
-      content: "",
-      createdAt: now,
-      updatedAt: now,
-    });
-    router.push(`/note/${id}`);
   }
 
   if (sortedNotes.length === 0) {
@@ -128,52 +180,6 @@ export default function NotesList({
   const taggedNotes = sortedNotes.filter((note) => note.tags?.length);
   const untaggedNotes = sortedNotes.filter((note) => !note.tags?.length);
 
-  const CollapsibleSection = ({
-    title,
-    notes,
-    sectionKey,
-  }: {
-    title: string;
-    notes: Note[];
-    sectionKey: string;
-  }) => {
-    const isExpanded = expandedSections[sectionKey] ?? true;
-
-    return (
-      <div className="w-full rounded-2xl border border-dashed  overflow-hidden backdrop-blur-sm bg-card/20">
-        <button
-          onClick={() => toggleSection(sectionKey)}
-          className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 hover:bg-accent/20 transition-all duration-200 group"
-        >
-          <div className="flex items-center gap-2">
-            <h2 className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
-              {title}
-            </h2>
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground/50 bg-muted/30 px-1.5 py-0.5 rounded-full font-medium min-w-[20px] text-center">
-              {notes.length}
-            </span>
-          </div>
-          <ChevronDown
-            className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground/50 transition-transform duration-300 ease-out ${
-              isExpanded ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-        {isExpanded && (
-          <div className="space-y-1 px-1.5 sm:px-2 pb-1.5 sm:pb-2">
-            {notes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onClick={() => router.push(`/note/${note.id}`)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="w-full max-w-full overflow-hidden space-y-2.5 sm:space-y-3">
       {tagFilter === "all" ? (
@@ -182,14 +188,18 @@ export default function NotesList({
             <CollapsibleSection
               title="Tagged Notes"
               notes={taggedNotes}
-              sectionKey="tagged"
+              isExpanded={expandedSections.tagged ?? true}
+              onToggle={() => toggleSection("tagged")}
+              onNoteClick={navigateToNote}
             />
           )}
           {untaggedNotes.length > 0 && (
             <CollapsibleSection
               title="Untagged Notes"
               notes={untaggedNotes}
-              sectionKey="untagged"
+              isExpanded={expandedSections.untagged ?? true}
+              onToggle={() => toggleSection("untagged")}
+              onNoteClick={navigateToNote}
             />
           )}
         </>
@@ -197,9 +207,13 @@ export default function NotesList({
         <CollapsibleSection
           title={tagFilter === "untagged" ? "Untagged" : `#${tagFilter}`}
           notes={sortedNotes}
-          sectionKey={tagFilter}
+          isExpanded={expandedSections[tagFilter] ?? true}
+          onToggle={() => toggleSection(tagFilter)}
+          onNoteClick={navigateToNote}
         />
       )}
     </div>
   );
-}
+});
+
+export default NotesList;

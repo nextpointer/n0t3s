@@ -2,7 +2,6 @@ import { X } from "lucide-react";
 import {
   type FocusEvent,
   type KeyboardEvent,
-  useEffect,
   useRef,
   useState,
 } from "react";
@@ -20,7 +19,6 @@ export function TagInput({ value, onChange, suggestions }: Props) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [focused, setFocused] = useState<boolean>(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -32,6 +30,8 @@ export function TagInput({ value, onChange, suggestions }: Props) {
       !value.includes(sug),
   );
 
+  const showSuggestions = input.trim() !== "" && filteredSuggestions.length > 0;
+
   // Add a new tag
   function addTag(tag: string) {
     const newTag = tag.trim().toLowerCase();
@@ -39,7 +39,6 @@ export function TagInput({ value, onChange, suggestions }: Props) {
     onChange([...value, newTag]);
     setInput("");
     setHighlightedIndex(-1);
-    setShowSuggestions(false);
   }
 
   // Remove a tag by index
@@ -133,18 +132,10 @@ export function TagInput({ value, onChange, suggestions }: Props) {
       return;
     }
     setFocused(false);
-    setShowSuggestions(false);
     setHighlightedIndex(-1);
   }
 
-  // Toggle suggestions when input changes
-  useEffect(() => {
-    if (input.trim() !== "") {
-      setShowSuggestions(true);
-    } else {
-      setShowSuggestions(false);
-    }
-  }, [input]);
+  // suggestions visibility is derived from input — no effect needed
 
   return (
     <div
@@ -168,6 +159,7 @@ export function TagInput({ value, onChange, suggestions }: Props) {
               onChange={(e) => updateTag(index, e.target.value)}
               onKeyDown={(e) => handleEditKeyDown(e, index)}
               onBlur={() => saveEditedTag(index)}
+              aria-label={`Edit tag ${tag}`}
             />
           ) : (
             <span
@@ -188,6 +180,7 @@ export function TagInput({ value, onChange, suggestions }: Props) {
                 e.preventDefault();
                 removeTag(index);
               }}
+              aria-label={`Remove tag ${tag}`}
               className="ml-1 transition-opacity cursor-pointer rounded-full bg-foreground text-background p-1"
             >
               <X className="w-3 h-3" />
@@ -209,14 +202,17 @@ export function TagInput({ value, onChange, suggestions }: Props) {
           name="tags"
           id="tag-input"
           autoComplete="off"
+          aria-label="Add tag"
         />
 
         {/* Suggestion dropdown */}
-        {showSuggestions && filteredSuggestions.length > 0 && (
+        {showSuggestions && (
           <div className="absolute z-10 mt-1 w-full rounded-md border border-border bg-popover shadow-md max-h-48 overflow-y-auto text-popover-foreground">
             {filteredSuggestions.map((sug, i) => (
               <div
                 key={sug}
+                role="option"
+                aria-selected={i === highlightedIndex}
                 className={`px-3 py-2 cursor-pointer hover:bg-muted ${
                   i === highlightedIndex
                     ? "bg-accent text-accent-foreground"
@@ -227,6 +223,12 @@ export function TagInput({ value, onChange, suggestions }: Props) {
                   addTag(sug);
                 }}
                 onMouseEnter={() => setHighlightedIndex(i)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    addTag(sug);
+                  }
+                }}
               >
                 {sug}
               </div>

@@ -1,18 +1,26 @@
 import { Note } from "./types";
 
 // Storage keys
-const NOTES_KEY = "n0t3s-storage";
+const NOTES_KEY = "n0t3s-storage:v1";
 
 // get the Notes
 export const getNotes = (): Note[] => {
-  if (typeof window === undefined) return [];
+  if (typeof window === "undefined") return [];
   const data = localStorage.getItem(NOTES_KEY);
-  return data ? JSON.parse(data) : [];
+  try {
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
 };
 
 // save the Notes
 export const saveNotes = (notes: Note[]): void => {
-  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  try {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  } catch {
+    // Storage full or unavailable
+  }
 };
 // add Note
 export const addNote = (note: Note): void => {

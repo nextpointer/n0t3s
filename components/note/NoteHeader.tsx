@@ -1,10 +1,10 @@
 "use client";
 
-import { memo, useCallback, useEffect, useState } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { memo, useCallback } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, HelpCircle, Search } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 import { HistoryControls } from "./HistoryControls";
 import { AIMenu } from "./AIMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -13,11 +13,7 @@ import {
   autoSaveAtom,
   savePromptDialogOpenAtom,
   navigationTargetAtom,
-  search,
 } from "@/store/noteAtom";
-import { CommandMenu } from "../CommandMenu";
-import { getNotes } from "@/lib/storage";
-import { Note } from "@/lib/types";
 
 export const NoteHeader = memo(function NoteHeader() {
   //getter

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dark } from "./icons/Dark";
 
-export function ModeToggle() {
+export const ModeToggle = React.memo(function ModeToggle() {
   const [mounted, setMounted] = useState(false);
   // We grab resolvedTheme to know exactly what is rendering on the screen
   const { setTheme, resolvedTheme } = useTheme();
@@ -43,4 +43,4 @@ export function ModeToggle() {
       />
     </Button>
   );
-}
+});

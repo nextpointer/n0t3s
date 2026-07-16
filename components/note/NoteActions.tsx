@@ -12,15 +12,16 @@ import {
   zenMode,
   search,
 } from "@/store/noteAtom";
-import { useNoteOperations } from "@/hooks/useNoteOperations";
 import { Cross } from "../icons/Cross";
-import { Saved } from "../icons/Saved";
 import { Spark } from "../icons/Spark";
 import { Zen } from "../icons/Zen";
 import { Search } from "../icons/Search";
-import { ModeToggle } from "../Theme-Mode";
 
-export const NoteActions = memo(function NoteActions() {
+interface NoteActionsProps {
+  save: (isAutoSave?: boolean) => void;
+}
+
+export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps) {
   // zen mode state
   const [zen, setZenMode] = useAtom(zenMode);
   // getter
@@ -31,8 +32,6 @@ export const NoteActions = memo(function NoteActions() {
   // setter
   const setAskDialogOpen = useSetAtom(askDialogOpenAtom);
   const setSearchOpen = useSetAtom(search);
-
-  const { save } = useNoteOperations();
   const handleSave = useCallback(() => {
     save(false);
   }, [save]);
@@ -46,6 +45,7 @@ export const NoteActions = memo(function NoteActions() {
     <div className="md:relative fixed right-8 bottom-3 md:bottom-0 left-0 flex flex-row h-16 pb-1 gap-4 items-center justify-end z-30 ">
       {!zen && (
         <button
+          type="button"
           onClick={() => setSearchOpen(true)}
           className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
         >
@@ -55,6 +55,7 @@ export const NoteActions = memo(function NoteActions() {
 
       {zen ? (
         <button
+          type="button"
           onClick={() => setZenMode((prev) => !prev)}
           className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
         >
@@ -62,6 +63,7 @@ export const NoteActions = memo(function NoteActions() {
         </button>
       ) : (
         <button
+          type="button"
           onClick={() => setZenMode((prev) => !prev)}
           className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
         >
@@ -71,6 +73,7 @@ export const NoteActions = memo(function NoteActions() {
 
       {!zen && (
         <button
+          type="button"
           onClick={handleOpenAskDialog}
           className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
         >

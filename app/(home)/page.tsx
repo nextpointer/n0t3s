@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSetAtom } from "jotai";
 import { allTagsAtom } from "@/store/noteAtom";
 import { getNotes, addNote } from "@/lib/storage";
@@ -40,7 +40,11 @@ export default function Home() {
     setAllTags(tags);
   }, [setAllTags]);
 
-  function handleNewNote() {
+  const allTags = useMemo(() => {
+    return Array.from(new Set(notes.flatMap((note) => note.tags || [])));
+  }, [notes]);
+
+  const handleNewNote = useCallback(() => {
     const id = crypto.randomUUID();
     const now = Date.now();
     addNote({
@@ -51,7 +55,7 @@ export default function Home() {
       updatedAt: now,
     });
     router.push(`/note/${id}`);
-  }
+  }, [router]);
 
   return (
     <>
@@ -81,9 +85,7 @@ export default function Home() {
         <div className="flex flex-row w-full gap-2 mt-12 justify-start items-center">
           <NotesFilters
             loading={loading}
-            allTags={Array.from(
-              new Set(notes.flatMap((note) => note.tags || [])),
-            )}
+            allTags={allTags}
             orderBy={orderBy}
             setOrderBy={setOrderBy}
             tagFilter={tagFilter}

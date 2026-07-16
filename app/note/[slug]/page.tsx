@@ -41,7 +41,7 @@ export default function Page() {
   const [loadedNote, setLoadedNote] = useState<Note | null>(null);
   const [searchOpen, setSearchOpen] = useAtom(search);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [zen, setZenMode] = useAtom(zenMode);
+  const zen = useAtomValue(zenMode);
 
   // Read-only atoms
   const pageLoading = useAtomValue(pageLoadingAtom);
@@ -56,7 +56,7 @@ export default function Page() {
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
 
   // Initialize auto-save functionality
-  useNoteOperations();
+  const { save } = useNoteOperations();
   UseAIShortcuts();
 
   // for fetching the notes
@@ -64,22 +64,6 @@ export default function Page() {
     const allNotes = getNotes();
     setNotes(allNotes);
   }, [searchOpen]);
-
-  // zen mode keybinding
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "z"
-      ) {
-        setZenMode((prev) => !prev);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [setZenMode]);
 
   useEffect(() => {
     if (!id) return;
@@ -145,14 +129,14 @@ export default function Page() {
       </div>
 
       {/* Footer actions (save, delete, etc.) */}
-      <NoteActions />
+      <NoteActions save={save} />
 
       {/* Modal dialogs */}
       <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} />
       <AskAIDialog />
       <DeleteDialog />
       <ExportDialog />
-      <SavePromptDialog />
+      <SavePromptDialog save={save} />
     </div>
   );
 }

@@ -15,12 +15,14 @@ import {
   savePromptDialogOpenAtom,
   navigationTargetAtom,
 } from "@/store/noteAtom";
-import { useNoteOperations } from "@/hooks/useNoteOperations";
 
-export const SavePromptDialog = memo(function SavePromptDialog() {
+interface SavePromptDialogProps {
+  save: (isAutoSave?: boolean) => void;
+}
+
+export const SavePromptDialog = memo(function SavePromptDialog({ save }: SavePromptDialogProps) {
   const [open, setOpen] = useAtom(savePromptDialogOpenAtom);
   const target = useAtomValue(navigationTargetAtom);
-  const { save } = useNoteOperations();
   const router = useRouter();
 
   // handler for save the unsaved changes

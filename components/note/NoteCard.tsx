@@ -1,3 +1,4 @@
+import React from "react";
 import { Note } from "@/lib/types";
 import { Pin } from "lucide-react";
 
@@ -6,7 +7,7 @@ type Props = {
   onClick: () => void;
 };
 
-export default function NoteCard({ note, onClick }: Props) {
+const NoteCard = React.memo(function NoteCard({ note, onClick }: Props) {
   const isPinned = note.tags?.includes("pin");
   const otherTags = note.tags?.filter((t) => t !== "pin") ?? [];
   const maxTagsToShow = 2;
@@ -14,6 +15,14 @@ export default function NoteCard({ note, onClick }: Props) {
   return (
     <div
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="link"
+      tabIndex={0}
       className="group relative cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 bg-background/40 hover:bg-accent/30 border border-dashed border-border/40 hover:border-border/60 transition-all duration-200 rounded-[14px] sm:rounded-[16px] backdrop-blur-sm active:scale-[0.99] overflow-hidden"
     >
       <div className="flex items-start justify-between gap-2 sm:gap-3 w-full">
@@ -54,4 +63,6 @@ export default function NoteCard({ note, onClick }: Props) {
       </div>
     </div>
   );
-}
+});
+
+export default NoteCard;

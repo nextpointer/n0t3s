@@ -29,17 +29,17 @@ export const NoteContent = memo(
     const isExternalUpdateRef = useRef(false);
     const isTypingRef = useRef(false);
 
-    const [stats, setStats] = useState({ words: 0, chars: 0 });
+    const [trackedContent, setTrackedContent] = useState(initialContent);
+    const stats = (() => {
+      const words = trackedContent.trim() ? trackedContent.trim().split(/\s+/).length : 0;
+      const chars = trackedContent.length;
+      const lines = trackedContent.split("\n").length;
+      const minutes = Math.max(1, Math.ceil(words / 200));
+      return { words, chars, lines, readingTime: `${minutes} min` };
+    })();
 
     const syncToContent = useSetAtom(syncEditorToContentAtom);
     const externalContent = useAtomValue(contentAtom);
-
-    // Helper to calculate stats
-    const calculateStats = (text: string) => {
-      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-      const chars = text.length;
-      setStats({ words, chars });
-    };
 
     const debouncedSync = useCallback(
       (content: string) => {
@@ -58,7 +58,7 @@ export const NoteContent = memo(
         if (isExternalUpdateRef.current) return;
         isTypingRef.current = true;
 
-        calculateStats(newValue);
+        setTrackedContent(newValue);
         debouncedSync(newValue);
       },
       [debouncedSync],
@@ -126,7 +126,6 @@ export const NoteContent = memo(
       });
 
       editorRef.current = editorInstance;
-      calculateStats(initialContent);
 
       return () => {
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -208,7 +207,7 @@ export const NoteContent = memo(
         isExternalUpdateRef.current = true;
         editorRef.current.setValue(externalContent);
 
-        calculateStats(externalContent);
+        setTrackedContent(externalContent);
 
         requestAnimationFrame(() => {
           isExternalUpdateRef.current = false;
@@ -233,9 +232,7 @@ export const NoteContent = memo(
         <div
           className="fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3 "
           style={{
-            width: containerRef.current
-              ? `${containerRef.current.offsetWidth}px`
-              : "100%",
+            width: "100%",
             zIndex: 20,
             fontFamily: "'Jetbrains Mono', 'Space Mono', monospace",
           }}

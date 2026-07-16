@@ -4,7 +4,6 @@ import { memo, useCallback } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Settings, Trash2 } from "lucide-react";
-import { Import } from "@/components/icons/Import";
 import { Export } from "@/components/icons/Export";
 import {
   DropdownMenu,
@@ -19,25 +18,16 @@ import {
   autoSaveAtom,
   deleteDialogOpenAtom,
   exportDialogOpenAtom,
-  importDialogOpenAtom,
-  zenMode,
 } from "@/store/noteAtom";
-import { Zen } from "../icons/Zen";
 
 export const SettingsMenu = memo(function SettingsMenu() {
   const [autoSave, setAutoSave] = useAtom(autoSaveAtom);
-  const [zen, setZenMode] = useAtom(zenMode);
   const setDeleteDialogOpen = useSetAtom(deleteDialogOpenAtom);
-  const setImportDialogOpen = useSetAtom(importDialogOpenAtom);
   const setExportDialogOpen = useSetAtom(exportDialogOpenAtom);
 
   const handleDelete = useCallback(() => {
     setDeleteDialogOpen(true);
   }, [setDeleteDialogOpen]);
-
-  const handleImport = useCallback(() => {
-    setImportDialogOpen(true);
-  }, [setImportDialogOpen]);
 
   const handleExport = useCallback(() => {
     setExportDialogOpen(true);

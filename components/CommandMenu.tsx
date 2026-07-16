@@ -8,7 +8,7 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command";
-import { Dispatch, SetStateAction, useEffect, useState, useMemo } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState, useMemo, useCallback } from "react";
 import { Note } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { EmptyNote } from "./icons/EmptyNote";
@@ -19,22 +19,25 @@ interface Props {
   notes: Note[];
 }
 
-export function CommandMenu({ open, setOpen, notes }: Props) {
+export const CommandMenu = React.memo(function CommandMenu({ open, setOpen, notes }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
   // 1. Add Ctrl+P / Cmd+P Keybind
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
       if (e.key === "p" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         setOpen((prev) => !prev);
       }
-    };
+    },
+    [setOpen],
+  );
 
+  useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [setOpen]);
+  }, [handleKeyDown]);
 
   // 2. Filter, Reverse, and Apply Counters for duplicate names
   const displayNotes = useMemo(() => {
@@ -101,4 +104,4 @@ export function CommandMenu({ open, setOpen, notes }: Props) {
       </CommandList>
     </CommandDialog>
   );
-}
+});

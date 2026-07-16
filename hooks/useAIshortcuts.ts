@@ -1,10 +1,11 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
   contentAtom,
   aiLoadingAtom,
   addToHistoryAtom,
   checkUnsavedAtom,
+  zenMode,
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
 import toast from "react-hot-toast";
@@ -15,6 +16,7 @@ export function UseAIShortcuts() {
   const setContent = useSetAtom(contentAtom);
   const addToHistory = useSetAtom(addToHistoryAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
+  const setZenMode = useSetAtom(zenMode);
   const { executeAction } = UseAIActions();
 
   const handleAIAction = useCallback(
@@ -34,6 +36,11 @@ export function UseAIShortcuts() {
     [content, executeAction, setContent, addToHistory, checkUnsaved],
   );
 
+  const handleAIActionRef = useRef(handleAIAction);
+  useEffect(() => {
+    handleAIActionRef.current = handleAIAction;
+  });
+
   useEffect(() => {
     if (loading) return;
 
@@ -48,18 +55,31 @@ export function UseAIShortcuts() {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Zen mode toggle: Ctrl/Cmd+Shift+Z
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "z"
+      ) {
+        setZenMode((prev) => !prev);
+        return;
+      }
+
       const key = `${e.ctrlKey ? "Control+" : ""}${e.metaKey ? "Meta+" : ""}${
         e.shiftKey ? "Shift+" : ""
       }${e.key.toLowerCase()}`;
 
       const action = SHORTCUTS[key];
       if (action) {
-        e.preventDefault();
-        handleAIAction(action);
+        // Don't preventDefault for Ctrl+Shift+I (browser DevTools)
+        if (key !== "Control+Shift+i" && key !== "Meta+Shift+i") {
+          e.preventDefault();
+        }
+        handleAIActionRef.current(action);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleAIAction, loading]);
+  }, [loading, setZenMode]);
 }
