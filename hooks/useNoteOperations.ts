@@ -31,7 +31,7 @@ export function useNoteOperations() {
 
   // manual save handler
   const save = useCallback(
-    (isAutoSave = false) => {
+    async (isAutoSave = false) => {
       if (!note) return;
 
       setSaveLoading(true);
@@ -44,7 +44,7 @@ export function useNoteOperations() {
           updatedAt: Date.now(),
         };
 
-        updateNote(updated);
+        await updateNote(updated);
         setNote(updated);
         setUnsaved(false);
 
@@ -71,7 +71,7 @@ export function useNoteOperations() {
 
     // store the timeid in the ref
     saveTimeoutRef.current = setTimeout(() => {
-      save(true);
+      void save(true);
     }, 1000);
 
     return () => {

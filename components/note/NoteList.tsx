@@ -1,12 +1,13 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Note } from "@/lib/types";
 import NoteCard from "./NoteCard";
 import { ChevronDown } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
 import { addNote } from "@/lib/storage";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 function CollapsibleSection({
   title,
@@ -21,6 +22,18 @@ function CollapsibleSection({
   onToggle: () => void;
   onNoteClick: (id: string) => void;
 }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const useVirt = notes.length >= 10;
+
+  const virtualizer = useVirtualizer({
+    count: notes.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 80,
+    overscan: 5,
+    enabled: useVirt,
+  });
+
   return (
     <div className="w-full rounded-2xl border border-dashed  overflow-hidden backdrop-blur-sm bg-card/20">
       <button
@@ -43,15 +56,41 @@ function CollapsibleSection({
         />
       </button>
       {isExpanded && (
-        <div className="space-y-1 px-1.5 sm:px-2 pb-1.5 sm:pb-2">
-          {notes.map((note) => (
-            <NoteCard
-              key={note.id}
-              note={note}
-              onClick={() => onNoteClick(note.id)}
-            />
-          ))}
-        </div>
+        <>
+          {useVirt ? (
+            <div ref={parentRef} className="space-y-1 px-1.5 sm:px-2 pb-1.5 sm:pb-2 max-h-[600px] overflow-auto">
+              <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+                {virtualizer.getVirtualItems().map((virtualRow) => (
+                  <div
+                    key={virtualRow.key}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <NoteCard
+                      note={notes[virtualRow.index]}
+                      onClick={() => onNoteClick(notes[virtualRow.index].id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1 px-1.5 sm:px-2 pb-1.5 sm:pb-2">
+              {notes.map((note) => (
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  onClick={() => onNoteClick(note.id)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -109,10 +148,10 @@ const NotesList = React.memo(function NotesList({
     router.push(`/note/${id}`);
   }, [router]);
 
-  const handleNewNote = useCallback(() => {
+  const handleNewNote = useCallback(async () => {
     const id = crypto.randomUUID();
     const now = Date.now();
-    addNote({
+    await addNote({
       id,
       title: "Untitled Note",
       content: "",

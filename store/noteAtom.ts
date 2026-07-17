@@ -1,6 +1,6 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
 import { Note } from "@/lib/types";
+import { dbGet, dbPut } from "@/lib/db";
 
 function arraysEqual(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
@@ -10,11 +10,39 @@ function arraysEqual(a: string[], b: string[]): boolean {
   return true;
 }
 
-// PERSISTED SETTINGS ATOM
-export const autoSaveAtom = atomWithStorage<boolean>("autoSave", true);
+// PERSISTED SETTINGS ATOMS
+// Plain atoms with defaults; loaded from IndexedDB on mount.
+export const autoSaveAtom = atom<boolean>(true);
+export const zenMode = atom<boolean>(true);
 
-// zen mode for editor
-export const zenMode = atomWithStorage<boolean>("zenMode", true);
+// Load persisted settings from IndexedDB into atoms on mount.
+// Call once from the root layout's useEffect.
+export async function loadPersistedSettings(
+  setAutoSave: (v: boolean) => void,
+  setZenMode: (v: boolean) => void,
+) {
+  try {
+    const autoSave = await dbGet<{ id: string; value: boolean }>("autoSave");
+    if (autoSave) setAutoSave(autoSave.value);
+  } catch {
+    // ignore
+  }
+  try {
+    const zen = await dbGet<{ id: string; value: boolean }>("zenMode");
+    if (zen) setZenMode(zen.value);
+  } catch {
+    // ignore
+  }
+}
+
+// Persist helpers — fire and forget writes to IndexedDB
+export function persistAutoSave(value: boolean) {
+  dbPut({ id: "autoSave", value }).catch(() => {});
+}
+
+export function persistZenMode(value: boolean) {
+  dbPut({ id: "zenMode", value }).catch(() => {});
+}
 
 //for search pallate state
 export const search = atom<boolean>(false);

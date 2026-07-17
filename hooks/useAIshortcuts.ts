@@ -6,6 +6,7 @@ import {
   addToHistoryAtom,
   checkUnsavedAtom,
   zenMode,
+  persistZenMode,
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
 import toast from "react-hot-toast";
@@ -61,7 +62,11 @@ export function UseAIShortcuts() {
         e.shiftKey &&
         e.key.toLowerCase() === "z"
       ) {
-        setZenMode((prev) => !prev);
+        setZenMode((prev) => {
+          const next = !prev;
+          persistZenMode(next);
+          return next;
+        });
         return;
       }
 

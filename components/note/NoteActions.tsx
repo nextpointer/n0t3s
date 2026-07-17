@@ -11,6 +11,7 @@ import {
   askDialogOpenAtom,
   zenMode,
   search,
+  persistZenMode,
 } from "@/store/noteAtom";
 import { Cross } from "../icons/Cross";
 import { Spark } from "../icons/Spark";
@@ -24,6 +25,12 @@ interface NoteActionsProps {
 export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps) {
   // zen mode state
   const [zen, setZenMode] = useAtom(zenMode);
+
+  const handleToggleZen = useCallback(() => {
+    const next = !zen;
+    setZenMode(next);
+    persistZenMode(next);
+  }, [zen, setZenMode]);
   // getter
   const unsaved = useAtomValue(unsavedAtom);
   const loading = useAtomValue(saveLoadingAtom);
@@ -56,7 +63,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
       {zen ? (
         <button
           type="button"
-          onClick={() => setZenMode((prev) => !prev)}
+          onClick={handleToggleZen}
           className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
         >
           <Cross className="size-4 pointer-events-none text-foreground/70" />
@@ -64,7 +71,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
       ) : (
         <button
           type="button"
-          onClick={() => setZenMode((prev) => !prev)}
+          onClick={handleToggleZen}
           className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
         >
           <Zen className="size-4 pointer-events-none" />

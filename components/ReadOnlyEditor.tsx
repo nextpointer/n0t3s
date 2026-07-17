@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, memo } from "react";
 import { OverType } from "overtype";
-import { codeToHtml } from "shiki";
+import { shikiPool } from "@/lib/shiki-worker-pool";
 import { useTheme } from "next-themes";
 
 interface ReadOnlyEditorProps {
   content: string;
 }
 
+// Cache for extracted inner HTML (fast path for re-renders)
 const highlightCache = new Map<string, string>();
 const pendingHighlights = new Set<string>();
 
@@ -90,7 +91,7 @@ export const ReadOnlyEditor = memo(
           };
           const normalizedLang = langMap[language] || language || "text";
 
-          codeToHtml(code, { lang: normalizedLang, theme: shikiTheme })
+          shikiPool.highlight(code, normalizedLang, shikiTheme)
             .then((highlighted) => {
               const match = highlighted.match(/<code[^>]*>([\s\S]*?)<\/code>/);
               const resultHtml = match ? match[1] : code;

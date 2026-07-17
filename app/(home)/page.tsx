@@ -28,26 +28,32 @@ export default function Home() {
 
   // Initial load
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    const allNotes = getNotes();
-    setNotes(allNotes);
-    setLoading(false);
+    getNotes().then((allNotes) => {
+      if (cancelled) return;
+      setNotes(allNotes);
+      setLoading(false);
 
-    // Collect all tags for filter dropdown
-    const tags = Array.from(
-      new Set(allNotes.flatMap((note) => note.tags || [])),
-    );
-    setAllTags(tags);
+      // Collect all tags for filter dropdown
+      const tags = Array.from(
+        new Set(allNotes.flatMap((note) => note.tags || [])),
+      );
+      setAllTags(tags);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [setAllTags]);
 
   const allTags = useMemo(() => {
     return Array.from(new Set(notes.flatMap((note) => note.tags || [])));
   }, [notes]);
 
-  const handleNewNote = useCallback(() => {
+  const handleNewNote = useCallback(async () => {
     const id = crypto.randomUUID();
     const now = Date.now();
-    addNote({
+    await addNote({
       id,
       title: "Untitled Note",
       content: "",

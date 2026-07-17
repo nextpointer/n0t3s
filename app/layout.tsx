@@ -4,6 +4,7 @@ import { Space_Grotesk, Space_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Viewport } from "next";
+import { StorageInit } from "@/components/StorageInit";
 
 export const metadata: Metadata = {
   title: "N0T3S",
@@ -62,6 +63,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <StorageInit />
           <main
             className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 overflow-hidden ${sg.className} `}
           >

@@ -61,31 +61,43 @@ export default function Page() {
 
   // for fetching the notes
   useEffect(() => {
-    const allNotes = getNotes();
-    setNotes(allNotes);
+    let cancelled = false;
+    getNotes().then((allNotes) => {
+      if (!cancelled) setNotes(allNotes);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [searchOpen]);
 
   useEffect(() => {
     if (!id) return;
 
+    let cancelled = false;
     setPageLoading(true);
 
     // This ensures conditional render shows loader
     setLoadedNote(null);
 
     // Load note from storage
-    const data = getNotes();
-    const foundNote = data.find((n) => n.id === id);
+    getNotes().then((data) => {
+      if (cancelled) return;
+      const foundNote = data.find((n) => n.id === id);
 
-    if (foundNote) {
-      initializeNote(foundNote);
-      setLoadedNote(foundNote);
-    }
+      if (foundNote) {
+        initializeNote(foundNote);
+        setLoadedNote(foundNote);
+      }
 
-    // Load all tags for suggestions
-    setAllTags(Array.from(new Set(data.flatMap((n) => n.tags || []))));
+      // Load all tags for suggestions
+      setAllTags(Array.from(new Set(data.flatMap((n) => n.tags || []))));
 
-    setPageLoading(false);
+      setPageLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, setPageLoading, initializeNote, setAllTags]);
 
   const handleTagsChange = useCallback(

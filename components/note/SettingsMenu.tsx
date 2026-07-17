@@ -18,10 +18,16 @@ import {
   autoSaveAtom,
   deleteDialogOpenAtom,
   exportDialogOpenAtom,
+  persistAutoSave,
 } from "@/store/noteAtom";
 
 export const SettingsMenu = memo(function SettingsMenu() {
   const [autoSave, setAutoSave] = useAtom(autoSaveAtom);
+
+  const handleAutoSaveChange = useCallback((value: boolean) => {
+    setAutoSave(value);
+    persistAutoSave(value);
+  }, [setAutoSave]);
   const setDeleteDialogOpen = useSetAtom(deleteDialogOpenAtom);
   const setExportDialogOpen = useSetAtom(exportDialogOpenAtom);
 
@@ -48,7 +54,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
           <Switch
             id="auto-save"
             checked={autoSave}
-            onCheckedChange={setAutoSave}
+            onCheckedChange={handleAutoSaveChange}
           />
         </div>
         <DropdownMenuSeparator />

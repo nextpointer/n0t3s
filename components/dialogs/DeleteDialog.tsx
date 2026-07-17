@@ -20,10 +20,10 @@ export const DeleteDialog = memo(function DeleteDialog() {
   const router = useRouter();
 
   // handler for confirm delete
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     if (!note) return;
     try {
-      deleteNote(note.id);
+      await deleteNote(note.id);
       setOpen(false);
       router.push("/");
       toast.success("Note deleted successfully", { id: "deleted" });
