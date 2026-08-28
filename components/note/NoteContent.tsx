@@ -150,6 +150,33 @@ export const NoteContent = memo(
 
         editorRef.current = editorInstance;
 
+        // Attach Shiki highlighter immediately after editor creation
+        const currentShikiTheme = resolvedTheme === "dark" ? "github-dark" : "github-light";
+        const syncShikiHighlighter = (code: string, language: string) => {
+          const cacheKey = `${language}:${currentShikiTheme}:${code}`;
+          if (highlightCache.has(cacheKey)) return highlightCache.get(cacheKey)!;
+
+          if (!pendingHighlights.has(cacheKey)) {
+            pendingHighlights.add(cacheKey);
+            const langMap: Record<string, string> = { js: "javascript", ts: "typescript", py: "python", rs: "rust" };
+            const normalizedLang = langMap[language] || language || "text";
+
+            shikiPool.highlight(code, normalizedLang, currentShikiTheme)
+              .then((highlighted) => {
+                const match = highlighted.match(/<code[^>]*>([\s\S]*?)<\/code>/);
+                const resultHtml = match ? match[1] : code;
+                highlightCache.set(cacheKey, resultHtml);
+                if (editorRef.current) editorRef.current.updatePreview();
+              })
+              .catch((error) => console.warn("Shiki highlighting failed:", error))
+              .finally(() => pendingHighlights.delete(cacheKey));
+          }
+          return code;
+        };
+
+        editorInstance.setCodeHighlighter(syncShikiHighlighter);
+        editorInstance.updatePreview();
+
         // Unblock sync after editor is settled
         requestAnimationFrame(() => {
           isExternalUpdateRef.current = false;
@@ -165,38 +192,6 @@ export const NoteContent = memo(
         }
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [resolvedTheme]);
-
-    // THEME EFFECT: Update Shiki highlighter when theme changes
-    useEffect(() => {
-      if (!editorRef.current) return;
-
-      const shikiTheme = resolvedTheme === "dark" ? "github-dark" : "github-light";
-
-      const syncShikiHighlighter = (code: string, language: string) => {
-        const cacheKey = `${language}:${shikiTheme}:${code}`;
-        if (highlightCache.has(cacheKey)) return highlightCache.get(cacheKey)!;
-
-        if (!pendingHighlights.has(cacheKey)) {
-          pendingHighlights.add(cacheKey);
-          const langMap: Record<string, string> = { js: "javascript", ts: "typescript", py: "python", rs: "rust" };
-          const normalizedLang = langMap[language] || language || "text";
-
-          shikiPool.highlight(code, normalizedLang, shikiTheme)
-            .then((highlighted) => {
-              const match = highlighted.match(/<code[^>]*>([\s\S]*?)<\/code>/);
-              const resultHtml = match ? match[1] : code;
-              highlightCache.set(cacheKey, resultHtml);
-              if (editorRef.current) editorRef.current.updatePreview();
-            })
-            .catch((error) => console.warn("Shiki highlighting failed:", error))
-            .finally(() => pendingHighlights.delete(cacheKey));
-        }
-        return code;
-      };
-
-      editorRef.current.setCodeHighlighter(syncShikiHighlighter);
-      editorRef.current.updatePreview();
     }, [resolvedTheme]);
 
     // Sync external changes to editor
