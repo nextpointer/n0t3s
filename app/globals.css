@@ -283,4 +283,10 @@
     .note-editor-container * {
         font-family: inherit !important;
     }
+
+    .note-editor-container .overtype-input::placeholder {
+        color: var(--editor-text) !important;
+        opacity: 0.2;
+    }
+
 }
