@@ -44,7 +44,7 @@ const COMMANDS: Item[] = [
   { id: "delete", label: "Delete note", shortcut: "", kind: "action" },
   { id: "export", label: "Export note", shortcut: "", kind: "action" },
   { id: "help", label: "Help & shortcuts", shortcut: "?", kind: "action" },
-  { id: "theme", label: "Toggle dark mode", shortcut: "", kind: "action" },
+  { id: "theme", label: "Toggle theme", shortcut: "", kind: "action" },
   { id: "zen", label: "Toggle zen mode", shortcut: "⌘⇧Z", kind: "action" },
   { id: "ai:summarize", label: "Summarize", shortcut: "⌘⇧S", kind: "ai" },
   { id: "ai:rewrite", label: "Rewrite", shortcut: "⌘⇧R", kind: "ai" },
