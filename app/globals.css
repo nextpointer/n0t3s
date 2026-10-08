@@ -408,8 +408,12 @@
             bottom: var(--ot-bottom-inset, 72px);
             width: auto;
             z-index: 40;
-            background: transparent;
+            /* Opaque: with the keyboard up this row sits over the keyboard,
+               so a transparent bar would let the keys show through the labels. */
+            background: var(--background);
             border: none;
+            border-radius: 0;
+            box-shadow: 0 -1px 0 0 color-mix(in srgb, var(--editor-text) 12%, transparent);
             backdrop-filter: none;
         }
 
