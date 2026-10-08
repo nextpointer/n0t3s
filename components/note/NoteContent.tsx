@@ -434,45 +434,76 @@ export const NoteContent = memo(
       return () => window.removeEventListener("keydown", onKeyDown);
     }, []);
 
-    // Viewport scroll handler + toolbar keyboard offset
+    // Keyboard tracking. The visual viewport is the only signal that works on
+    // both platforms, and the two report the keyboard differently: Android
+    // shrinks the layout viewport, iOS overlays it. Recomputing on the visual
+    // viewport (not just window resize) is what makes the toolbar appear at
+    // all on iOS, where opening the keyboard fires no window resize.
     useEffect(() => {
       const vv = window.visualViewport;
       if (!vv) return;
 
-      const syncToolbarOffset = () => {
+      // Tallest layout viewport seen this session. Measuring the keyboard
+      // against it is what tells the two platforms apart.
+      let baseline = window.innerHeight;
+
+      const syncKeyboard = () => {
         const host = wrapperRef.current ?? containerRef.current;
         if (!host) return;
-        // How much of the layout viewport the keyboard/URL bar is covering.
-        const keyboard = Math.max(
+        baseline = Math.max(baseline, window.innerHeight);
+
+        // Keyboard height in CSS px, against that baseline.
+        const overlay = Math.max(
           0,
-          Math.round(window.innerHeight - vv.height - vv.offsetTop),
+          Math.round(baseline - vv.height - vv.offsetTop),
         );
+        // When the layout viewport shrinks, the OS already handed the space
+        // back and the note is not underneath the keyboard — so the toolbar
+        // only needs a gap, and padding for the keyboard would take it twice.
+        const layoutShrank = window.innerHeight < baseline - 24;
+        const keyboard = layoutShrank ? 0 : overlay;
+
         // With no keyboard up, keep clear of the fixed action bar instead.
-        const reserved = keyboard > 24 ? 0 : 72;
+        const reserved = overlay > 24 ? 0 : 72;
         host.style.setProperty("--ot-bottom-inset", `${keyboard + reserved}px`);
-        // Editor padding so the last line can scroll above the keyboard.
-        host.style.setProperty("--ot-keyboard", `${keyboard}px`);
-        // Drives the mobile-only toolbar visibility and the compact editor.
-        setKeyboardOpen(keyboard > 24);
+
+        // Only pad by what actually sits under the keyboard. Derived from the
+        // container's own box so it cannot double count on a platform that
+        // has already resized us.
+        const rect = containerRef.current?.getBoundingClientRect();
+        const covered = rect
+          ? Math.min(overlay, Math.max(0, Math.round(rect.bottom - vv.height)))
+          : 0;
+        host.style.setProperty("--ot-keyboard", `${covered}px`);
+
+        // Follow focus: the keyboard is opened to type, and the two platforms
+        // disagree about whether that shrinks the layout viewport.
+        const typing =
+          editorRef.current?.textarea === document.activeElement;
+        setKeyboardOpen(typing && overlay > 24);
       };
 
-      const handler = () => {
-        const focused = document.activeElement as HTMLElement;
-        if (!focused || !containerRef.current) return;
-        const rect = focused.getBoundingClientRect();
-        if (rect.bottom > vv.height) {
-          window.scrollBy({ top: rect.bottom - vv.height + 24, behavior: "smooth" });
-        }
+      // The keyboard is laid out after the focus change that asked for it, so
+      // focus alone reports a viewport that has not moved yet.
+      const onFocusChange = () => {
+        syncKeyboard();
+        requestAnimationFrame(syncKeyboard);
       };
 
-      syncToolbarOffset();
-      vv.addEventListener("resize", handler);
-      vv.addEventListener("scroll", handler);
-      window.addEventListener("resize", syncToolbarOffset);
+      syncKeyboard();
+      vv.addEventListener("resize", syncKeyboard);
+      vv.addEventListener("scroll", syncKeyboard);
+      window.addEventListener("resize", syncKeyboard);
+      window.addEventListener("orientationchange", onFocusChange);
+      document.addEventListener("focusin", onFocusChange);
+      document.addEventListener("focusout", onFocusChange);
       return () => {
-        vv.removeEventListener("resize", handler);
-        vv.removeEventListener("scroll", handler);
-        window.removeEventListener("resize", syncToolbarOffset);
+        vv.removeEventListener("resize", syncKeyboard);
+        vv.removeEventListener("scroll", syncKeyboard);
+        window.removeEventListener("resize", syncKeyboard);
+        window.removeEventListener("orientationchange", onFocusChange);
+        document.removeEventListener("focusin", onFocusChange);
+        document.removeEventListener("focusout", onFocusChange);
       };
     }, []);
 
