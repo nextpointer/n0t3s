@@ -362,17 +362,38 @@ export const NoteContent = memo(
 
     // Font size is applied through reinit so OverType regenerates the
     // <=640px media rule as well as the desktop metrics. Debounced, because
-    // dragging a slider would otherwise rebuild on every frame.
+    // dragging a slider would otherwise rebuild on every frame — but short,
+    // since a long tail reflows the text after the reader has moved on.
     useEffect(() => {
       const instance = editorRef.current;
       if (!instance) return;
       const size = fontSize;
       const id = setTimeout(() => {
+        const ta = instance.textarea as HTMLTextAreaElement | undefined;
+        // The reflow moves the text out from under the caret, so keep the
+        // reader's place across it rather than letting it land wherever the
+        // new metrics happen to put it.
+        const focused = !!ta && document.activeElement === ta;
+        const start = ta?.selectionStart ?? 0;
+        const end = ta?.selectionEnd ?? 0;
+        const scrollTop = ta?.scrollTop ?? 0;
+
         instance.reinit({
           fontSize: `${size}px`,
           mobile: { fontSize: `${Math.max(12, size - 3)}px`, lineHeight: 1.3 },
         });
-      }, 250);
+
+        if (ta) {
+          ta.setSelectionRange(start, end);
+          if (focused) {
+            ta.focus({ preventScroll: true });
+          } else {
+            // Untouched while the slider had focus, so leave it where the
+            // reader was rather than yanking it back on the reflow.
+            ta.scrollTop = scrollTop;
+          }
+        }
+      }, 120);
       return () => clearTimeout(id);
     }, [fontSize]);
 
