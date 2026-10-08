@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect, useRef, memo, useCallback, useState } from "react";
-import { useSetAtom, useAtomValue } from "jotai";
+import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { OverType } from "overtype";
 import {
   syncEditorToContentAtom,
   contentAtom,
   toolbarEnabledAtom,
+  viewModeAtom,
+  type ViewMode,
 } from "@/store/noteAtom";
 import { shikiPool } from "@/lib/shiki-worker-pool";
+import { normalizeLang } from "@/lib/shiki-langs";
+import { NEW_NOTE_CONTENT } from "@/lib/storage";
 import { useTheme } from "next-themes";
-import {
-  EditorToolbar,
-  type ToolbarEditor,
-  type ViewMode,
-} from "./EditorToolbar";
+import { EditorToolbar, type ToolbarEditor } from "./EditorToolbar";
 
 interface NoteContentProps {
   initialContent: string;
@@ -211,11 +211,14 @@ export const NoteContent = memo(
     const isTypingRef = useRef(false);
     // Survives effect cleanup — tracks latest editor content
     const contentRef = useRef(startContent);
+    // Cancels a scheduled (rAF-coalesced) preview refresh on teardown.
+    const pendingFrameRef = useRef<(() => void) | null>(null);
 
     // Lives in state (not just the ref) so the custom toolbar re-renders when
     // the editor is created/destroyed — a ref change would not notify React.
     const [editor, setEditor] = useState<ToolbarEditor | null>(null);
-    const [viewMode, setViewMode] = useState<ViewMode>("edit");
+    // Shared with the bottom bar so the read-mode button there stays in sync.
+    const [viewMode, setViewMode] = useAtom(viewModeAtom);
     // Lets the init effect restore the current mode after a theme rebuild
     // without listing viewMode as a dependency (which would re-create the
     // editor on every mode switch).
@@ -294,19 +297,28 @@ export const NoteContent = memo(
       toggleTaskByIndex(textarea, index);
     }, []);
 
-    /** Single owner of view-mode state: switches the editor and the React state. */
-    const applyViewMode = useCallback((mode: ViewMode) => {
-      const instance = editorRef.current;
-      if (!instance) return;
-      if (mode === "edit") instance.showNormalEditMode();
-      else if (mode === "plain") instance.showPlainTextarea();
-      else instance.showPreviewMode();
-      setViewMode(mode);
-    }, []);
+    /** The editor follows the shared atom, so every entry point stays in sync. */
+    const applyViewMode = useCallback(
+      (mode: ViewMode) => {
+        setViewMode(mode);
+      },
+      [setViewMode],
+    );
 
     const toggleReadMode = useCallback(() => {
       applyViewMode(viewModeRef.current === "preview" ? "edit" : "preview");
     }, [applyViewMode]);
+
+    // Drive the editor whenever the shared mode changes (toolbar dropdown,
+    // Ctrl+/, the bottom-bar button). The init effect handles the first value,
+    // before the editor exists.
+    useEffect(() => {
+      const instance = editorRef.current;
+      if (!instance) return;
+      if (viewMode === "preview") instance.showPreviewMode();
+      else if (viewMode === "plain") instance.showPlainTextarea();
+      else instance.showNormalEditMode();
+    }, [viewMode]);
 
     /**
      * Read mode = rendered preview, no markdown syntax.

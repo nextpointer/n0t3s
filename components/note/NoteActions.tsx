@@ -22,7 +22,7 @@ import { Cross } from "../icons/Cross";
 import { Spark } from "../icons/Spark";
 import { Zen } from "../icons/Zen";
 import { Search } from "../icons/Search";
-import { ToolbarIcon } from "../icons/EditorIcons";
+import { EyeIcon, ToolbarIcon } from "../icons/EditorIcons";
 
 interface NoteActionsProps {
   save: (isAutoSave?: boolean) => void;
@@ -32,12 +32,18 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
   // zen mode state
   const [zen, setZenMode] = useAtom(zenMode);
   const [toolbarEnabled, setToolbarEnabled] = useAtom(toolbarEnabledAtom);
+  const [viewMode, setViewMode] = useAtom(viewModeAtom);
 
   const handleToggleZen = useCallback(() => {
     const next = !zen;
     setZenMode(next);
     persistZenMode(next);
   }, [zen, setZenMode]);
+
+  const previewing = viewMode === "preview";
+  const handleTogglePreview = useCallback(() => {
+    setViewMode(previewing ? "edit" : "preview");
+  }, [previewing, setViewMode]);
 
   const handleToggleToolbar = useCallback(() => {
     const next = !toolbarEnabled;
@@ -75,6 +81,22 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           <Search className="size-4 pointer-events-none text-foreground/70" />
         </button>
       )}
+
+      <button
+        type="button"
+        onClick={handleTogglePreview}
+        aria-pressed={previewing}
+        aria-label="Toggle read mode"
+        title="Read mode (Ctrl+/)"
+        className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+      >
+        <EyeIcon
+          className={cn(
+            "size-4 pointer-events-none transition-colors",
+            previewing ? "text-foreground" : "text-foreground/30",
+          )}
+        />
+      </button>
 
       <button
         type="button"
