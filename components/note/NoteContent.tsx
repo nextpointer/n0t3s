@@ -275,8 +275,6 @@ export const NoteContent = memo(
     // Lives in state (not just the ref) so the custom toolbar re-renders when
     // the editor is created/destroyed — a ref change would not notify React.
     const [editor, setEditor] = useState<ToolbarEditor | null>(null);
-    // The textarea, so the custom caret can track it.
-    const [textareaEl, setTextareaEl] = useState<HTMLTextAreaElement | null>(null);
     // Shared with the bottom bar so the read-mode button there stays in sync.
     const [viewMode, setViewMode] = useAtom(viewModeAtom);
     // Lets the init effect restore the current mode after a theme rebuild
@@ -524,7 +522,6 @@ export const NoteContent = memo(
 
         editorRef.current = editorInstance;
         setEditor(editorInstance as ToolbarEditor);
-        setTextareaEl(editorInstance.textarea as HTMLTextAreaElement);
 
         // OverType drops per-instance `previewColors` on first build: the
         // injected stylesheet bakes `--preview-*-default` from the *global*
@@ -610,7 +607,6 @@ export const NoteContent = memo(
         pendingFrameRef.current = null;
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         setEditor(null);
-        setTextareaEl(null);
         if (editorRef.current) {
           editorRef.current.destroy();
           editorRef.current = null;
