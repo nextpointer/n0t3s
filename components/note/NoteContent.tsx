@@ -453,21 +453,41 @@ export const NoteContent = memo(
 
         // Attach Shiki highlighter immediately after editor creation
         const currentShikiTheme = resolvedTheme === "dark" ? "github-dark" : "github-light";
+
+        /**
+         * Re-render at most once per frame.
+         *
+         * Every resolved highlight used to call updatePreview() directly. A long
+         * paste can contain dozens of code blocks, so that meant dozens of full
+         * re-parses of the whole document back to back and the page crawled.
+         */
+        let highlightFrame = 0;
+        const schedulePreviewRefresh = () => {
+          if (highlightFrame) return;
+          highlightFrame = requestAnimationFrame(() => {
+            highlightFrame = 0;
+            if (editorRef.current) editorRef.current.updatePreview();
+          });
+        };
+
         const syncShikiHighlighter = (code: string, language: string) => {
-          const cacheKey = `${language}:${currentShikiTheme}:${code}`;
-          if (highlightCache.has(cacheKey)) return highlightCache.get(cacheKey)!;
+          const normalizedLang = normalizeLang(language);
+          // Unknown language: return the source untouched and skip the worker.
+          if (!normalizedLang) return code;
+
+          const cacheKey = `${normalizedLang}:${currentShikiTheme}:${code}`;
+          const cached = highlightCache.get(cacheKey);
+          if (cached !== undefined) return cached;
 
           if (!pendingHighlights.has(cacheKey)) {
             pendingHighlights.add(cacheKey);
-            const langMap: Record<string, string> = { js: "javascript", ts: "typescript", py: "python", rs: "rust" };
-            const normalizedLang = langMap[language] || language || "text";
-
-            shikiPool.highlight(code, normalizedLang, currentShikiTheme)
+            shikiPool
+              .highlight(code, normalizedLang, currentShikiTheme)
               .then((highlighted) => {
                 const match = highlighted.match(/<code[^>]*>([\s\S]*?)<\/code>/);
                 const resultHtml = match ? match[1] : code;
                 highlightCache.set(cacheKey, resultHtml);
-                if (editorRef.current) editorRef.current.updatePreview();
+                schedulePreviewRefresh();
               })
               .catch((error) => console.warn("Shiki highlighting failed:", error))
               .finally(() => pendingHighlights.delete(cacheKey));
@@ -477,6 +497,12 @@ export const NoteContent = memo(
 
         editorInstance.setCodeHighlighter(syncShikiHighlighter);
         editorInstance.updatePreview();
+        pendingFrameRef.current = () => {
+          if (highlightFrame) {
+            cancelAnimationFrame(highlightFrame);
+            highlightFrame = 0;
+          }
+        };
 
         // Unblock sync after editor is settled
         requestAnimationFrame(() => {
@@ -486,6 +512,8 @@ export const NoteContent = memo(
 
       return () => {
         cancelAnimationFrame(raf);
+        pendingFrameRef.current?.();
+        pendingFrameRef.current = null;
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         setEditor(null);
         if (editorRef.current) {
