@@ -116,6 +116,31 @@ function stampTaskIndices(preview: HTMLElement) {
 }
 
 /**
+ * Toggle the checkbox on the caret's task line, in place.
+ *
+ * Returns false when the caret is not on a task item (or spans a selection),
+ * so the caller can leave the key alone instead of swallowing it.
+ */
+function toggleTaskAtCaret(textarea: HTMLTextAreaElement): boolean {
+  const caret = textarea.selectionStart;
+  if (caret !== textarea.selectionEnd) return false;
+
+  const lineStart = textarea.value.lastIndexOf("\n", caret - 1) + 1;
+  let lineEnd = textarea.value.indexOf("\n", caret);
+  if (lineEnd === -1) lineEnd = textarea.value.length;
+
+  const line = textarea.value.slice(lineStart, lineEnd);
+  const match = /^( *-\s+\[)([ xX])\]/.exec(line);
+  if (!match) return false;
+
+  const pos = lineStart + match[1].length;
+  const next = match[2].toLowerCase() === "x" ? " " : "x";
+  textarea.setRangeText(next, pos, pos + 1, "preserve");
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  return true;
+}
+
+/**
  * Read CSS variables into a plain object — avoids stale getComputedStyle.
  *
  * `colors` drives edit mode. Preview mode reads a completely separate set of
@@ -330,6 +355,45 @@ export const NoteContent = memo(
         window.removeEventListener("note:readmode", onReadModeEvent);
       };
     }, [toggleReadMode]);
+
+    /**
+     * Toggle the task checkbox at the caret with Ctrl+Enter.
+     *
+     * Ctrl+Enter is unused by browsers (unlike Ctrl+Shift+<letter> combos), and
+     * Enter is the natural "do something to this line" key while writing a list.
+     */
+    useEffect(() => {
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey) || e.shiftKey) return;
+        const instance = editorRef.current;
+        const textarea = instance?.textarea as HTMLTextAreaElement | undefined;
+        if (!textarea) return;
+        // Preview mode hides the textarea; the click-to-toggle path owns that.
+        if (instance.container.dataset.mode === "preview") return;
+        if (!toggleTaskAtCaret(textarea)) return;
+        e.preventDefault();
+      };
+
+      window.addEventListener("keydown", onKeyDown);
+      return () => window.removeEventListener("keydown", onKeyDown);
+    }, []);
+
+    /**
+     * A brand new note starts as the bare heading marker, pre-selected, so the
+     * first Enter drops straight into the body. Only an untouched `# ` matches,
+     * so existing notes are never touched.
+     */
+    const hasFocusedNewNoteRef = useRef(false);
+    useEffect(() => {
+      if (hasFocusedNewNoteRef.current) return;
+      if (startContent !== NEW_NOTE_CONTENT) return;
+      const instance = editorRef.current;
+      const textarea = instance?.textarea as HTMLTextAreaElement | undefined;
+      if (!textarea) return;
+      hasFocusedNewNoteRef.current = true;
+      instance.focus();
+      textarea.setSelectionRange(0, textarea.value.length);
+    }, [startContent, editor]);
 
     // Viewport scroll handler + toolbar keyboard offset
     useEffect(() => {
