@@ -123,11 +123,9 @@ function stampTaskIndices(preview: HTMLElement) {
  * back to OverType's baked-in defaults (a navy serif palette that clashes with
  * the app). Feeding it the same tokens keeps preview on-brand and legible.
  *
- * `strong`/`em` intentionally reuse the body text colour: OverType applies the
- * accent to the whole element in preview mode, and pastel pink/cyan body copy
- * is far harder to read than the weight/italic already conveying the emphasis.
- * Headings, links, code and quotes keep their accents, where the colour aids
- * scanning rather than competing with it.
+ * Every accent token is mapped through, so preview is the colourful,
+ * read-only rendering rather than black-on-black. Headings, strong, em, links,
+ * code and quotes each keep their own editor colour.
  */
 function readEditorColors(): {
   colors: Record<string, string>;
@@ -176,8 +174,8 @@ function readEditorColors(): {
       h1,
       h2,
       h3,
-      strong: text,
-      em: text,
+      strong,
+      em,
       link,
       code,
       codeBg,

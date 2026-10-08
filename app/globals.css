@@ -74,7 +74,7 @@
     --editor-em: #06b6d4; /* Soft cyan */
     --editor-link: #f59e0b; /* Soft amber */
     --editor-code: #6366f1; /* Soft indigo */
-    --editor-code-bg: rgba(0, 0, 0, 0.03);
+    --editor-code-bg: rgba(0, 0, 0, 0.07);
     --editor-blockquote: #84cc16; /* Soft lime */
     --editor-hr: rgba(26, 26, 26, 0.12);
     --editor-syntax: rgba(0, 0, 0, 0.25);
@@ -156,7 +156,7 @@
     --editor-em: #67e8f9; /* Light cyan */
     --editor-link: #fcd34d; /* Light amber */
     --editor-code: #a5b4fc; /* Light indigo */
-    --editor-code-bg: rgba(255, 255, 255, 0.05);
+    --editor-code-bg: rgba(255, 255, 255, 0.1);
     --editor-blockquote: #bef264; /* Light lime */
     --editor-hr: rgba(226, 232, 240, 0.2);
     --editor-syntax: rgba(255, 255, 255, 0.35);
