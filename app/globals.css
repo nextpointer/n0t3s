@@ -307,8 +307,45 @@
     .note-editor-container .overtype-container[data-mode="preview"] .overtype-preview li.task-list input[type="checkbox"] {
         cursor: pointer !important;
         accent-color: var(--note-accent);
-        width: 14px;
-        height: 14px;
+        width: 1.05em;
+        height: 1.05em;
+        /* Round rather than the browser's default square. */
+        transition: transform 0.12s ease;
+    }
+
+    /* accent-color paints the box itself and suppresses the UA's own
+       background/shape, so `appearance: none` is what lets the round shape and
+       a hairline ring actually show. */
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-preview li.task-list input[type="checkbox"] {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        flex: none;
+        border-radius: 50% !important;
+        border: 1.5px solid var(--editor-syntax) !important;
+        background: transparent !important;
+        display: inline-grid !important;
+        place-content: center !important;
+    }
+
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-preview li.task-list input[type="checkbox"]::before {
+        content: "";
+        width: 55%;
+        height: 55%;
+        transform: scale(0);
+        transform-origin: center;
+        clip-path: polygon(14% 44%, 0 60%, 40% 100%, 100% 20%, 84% 6%, 39% 70%);
+        background: var(--note-accent);
+        transition: transform 0.12s ease;
+    }
+
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-preview li.task-list input[type="checkbox"]:checked {
+        background: var(--note-accent) !important;
+        border-color: var(--note-accent) !important;
+    }
+
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-preview li.task-list input[type="checkbox"]:checked::before {
+        transform: scale(1);
+        background: var(--background);
     }
 
     .note-editor-container .overtype-container[data-mode="preview"] .overtype-preview li.task-list:has(input:checked) {
@@ -316,6 +353,30 @@
         /* OverType's stylesheet resets text-decoration with !important. */
         text-decoration: line-through !important;
         text-decoration-color: var(--editor-syntax) !important;
+    }
+
+    /* Custom caret: a slim bar over the hidden textarea's native one.
+       OverType hides the real glyphs in a transparent textarea layered over
+       the styled preview, so the native caret is suppressed and redrawn. */
+    .note-editor-host .overtype-input {
+        caret-color: transparent !important;
+    }
+
+    .note-caret {
+        background: var(--editor-text);
+        opacity: 0.85;
+        box-shadow: 0 0 6px color-mix(in srgb, var(--editor-text) 45%, transparent);
+        animation: note-caret-blink 1.1s steps(1, end) infinite;
+    }
+
+    @keyframes note-caret-blink {
+        0%, 45% { opacity: 0.85; }
+        50%, 95% { opacity: 0.05; }
+        100% { opacity: 0.85; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .note-caret { animation: none; opacity: 0.85; }
     }
 
     /* Custom formatting toolbar: fully transparent, centred on desktop and
@@ -358,6 +419,11 @@
     }
 
     @media (max-width: 640px) {
+        /* Phones: the toolbar belongs to the keyboard, not the page. */
+        .note-toolbar:not([data-mobile-visible]) {
+            display: none !important;
+        }
+
         .note-toolbar {
             position: fixed;
             top: auto;
@@ -375,6 +441,18 @@
            line can still be scrolled into the visible viewport. */
         .note-editor-container {
             padding-bottom: var(--ot-keyboard, 0px);
+        }
+
+        /* While typing, reclaim vertical space: the word counter is behind
+           the keyboard anyway, and the keyboard itself shrinks the editor. */
+        [data-keyboard="open"] .note-stats {
+            display: none;
+        }
+
+        [data-keyboard="open"] .note-editor-container .overtype-preview,
+        [data-keyboard="open"] .note-editor-container .overtype-input {
+            padding-top: 4px;
+            padding-bottom: 8px;
         }
     }
 

@@ -455,6 +455,8 @@ export const NoteContent = memo(
         host.style.setProperty("--ot-bottom-inset", `${keyboard + reserved}px`);
         // Editor padding so the last line can scroll above the keyboard.
         host.style.setProperty("--ot-keyboard", `${keyboard}px`);
+        // Drives the mobile-only toolbar visibility and the compact editor.
+        setKeyboardOpen(keyboard > 24);
       };
 
       const handler = () => {
