@@ -14,9 +14,9 @@ import {
 } from "@/store/noteAtom";
 import { shikiPool } from "@/lib/shiki-worker-pool";
 import { normalizeLang } from "@/lib/shiki-langs";
-import { NEW_NOTE_CONTENT } from "@/lib/storage";
 import { useTheme } from "next-themes";
 import { EditorToolbar, type ToolbarEditor } from "./EditorToolbar";
+import { CustomCaret } from "./CustomCaret";
 
 interface NoteContentProps {
   initialContent: string;
@@ -276,6 +276,8 @@ export const NoteContent = memo(
     // Lives in state (not just the ref) so the custom toolbar re-renders when
     // the editor is created/destroyed — a ref change would not notify React.
     const [editor, setEditor] = useState<ToolbarEditor | null>(null);
+    // The textarea, so the custom caret can track it.
+    const [textareaEl, setTextareaEl] = useState<HTMLTextAreaElement | null>(null);
     // Shared with the bottom bar so the read-mode button there stays in sync.
     const [viewMode, setViewMode] = useAtom(viewModeAtom);
     // Lets the init effect restore the current mode after a theme rebuild
@@ -435,23 +437,6 @@ export const NoteContent = memo(
       return () => window.removeEventListener("keydown", onKeyDown);
     }, []);
 
-    /**
-     * A brand new note starts as the bare heading marker, pre-selected, so the
-     * first Enter drops straight into the body. Only an untouched `# ` matches,
-     * so existing notes are never touched.
-     */
-    const hasFocusedNewNoteRef = useRef(false);
-    useEffect(() => {
-      if (hasFocusedNewNoteRef.current) return;
-      if (startContent !== NEW_NOTE_CONTENT) return;
-      const instance = editorRef.current;
-      const textarea = instance?.textarea as HTMLTextAreaElement | undefined;
-      if (!textarea) return;
-      hasFocusedNewNoteRef.current = true;
-      instance.focus();
-      textarea.setSelectionRange(0, textarea.value.length);
-    }, [startContent, editor]);
-
     // Viewport scroll handler + toolbar keyboard offset
     useEffect(() => {
       const vv = window.visualViewport;
@@ -538,6 +523,7 @@ export const NoteContent = memo(
 
         editorRef.current = editorInstance;
         setEditor(editorInstance as ToolbarEditor);
+        setTextareaEl(editorInstance.textarea as HTMLTextAreaElement);
 
         // OverType drops per-instance `previewColors` on first build: the
         // injected stylesheet bakes `--preview-*-default` from the *global*
@@ -623,6 +609,7 @@ export const NoteContent = memo(
         pendingFrameRef.current = null;
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         setEditor(null);
+        setTextareaEl(null);
         if (editorRef.current) {
           editorRef.current.destroy();
           editorRef.current = null;
@@ -647,18 +634,20 @@ export const NoteContent = memo(
     return (
       <div
         ref={wrapperRef}
+        data-keyboard={keyboardOpen ? "open" : "closed"}
         className="relative flex flex-col w-full h-full"
       >
-        {toolbarEnabled && (
+        {toolbarEnabled && viewMode !== "preview" && (
           <EditorToolbar
             editor={editor}
             viewMode={viewMode}
             onViewModeChange={applyViewMode}
+            mobileVisible={keyboardOpen}
           />
         )}
         <div
           ref={containerRef}
-          className="note-editor-container flex-1 min-h-0"
+          className="note-editor-container note-editor-host relative flex-1 min-h-0"
           style={{
             width: "100%",
             height: "100%",
@@ -666,8 +655,10 @@ export const NoteContent = memo(
             fontWeight: "800",
           }}
         />
+        <CustomCaret textarea={textareaEl} />
+
         <div
-          className="fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3 "
+          className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3 "
           style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
           <div

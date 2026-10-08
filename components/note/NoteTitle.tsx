@@ -3,6 +3,7 @@
 import { memo, useCallback, useEffect, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { titleAtom, checkUnsavedAtom, zenMode } from "@/store/noteAtom";
+import { consumeNewNoteFlag } from "@/lib/storage";
 
 export const NoteTitle = memo(function NoteTitle() {
   const [title, setTitle] = useAtom(titleAtom);
@@ -11,17 +12,38 @@ export const NoteTitle = memo(function NoteTitle() {
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   // zen mode state
   const zen = useAtomValue(zenMode);
+  // A brand new note opens with the title pre-selected so typing replaces it.
+  const isNewNoteRef = useRef(false);
+
   // first load focus and select
   useEffect(() => {
     const titleInput = titleInputRef.current;
-    if (titleInput) {
-      titleInput.focus();
+    if (!titleInput) return;
+    titleInput.focus();
+    if (consumeNewNoteFlag()) {
+      isNewNoteRef.current = true;
+      titleInput.select();
     }
+  }, []);
+
+  // Enter leaves the title and drops into the note body.
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    const textarea = document.querySelector<HTMLTextAreaElement>(
+      ".note-editor-container textarea.overtype-input",
+    );
+    if (!textarea) return;
+    e.preventDefault();
+    textarea.focus();
+    // Put the caret at the very start of the body.
+    textarea.setSelectionRange(0, 0);
+    isNewNoteRef.current = false;
   }, []);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setTitle(e.target.value);
+      isNewNoteRef.current = false;
       checkUnsaved();
     },
     [setTitle, checkUnsaved],
@@ -38,6 +60,7 @@ export const NoteTitle = memo(function NoteTitle() {
         ref={titleInputRef}
         value={title}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="Title..."
       />
     </div>

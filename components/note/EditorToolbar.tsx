@@ -76,12 +76,19 @@ interface EditorToolbarProps {
   editor: ToolbarEditor | null;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  /**
+   * Phones only: the keyboard is covering the screen. The toolbar is pinned
+   * above the keyboard, so it is hidden whenever the keyboard is down rather
+   * than sitting over the note.
+   */
+  mobileVisible?: boolean;
 }
 
 export const EditorToolbar = memo(function EditorToolbar({
   editor,
   viewMode,
   onViewModeChange,
+  mobileVisible = false,
 }: EditorToolbarProps) {
   const [activeFormats, setActiveFormats] = useState<string[]>([]);
   // Cheap guard so we don't setState on every selection tick.
@@ -148,6 +155,7 @@ export const EditorToolbar = memo(function EditorToolbar({
     <div
       role="toolbar"
       aria-label="Formatting toolbar"
+      data-mobile-visible={mobileVisible || undefined}
       className="note-toolbar flex w-full items-center gap-1 overflow-x-auto px-1.5 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {GROUPS.map((group, gi) => (

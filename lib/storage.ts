@@ -47,13 +47,15 @@ export async function updateNote(updatedNote: Note): Promise<void> {
 }
 
 /**
- * Content a brand new note starts with: the bare heading marker, which
- * NoteContent selects on open so the first Enter drops into the body.
- * Existing notes never match this exactly, so they are left untouched.
+ * A brand new note starts empty. The title input takes focus with its
+ * placeholder text selected, so the first keystroke replaces it and Enter
+ * drops straight into the body.
  */
-export const NEW_NOTE_CONTENT = "# ";
+export const NEW_NOTE_CONTENT = "";
 
-/** Create and persist a new note, returning it so callers can navigate to it. */
+/** Set when a note is created, consumed once by the note page. */
+const NEW_NOTE_FLAG = "n0t3s:new-note";
+
 export async function createNote(title = "Untitled Note"): Promise<Note> {
   const now = Date.now();
   const note: Note = {
@@ -65,7 +67,23 @@ export async function createNote(title = "Untitled Note"): Promise<Note> {
     updatedAt: now,
   };
   await addNote(note);
+  try {
+    // Same-tab signal only: the note page reads and clears it.
+    sessionStorage.setItem(NEW_NOTE_FLAG, "1");
+  } catch {
+    // sessionStorage unavailable — the note simply opens without pre-select.
+  }
   return note;
+}
+
+export function consumeNewNoteFlag(): boolean {
+  try {
+    const set = sessionStorage.getItem(NEW_NOTE_FLAG) === "1";
+    sessionStorage.removeItem(NEW_NOTE_FLAG);
+    return set;
+  } catch {
+    return false;
+  }
 }
 
 export async function deleteNote(id: string): Promise<void> {
