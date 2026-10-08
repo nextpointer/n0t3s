@@ -28,6 +28,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
     setAutoSave(value);
     persistAutoSave(value);
   }, [setAutoSave]);
+
   const setDeleteDialogOpen = useSetAtom(deleteDialogOpenAtom);
   const setExportDialogOpen = useSetAtom(exportDialogOpenAtom);
 
@@ -42,7 +43,13 @@ export const SettingsMenu = memo(function SettingsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1 pr-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1 pr-2"
+          aria-label="Settings"
+          title="Settings"
+        >
           <Settings className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>

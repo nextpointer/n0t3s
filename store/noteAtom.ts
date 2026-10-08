@@ -14,12 +14,18 @@ function arraysEqual(a: string[], b: string[]): boolean {
 // Plain atoms with defaults; loaded from IndexedDB on mount.
 export const autoSaveAtom = atom<boolean>(true);
 export const zenMode = atom<boolean>(true);
+/**
+ * Whether the editor formatting toolbar is visible.
+ * On phones it is pinned above the on-screen keyboard.
+ */
+export const toolbarEnabledAtom = atom<boolean>(true);
 
 // Load persisted settings from IndexedDB into atoms on mount.
 // Call once from the root layout's useEffect.
 export async function loadPersistedSettings(
   setAutoSave: (v: boolean) => void,
   setZenMode: (v: boolean) => void,
+  setToolbarEnabled: (v: boolean) => void,
 ) {
   try {
     const autoSave = await dbGet<{ id: string; value: boolean }>("autoSave");
@@ -33,6 +39,12 @@ export async function loadPersistedSettings(
   } catch {
     // ignore
   }
+  try {
+    const toolbar = await dbGet<{ id: string; value: boolean }>("toolbarEnabled");
+    if (toolbar) setToolbarEnabled(toolbar.value);
+  } catch {
+    // ignore
+  }
 }
 
 // Persist helpers — fire and forget writes to IndexedDB
@@ -42,6 +54,10 @@ export function persistAutoSave(value: boolean) {
 
 export function persistZenMode(value: boolean) {
   dbPut({ id: "zenMode", value }).catch(() => {});
+}
+
+export function persistToolbarEnabled(value: boolean) {
+  dbPut({ id: "toolbarEnabled", value }).catch(() => {});
 }
 
 //for search pallate state
