@@ -169,7 +169,7 @@ export default function Page() {
       <NoteActions save={save} />
 
       {/* Modal dialogs */}
-      <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} />
+      <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={id} />
       <AskAIDialog />
       <DeleteDialog />
       <ExportDialog />

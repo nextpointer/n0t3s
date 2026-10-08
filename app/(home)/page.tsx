@@ -101,7 +101,7 @@ export default function Home() {
         </div>
 
         {/* Search command */}
-        <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} />
+        <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
 
         {/* Content */}
         <div className="w-full mt-6 overflow-y-scroll overflow-x-hidden px-4 py-4">

@@ -26,6 +26,12 @@ interface Props {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   notes: Note[];
+  /**
+   * Id of the note currently open, or null on pages without one. Commands
+   * scoped to a note (save, delete, export, zen, AI) are hidden when null,
+   * because they act on an open note and would silently do nothing here.
+   */
+  noteId?: string | null;
 }
 
 interface Item {
@@ -36,23 +42,26 @@ interface Item {
   tag?: string;
   noteId?: string;
   sub?: string;
+  /** "note" = only offered while a note is open. */
+  scope?: "global" | "note";
 }
 
 const COMMANDS: Item[] = [
-  { id: "new", label: "New note", shortcut: "", kind: "action" },
-  { id: "save", label: "Save", shortcut: "⌘S", kind: "action" },
-  { id: "delete", label: "Delete note", shortcut: "", kind: "action" },
-  { id: "export", label: "Export note", shortcut: "", kind: "action" },
-  { id: "help", label: "Help & shortcuts", shortcut: "?", kind: "action" },
-  { id: "theme", label: "Toggle theme", shortcut: "", kind: "action" },
-  { id: "zen", label: "Toggle zen mode", shortcut: "⌘⇧Z", kind: "action" },
-  { id: "ai:summarize", label: "Summarize", shortcut: "⌘⇧S", kind: "ai" },
-  { id: "ai:rewrite", label: "Rewrite", shortcut: "⌘⇧R", kind: "ai" },
-  { id: "ai:grammar", label: "Fix grammar", shortcut: "⌘⇧G", kind: "ai" },
-  { id: "ai:expand", label: "Expand", shortcut: "⌘⇧E", kind: "ai" },
-  { id: "ai:simplify", label: "Simplify", shortcut: "⌘⇧I", kind: "ai" },
-  { id: "ai:todo", label: "Create todo list", shortcut: "⌘⇧Q", kind: "ai" },
-  { id: "ai:prompt", label: "Custom prompt", shortcut: "⌘⇧P", kind: "ai" },
+  { id: "new", label: "New note", shortcut: "", kind: "action", scope: "global" },
+  { id: "save", label: "Save", shortcut: "⌘S", kind: "action", scope: "note" },
+  { id: "delete", label: "Delete note", shortcut: "", kind: "action", scope: "note" },
+  { id: "export", label: "Export note", shortcut: "", kind: "action", scope: "note" },
+  { id: "help", label: "Help & shortcuts", shortcut: "?", kind: "action", scope: "global" },
+  { id: "theme", label: "Toggle theme", shortcut: "", kind: "action", scope: "global" },
+  { id: "zen", label: "Toggle zen mode", shortcut: "⌘⇧Z", kind: "action", scope: "note" },
+  { id: "readmode", label: "Toggle read mode", shortcut: "⌘/", kind: "action", scope: "note" },
+  { id: "ai:summarize", label: "Summarize", shortcut: "⌘⇧S", kind: "ai", scope: "note" },
+  { id: "ai:rewrite", label: "Rewrite", shortcut: "⌘⇧R", kind: "ai", scope: "note" },
+  { id: "ai:grammar", label: "Fix grammar", shortcut: "⌘⇧G", kind: "ai", scope: "note" },
+  { id: "ai:expand", label: "Expand", shortcut: "⌘⇧E", kind: "ai", scope: "note" },
+  { id: "ai:simplify", label: "Simplify", shortcut: "⌘⇧I", kind: "ai", scope: "note" },
+  { id: "ai:todo", label: "Create todo list", shortcut: "⌘⇧Q", kind: "ai", scope: "note" },
+  { id: "ai:prompt", label: "Custom prompt", shortcut: "⌘⇧P", kind: "ai", scope: "note" },
 ];
 
 function match(q: string, t: string): boolean {
@@ -75,6 +84,7 @@ export const CommandMenu = React.memo(function CommandMenu({
   open,
   setOpen,
   notes,
+  noteId = null,
 }: Props) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -112,13 +122,16 @@ export const CommandMenu = React.memo(function CommandMenu({
 
   // Build items once
   const allItems = useMemo<Item[]>(() => {
+    const commands = COMMANDS.filter(
+      (c) => c.scope !== "note" || Boolean(noteId),
+    );
     const tagSet = new Set<string>();
     notes.forEach((n) => (n.tags || []).forEach((t) => tagSet.add(t)));
     const tags = Array.from(tagSet).sort();
     const tagItems: Item[] = tags.map((t) => ({
       id: `tag:${t}`, label: t, shortcut: "", kind: "tag" as const, tag: t,
     }));
-    const noteItems: Item[] = notes
+    const noteItems: Item[] = [...notes]
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .map((n) => ({
         id: `note:${n.id}`,
@@ -128,8 +141,8 @@ export const CommandMenu = React.memo(function CommandMenu({
         noteId: n.id,
         sub: n.content?.slice(0, 50).replace(/[#*`\n]/g, " ").trim(),
       }));
-    return [...COMMANDS, ...tagItems, ...noteItems];
-  }, [notes]);
+    return [...commands, ...tagItems, ...noteItems];
+  }, [notes, noteId]);
 
   // Filter
   const q = query.toLowerCase();
@@ -173,6 +186,7 @@ export const CommandMenu = React.memo(function CommandMenu({
         case "help": router.push("/help"); break;
         case "theme": { const d = document.documentElement.classList.contains("dark"); setTheme(d ? "light" : "dark"); break; }
         case "zen": setZenMode((p) => { const n = !p; persistZenMode(n); return n; }); break;
+        case "readmode": window.dispatchEvent(new CustomEvent("note:readmode")); break;
         default: if (item.id.startsWith("ai:")) window.dispatchEvent(new CustomEvent("note:ai", { detail: { action: item.id.replace("ai:", "") } }));
       }
     },
