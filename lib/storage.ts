@@ -3,9 +3,30 @@ import { dbGetAll, dbPut, dbDelete, dbGet } from "./db";
 
 // All functions are now async — non-blocking main thread
 
+/**
+ * The `notes` object store also holds app settings as `{ id, value }` records
+ * (autoSave, zenMode, toolbarEnabled, …). A raw `getAll()` therefore returns
+ * settings alongside real notes, which made them render in the note list as
+ * untitled "Invalid Date" entries and crash the editor when opened.
+ *
+ * Shape-check rather than blacklist ids, so any future setting record is
+ * filtered out too.
+ */
+function isNote(record: unknown): record is Note {
+  if (!record || typeof record !== "object") return false;
+  const n = record as Partial<Note>;
+  return (
+    typeof n.id === "string" &&
+    typeof n.title === "string" &&
+    typeof n.content === "string" &&
+    typeof n.createdAt === "number"
+  );
+}
+
 export async function getNotes(): Promise<Note[]> {
   try {
-    return await dbGetAll<Note>();
+    const records = await dbGetAll<unknown>();
+    return records.filter(isNote);
   } catch {
     return [];
   }
@@ -13,16 +34,16 @@ export async function getNotes(): Promise<Note[]> {
 
 export async function saveNotes(notes: Note[]): Promise<void> {
   for (const note of notes) {
-    await dbPut(note);
+    if (isNote(note)) await dbPut(note);
   }
 }
 
 export async function addNote(note: Note): Promise<void> {
-  await dbPut(note);
+  await dbPut(normalizeNote(note));
 }
 
 export async function updateNote(updatedNote: Note): Promise<void> {
-  await dbPut(updatedNote);
+  await dbPut(normalizeNote(updatedNote));
 }
 
 export async function deleteNote(id: string): Promise<void> {
@@ -30,7 +51,21 @@ export async function deleteNote(id: string): Promise<void> {
 }
 
 export async function getNote(id: string): Promise<Note | undefined> {
-  return await dbGet<Note>(id);
+  const record = await dbGet<unknown>(id);
+  return isNote(record) ? record : undefined;
+}
+
+/** Fill in any missing text fields so persisted notes stay renderable. */
+function normalizeNote(note: Note): Note {
+  const now = Date.now();
+  return {
+    ...note,
+    title: typeof note.title === "string" ? note.title : "",
+    content: typeof note.content === "string" ? note.content : "",
+    tags: Array.isArray(note.tags) ? note.tags : [],
+    createdAt: typeof note.createdAt === "number" ? note.createdAt : now,
+    updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : now,
+  };
 }
 
 // One-time migration from localStorage to IndexedDB
@@ -46,7 +81,7 @@ export async function migrateFromLocalStorage(): Promise<void> {
     try {
       const notes: Note[] = JSON.parse(raw);
       for (const note of notes) {
-        await dbPut(note);
+        if (isNote(note)) await dbPut(normalizeNote(note));
       }
     } catch {
       // corrupted localStorage data — skip migration
