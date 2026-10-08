@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSetAtom } from "jotai";
 import { allTagsAtom } from "@/store/noteAtom";
-import { getNotes, addNote } from "@/lib/storage";
+import { getNotes, createNote } from "@/lib/storage";
 import { Note } from "@/lib/types";
 import { ModeToggle } from "@/components/Theme-Mode";
 import { Github } from "lucide-react";
@@ -51,16 +51,8 @@ export default function Home() {
   }, [notes]);
 
   const handleNewNote = useCallback(async () => {
-    const id = crypto.randomUUID();
-    const now = Date.now();
-    await addNote({
-      id,
-      title: "Untitled Note",
-      content: "",
-      createdAt: now,
-      updatedAt: now,
-    });
-    router.push(`/note/${id}`);
+    const note = await createNote();
+    router.push(`/note/${note.id}`);
   }, [router]);
 
   return (

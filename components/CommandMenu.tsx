@@ -176,10 +176,9 @@ export const CommandMenu = React.memo(function CommandMenu({
       if (item.kind === "tag" && item.tag) { router.push(`/?tag=${item.tag}`); return; }
       switch (item.id) {
         case "new": {
-          const id = crypto.randomUUID(); const now = Date.now();
-          import("@/lib/storage").then(({ addNote }) => {
-            addNote({ id, title: "Untitled Note", content: "", createdAt: now, updatedAt: now, tags: [] });
-            router.push(`/note/${id}`);
+          import("@/lib/storage").then(async ({ createNote }) => {
+            const note = await createNote();
+            router.push(`/note/${note.id}`);
           });
           break;
         }

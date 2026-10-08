@@ -46,6 +46,28 @@ export async function updateNote(updatedNote: Note): Promise<void> {
   await dbPut(normalizeNote(updatedNote));
 }
 
+/**
+ * Content a brand new note starts with: the bare heading marker, which
+ * NoteContent selects on open so the first Enter drops into the body.
+ * Existing notes never match this exactly, so they are left untouched.
+ */
+export const NEW_NOTE_CONTENT = "# ";
+
+/** Create and persist a new note, returning it so callers can navigate to it. */
+export async function createNote(title = "Untitled Note"): Promise<Note> {
+  const now = Date.now();
+  const note: Note = {
+    id: crypto.randomUUID(),
+    title,
+    content: NEW_NOTE_CONTENT,
+    tags: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  await addNote(note);
+  return note;
+}
+
 export async function deleteNote(id: string): Promise<void> {
   await dbDelete(id);
 }
