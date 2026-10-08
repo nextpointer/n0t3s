@@ -16,7 +16,6 @@ import { shikiPool } from "@/lib/shiki-worker-pool";
 import { normalizeLang } from "@/lib/shiki-langs";
 import { useTheme } from "next-themes";
 import { EditorToolbar, type ToolbarEditor } from "./EditorToolbar";
-import { CustomCaret } from "./CustomCaret";
 
 interface NoteContentProps {
   initialContent: string;
@@ -657,8 +656,6 @@ export const NoteContent = memo(
             fontWeight: "800",
           }}
         />
-        <CustomCaret textarea={textareaEl} />
-
         <div
           className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3 "
           style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
