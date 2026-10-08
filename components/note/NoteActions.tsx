@@ -9,10 +9,12 @@ import {
   unsavedAtom,
   saveLoadingAtom,
   autoSaveAtom,
+  aiEnabledAtom,
   askDialogOpenAtom,
   zenMode,
   search,
   toolbarEnabledAtom,
+  viewModeAtom,
   persistZenMode,
   persistToolbarEnabled,
 } from "@/store/noteAtom";
@@ -46,6 +48,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
   const unsaved = useAtomValue(unsavedAtom);
   const loading = useAtomValue(saveLoadingAtom);
   const autoSave = useAtomValue(autoSaveAtom);
+  const aiEnabled = useAtomValue(aiEnabledAtom);
 
   // setter
   const setAskDialogOpen = useSetAtom(askDialogOpenAtom);
@@ -113,7 +116,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         </button>
       )}
 
-      {!zen && (
+      {!zen && aiEnabled && (
         <button
           type="button"
           onClick={handleOpenAskDialog}

@@ -7,11 +7,13 @@ import {
   checkUnsavedAtom,
   zenMode,
   persistZenMode,
+  aiEnabledAtom,
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
 import toast from "react-hot-toast";
 
 export function UseAIShortcuts() {
+  const aiEnabled = useAtomValue(aiEnabledAtom);
   const content = useAtomValue(contentAtom);
   const loading = useAtomValue(aiLoadingAtom);
   const setContent = useSetAtom(contentAtom);
@@ -56,7 +58,8 @@ export function UseAIShortcuts() {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Zen mode toggle: Ctrl/Cmd+Shift+Z
+      // Zen mode toggle: Ctrl/Cmd+Shift+Z — not an AI action, so this stays
+      // registered even when AI is switched off.
       if (
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
@@ -69,6 +72,8 @@ export function UseAIShortcuts() {
         });
         return;
       }
+
+      if (!aiEnabled) return;
 
       const key = `${e.ctrlKey ? "Control+" : ""}${e.metaKey ? "Meta+" : ""}${
         e.shiftKey ? "Shift+" : ""
@@ -86,5 +91,5 @@ export function UseAIShortcuts() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [loading, setZenMode]);
+  }, [loading, aiEnabled, setZenMode]);
 }

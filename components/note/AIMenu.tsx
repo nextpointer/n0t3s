@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   aiLoadingAtom,
+  aiEnabledAtom,
   contentAtom,
   addToHistoryAtom,
   checkUnsavedAtom,
@@ -61,6 +62,7 @@ const AI_ACTIONS = [
 
 export const AIMenu = memo(function AIMenu() {
   const loading = useAtomValue(aiLoadingAtom);
+  const aiEnabled = useAtomValue(aiEnabledAtom);
   const content = useAtomValue(contentAtom);
   const setContent = useSetAtom(contentAtom);
   const addToHistory = useSetAtom(addToHistoryAtom);
@@ -85,6 +87,8 @@ export const AIMenu = memo(function AIMenu() {
     },
     [content, executeAction, setContent, addToHistory, checkUnsaved],
   );
+
+  if (!aiEnabled) return null;
 
   return (
     <DropdownMenu>

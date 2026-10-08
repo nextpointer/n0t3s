@@ -19,6 +19,15 @@ export const zenMode = atom<boolean>(true);
  * On phones it is pinned above the on-screen keyboard.
  */
 export const toolbarEnabledAtom = atom<boolean>(true);
+/**
+ * Turns every AI entry point off (menu, ask dialog, command palette actions,
+ * keyboard shortcuts) for people who never want to send text anywhere.
+ */
+export const aiEnabledAtom = atom<boolean>(true);
+
+/** Editor view mode. Shared so the toolbar and the bottom bar stay in sync. */
+export type ViewMode = "edit" | "plain" | "preview";
+export const viewModeAtom = atom<ViewMode>("edit");
 
 // Load persisted settings from IndexedDB into atoms on mount.
 // Call once from the root layout's useEffect.
@@ -26,6 +35,7 @@ export async function loadPersistedSettings(
   setAutoSave: (v: boolean) => void,
   setZenMode: (v: boolean) => void,
   setToolbarEnabled: (v: boolean) => void,
+  setAiEnabled: (v: boolean) => void,
 ) {
   try {
     const autoSave = await dbGet<{ id: string; value: boolean }>("autoSave");
@@ -45,6 +55,12 @@ export async function loadPersistedSettings(
   } catch {
     // ignore
   }
+  try {
+    const ai = await dbGet<{ id: string; value: boolean }>("aiEnabled");
+    if (ai) setAiEnabled(ai.value);
+  } catch {
+    // ignore
+  }
 }
 
 // Persist helpers — fire and forget writes to IndexedDB
@@ -58,6 +74,10 @@ export function persistZenMode(value: boolean) {
 
 export function persistToolbarEnabled(value: boolean) {
   dbPut({ id: "toolbarEnabled", value }).catch(() => {});
+}
+
+export function persistAiEnabled(value: boolean) {
+  dbPut({ id: "aiEnabled", value }).catch(() => {});
 }
 
 //for search pallate state

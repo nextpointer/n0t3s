@@ -14,8 +14,9 @@ import { Note } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
+  aiEnabledAtom,
   deleteDialogOpenAtom,
   exportDialogOpenAtom,
   zenMode,
@@ -93,6 +94,7 @@ export const CommandMenu = React.memo(function CommandMenu({
   const lenRef = useRef(0);
   const router = useRouter();
   const { setTheme } = useTheme();
+  const aiEnabled = useAtomValue(aiEnabledAtom);
   const setDeleteOpen = useSetAtom(deleteDialogOpenAtom);
   const setExportOpen = useSetAtom(exportDialogOpenAtom);
   const setZenMode = useSetAtom(zenMode);
@@ -123,7 +125,8 @@ export const CommandMenu = React.memo(function CommandMenu({
   // Build items once
   const allItems = useMemo<Item[]>(() => {
     const commands = COMMANDS.filter(
-      (c) => c.scope !== "note" || Boolean(noteId),
+      (c) => (c.scope !== "note" || Boolean(noteId)) &&
+        (c.kind !== "ai" || aiEnabled),
     );
     const tagSet = new Set<string>();
     notes.forEach((n) => (n.tags || []).forEach((t) => tagSet.add(t)));
@@ -142,7 +145,7 @@ export const CommandMenu = React.memo(function CommandMenu({
         sub: n.content?.slice(0, 50).replace(/[#*`\n]/g, " ").trim(),
       }));
     return [...commands, ...tagItems, ...noteItems];
-  }, [notes, noteId]);
+  }, [notes, noteId, aiEnabled]);
 
   // Filter
   const q = query.toLowerCase();

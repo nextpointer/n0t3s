@@ -16,18 +16,26 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   autoSaveAtom,
+  aiEnabledAtom,
   deleteDialogOpenAtom,
   exportDialogOpenAtom,
   persistAutoSave,
+  persistAiEnabled,
 } from "@/store/noteAtom";
 
 export const SettingsMenu = memo(function SettingsMenu() {
   const [autoSave, setAutoSave] = useAtom(autoSaveAtom);
+  const [aiEnabled, setAiEnabled] = useAtom(aiEnabledAtom);
 
   const handleAutoSaveChange = useCallback((value: boolean) => {
     setAutoSave(value);
     persistAutoSave(value);
   }, [setAutoSave]);
+
+  const handleAiChange = useCallback((value: boolean) => {
+    setAiEnabled(value);
+    persistAiEnabled(value);
+  }, [setAiEnabled]);
 
   const setDeleteDialogOpen = useSetAtom(deleteDialogOpenAtom);
   const setExportDialogOpen = useSetAtom(exportDialogOpenAtom);
@@ -53,7 +61,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
           <Settings className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-36 rounded-xl" align="end">
+      <DropdownMenuContent className="w-40 rounded-xl" align="end">
         <div className="flex items-center justify-between px-2 py-1.5">
           <Label htmlFor="auto-save" className="text-sm">
             Auto Save
@@ -62,6 +70,16 @@ export const SettingsMenu = memo(function SettingsMenu() {
             id="auto-save"
             checked={autoSave}
             onCheckedChange={handleAutoSaveChange}
+          />
+        </div>
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <Label htmlFor="ai-enabled" className="text-sm">
+            No AI
+          </Label>
+          <Switch
+            id="ai-enabled"
+            checked={!aiEnabled}
+            onCheckedChange={(on) => handleAiChange(!on)}
           />
         </div>
         <DropdownMenuSeparator />

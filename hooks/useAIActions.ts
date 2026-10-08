@@ -1,11 +1,12 @@
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
-import { aiLoadingAtom } from "@/store/noteAtom";
+import { aiEnabledAtom, aiLoadingAtom } from "@/store/noteAtom";
 import toast from "react-hot-toast";
 import { AIAction } from "@/lib/types";
 
 export function UseAIActions() {
   const setAiLoading = useSetAtom(aiLoadingAtom);
+  const aiEnabled = useAtomValue(aiEnabledAtom);
 
   // handler for execute the action and get response
   const executeAction = useCallback(
@@ -14,6 +15,10 @@ export function UseAIActions() {
       content: string,
       question?: string,
     ): Promise<string | null> => {
+      if (!aiEnabled) {
+        toast.error("AI is turned off in Settings");
+        return null;
+      }
       setAiLoading(true);
       try {
         // Make API request
