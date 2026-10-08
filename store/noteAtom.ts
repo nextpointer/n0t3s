@@ -25,6 +25,16 @@ export const toolbarEnabledAtom = atom<boolean>(true);
  */
 export const aiEnabledAtom = atom<boolean>(true);
 
+/**
+ * Colour for rendered preview (headings, bold, italic, quotes, links).
+ * When off the preview goes monochrome; syntax-highlighted code keeps its
+ * colours either way, because Shiki sets those inline per token.
+ */
+export const previewColorsAtom = atom<boolean>(true);
+
+/** Editor font size in px, applied to both desktop and mobile. */
+export const editorFontSizeAtom = atom<number>(15);
+
 /** Editor view mode. Shared so the toolbar and the bottom bar stay in sync. */
 export type ViewMode = "edit" | "plain" | "preview";
 export const viewModeAtom = atom<ViewMode>("edit");
@@ -36,6 +46,8 @@ export async function loadPersistedSettings(
   setZenMode: (v: boolean) => void,
   setToolbarEnabled: (v: boolean) => void,
   setAiEnabled: (v: boolean) => void,
+  setPreviewColors: (v: boolean) => void,
+  setEditorFontSize: (v: number) => void,
 ) {
   try {
     const autoSave = await dbGet<{ id: string; value: boolean }>("autoSave");
@@ -61,6 +73,18 @@ export async function loadPersistedSettings(
   } catch {
     // ignore
   }
+  try {
+    const pc = await dbGet<{ id: string; value: boolean }>("previewColors");
+    if (pc) setPreviewColors(pc.value);
+  } catch {
+    // ignore
+  }
+  try {
+    const fs = await dbGet<{ id: string; value: number }>("editorFontSize");
+    if (fs && typeof fs.value === "number") setEditorFontSize(fs.value);
+  } catch {
+    // ignore
+  }
 }
 
 // Persist helpers — fire and forget writes to IndexedDB
@@ -78,6 +102,14 @@ export function persistToolbarEnabled(value: boolean) {
 
 export function persistAiEnabled(value: boolean) {
   dbPut({ id: "aiEnabled", value }).catch(() => {});
+}
+
+export function persistPreviewColors(value: boolean) {
+  dbPut({ id: "previewColors", value }).catch(() => {});
+}
+
+export function persistEditorFontSize(value: number) {
+  dbPut({ id: "editorFontSize", value }).catch(() => {});
 }
 
 //for search pallate state

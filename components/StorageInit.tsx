@@ -7,6 +7,8 @@ import {
   zenMode,
   toolbarEnabledAtom,
   aiEnabledAtom,
+  previewColorsAtom,
+  editorFontSizeAtom,
   loadPersistedSettings,
 } from "@/store/noteAtom";
 import { migrateFromLocalStorage } from "@/lib/storage";
@@ -16,6 +18,8 @@ export function StorageInit() {
   const setZenMode = useSetAtom(zenMode);
   const setToolbarEnabled = useSetAtom(toolbarEnabledAtom);
   const setAiEnabled = useSetAtom(aiEnabledAtom);
+  const setPreviewColors = useSetAtom(previewColorsAtom);
+  const setEditorFontSize = useSetAtom(editorFontSizeAtom);
 
   useEffect(() => {
     migrateFromLocalStorage();
@@ -24,8 +28,17 @@ export function StorageInit() {
       setZenMode,
       setToolbarEnabled,
       setAiEnabled,
+      setPreviewColors,
+      setEditorFontSize,
     );
-  }, [setAutoSave, setZenMode, setToolbarEnabled, setAiEnabled]);
+  }, [
+    setAutoSave,
+    setZenMode,
+    setToolbarEnabled,
+    setAiEnabled,
+    setPreviewColors,
+    setEditorFontSize,
+  ]);
 
   return null;
 }

@@ -7,6 +7,8 @@ import {
   syncEditorToContentAtom,
   contentAtom,
   toolbarEnabledAtom,
+  previewColorsAtom,
+  editorFontSizeAtom,
   viewModeAtom,
   type ViewMode,
 } from "@/store/noteAtom";
@@ -152,7 +154,7 @@ function toggleTaskAtCaret(textarea: HTMLTextAreaElement): boolean {
  * read-only rendering rather than black-on-black. Headings, strong, em, links,
  * code and quotes each keep their own editor colour.
  */
-function readEditorColors(): {
+function readEditorColors(withPreviewColor: boolean): {
   colors: Record<string, string>;
   previewColors: Record<string, string>;
 } {
@@ -173,6 +175,11 @@ function readEditorColors(): {
   const syntax = read("--editor-syntax");
   const cursor = read("--editor-cursor");
   const selection = read("--editor-selection");
+
+  // Preview colour off: every accent collapses onto the body colour, so the
+  // rendered note reads monochrome. Shiki sets its own inline colours per
+  // token, so code blocks stay highlighted either way.
+  const px = (value: string) => (withPreviewColor ? value : text);
 
   return {
     colors: {
@@ -196,17 +203,37 @@ function readEditorColors(): {
     previewColors: {
       bg: "transparent",
       text,
-      h1,
-      h2,
-      h3,
-      strong,
-      em,
-      link,
-      code,
+      h1: px(h1),
+      h2: px(h2),
+      h3: px(h3),
+      strong: px(strong),
+      em: px(em),
+      link: px(link),
+      code: px(code),
       codeBg,
-      blockquote,
+      blockquote: px(blockquote),
       hr,
     },
+  };
+}
+
+/**
+ * Word/character/line counts.
+ *
+ * Deliberately NOT derived during render. Splitting a whole document into
+ * words on every keystroke is O(n) and became the single biggest cost the app
+ * added on top of OverType's own re-parse — ~10ms per key on a large note.
+ * It is computed inside the debounced sync instead, which already runs once
+ * typing pauses.
+ */
+function computeStats(text: string) {
+  const trimmed = text.trim();
+  const words = trimmed ? trimmed.split(/\s+/).length : 0;
+  return {
+    words,
+    chars: text.length,
+    lines: text.split("\n").length,
+    readingTime: `${Math.max(1, Math.ceil(words / 200))} min`,
   };
 }
 
@@ -214,6 +241,15 @@ export const NoteContent = memo(
   function NoteContent({ initialContent }: NoteContentProps) {
     const { resolvedTheme } = useTheme();
     const toolbarEnabled = useAtomValue(toolbarEnabledAtom);
+    const previewColorsOn = useAtomValue(previewColorsAtom);
+    const fontSize = useAtomValue(editorFontSizeAtom);
+
+    // Read by the init effect without becoming one of its dependencies, so
+    // toggling a setting never rebuilds the editor.
+    const previewColorsRef = useRef(previewColorsOn);
+    previewColorsRef.current = previewColorsOn;
+    const fontSizeRef = useRef(fontSize);
+    fontSizeRef.current = fontSize;
 
     // Records in IndexedDB are not runtime-validated, so a malformed/legacy
     // note can hand us undefined here and crash every derived value below.
@@ -248,14 +284,9 @@ export const NoteContent = memo(
     const viewModeRef = useRef(viewMode);
     viewModeRef.current = viewMode;
 
-    const [trackedContent, setTrackedContent] = useState(startContent);
-    const stats = (() => {
-      const words = trackedContent.trim() ? trackedContent.trim().split(/\s+/).length : 0;
-      const chars = trackedContent.length;
-      const lines = trackedContent.split("\n").length;
-      const minutes = Math.max(1, Math.ceil(words / 200));
-      return { words, chars, lines, readingTime: `${minutes} min` };
-    })();
+    const [stats, setStats] = useState(() => computeStats(startContent));
+    // True while the software keyboard covers part of the layout viewport.
+    const [keyboardOpen, setKeyboardOpen] = useState(false);
 
     const syncToContent = useSetAtom(syncEditorToContentAtom);
     const externalContent = useAtomValue(contentAtom);
@@ -265,6 +296,7 @@ export const NoteContent = memo(
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         syncTimeoutRef.current = setTimeout(() => {
           syncToContent(content);
+          setStats(computeStats(content));
           isTypingRef.current = false;
         }, 500);
       },
@@ -276,7 +308,6 @@ export const NoteContent = memo(
         if (isExternalUpdateRef.current) return;
         isTypingRef.current = true;
         contentRef.current = newValue;
-        setTrackedContent(newValue);
         debouncedSync(newValue);
       },
       [debouncedSync],
@@ -319,6 +350,32 @@ export const NoteContent = memo(
     const toggleReadMode = useCallback(() => {
       applyViewMode(viewModeRef.current === "preview" ? "edit" : "preview");
     }, [applyViewMode]);
+
+    // Preview colours live in the editor theme, so re-apply it when the
+    // setting changes. setTheme() is the documented path that emits both
+    // `colors` and `previewColors`.
+    useEffect(() => {
+      const instance = editorRef.current;
+      if (!instance) return;
+      const { colors, previewColors } = readEditorColors(previewColorsOn);
+      instance.setTheme({ name: "minimal-hierarchy", colors, previewColors });
+    }, [previewColorsOn]);
+
+    // Font size is applied through reinit so OverType regenerates the
+    // <=640px media rule as well as the desktop metrics. Debounced, because
+    // dragging a slider would otherwise rebuild on every frame.
+    useEffect(() => {
+      const instance = editorRef.current;
+      if (!instance) return;
+      const size = fontSize;
+      const id = setTimeout(() => {
+        instance.reinit({
+          fontSize: `${size}px`,
+          mobile: { fontSize: `${Math.max(12, size - 3)}px`, lineHeight: 1.3 },
+        });
+      }, 250);
+      return () => clearTimeout(id);
+    }, [fontSize]);
 
     // Drive the editor whenever the shared mode changes (toolbar dropdown,
     // Ctrl+/, the bottom-bar button). The init effect handles the first value,
@@ -458,7 +515,7 @@ export const NoteContent = memo(
       const raf = requestAnimationFrame(() => {
         if (!containerRef.current) return;
 
-        const { colors, previewColors } = readEditorColors();
+        const { colors, previewColors } = readEditorColors(previewColorsRef.current);
         const [editorInstance] = OverType.init(containerRef.current, {
           value: currentContent,
           onChange: (v: string) => handleChangeRef.current(v),
@@ -468,9 +525,9 @@ export const NoteContent = memo(
           // sit above the mobile keyboard, so the app renders its own.
           toolbar: false,
           autofocus: false,
-          fontSize: "15px",
+          fontSize: `${fontSizeRef.current}px`,
           lineHeight: 1.7,
-          mobile: { fontSize: "12px", lineHeight: 1.3 },
+          mobile: { fontSize: `${Math.max(12, fontSizeRef.current - 3)}px`, lineHeight: 1.3 },
           theme: { name: "minimal-hierarchy", colors, previewColors },
           smartLists: true,
           textareaProps: { spellCheck: false },
@@ -582,7 +639,7 @@ export const NoteContent = memo(
         isExternalUpdateRef.current = true;
         editorRef.current.setValue(externalContent);
         contentRef.current = externalContent;
-        setTrackedContent(externalContent);
+        setStats(computeStats(externalContent));
         requestAnimationFrame(() => { isExternalUpdateRef.current = false; });
       }
     }, [externalContent]);
