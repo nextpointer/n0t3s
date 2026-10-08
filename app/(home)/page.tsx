@@ -71,7 +71,13 @@ export default function Home() {
         <div className="flex flex-row justify-end items-center gap-2 md:fixed md:top-0 left-0 w-full  md:w-3xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed sm:p-4">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
           <ModeToggle />
-          <Button variant={"outline"} className="p-3">
+          <Button
+            variant={"outline"}
+            className="p-3"
+            asChild
+            aria-label="Project on GitHub"
+            title="Project on GitHub"
+          >
             <Link
               href="https://github.com/nextpointer/n0t3s?tab=readme-ov-file#-n0t3s"
               target="_blank"
@@ -81,7 +87,11 @@ export default function Home() {
               <Github />
             </Link>
           </Button>
-          <Button onClick={handleNewNote}>
+          <Button
+            onClick={handleNewNote}
+            aria-label="New note"
+            title="New note"
+          >
             <NewNote className="sm:mr-1 " />{" "}
             <span className="hidden sm:block">New Note</span>
           </Button>

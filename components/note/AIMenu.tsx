@@ -94,6 +94,8 @@ export const AIMenu = memo(function AIMenu() {
           size="sm"
           className="gap-1 pr-2"
           disabled={loading}
+          aria-label="AI actions"
+          title="AI actions"
         >
           {loading ? (
             <Loader className="w-4 h-4" />

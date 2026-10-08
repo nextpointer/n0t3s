@@ -23,14 +23,26 @@ export const ModeToggle = React.memo(function ModeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon" disabled>
+      <Button
+        variant="outline"
+        size="icon"
+        disabled
+        aria-label="Toggle theme"
+        title="Toggle theme"
+      >
         <span className="h-[1.2rem] w-[1.2rem]" />
       </Button>
     );
   }
 
   return (
-    <Button variant="outline" size="icon" onClick={toggleTheme}>
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={toggleTheme}
+      aria-label="Toggle theme"
+      title="Toggle theme"
+    >
       <Sun
         className={`h-[1.2rem] w-[1.2rem] transition-all ${
           resolvedTheme === "dark" ? "hidden" : "block"

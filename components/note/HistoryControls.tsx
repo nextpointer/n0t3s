@@ -43,6 +43,7 @@ export const HistoryControls = memo(function HistoryControls() {
         onClick={handleUndo}
         disabled={!canUndo}
         aria-label="Undo"
+        title="Undo"
       >
         <Undo2 className="w-4 h-4" />
       </Button>
@@ -52,6 +53,7 @@ export const HistoryControls = memo(function HistoryControls() {
         onClick={handleRedo}
         disabled={!canRedo}
         aria-label="Redo"
+        title="Redo"
       >
         <Redo2 className="w-4 h-4" />
       </Button>

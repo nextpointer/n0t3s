@@ -37,7 +37,13 @@ export const NoteHeader = memo(function NoteHeader() {
   return (
     <div className="fixed top-0 left-0 w-screen xl:w-5xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed flex justify-between items-center gap-2 p-2">
       <div className="flex items-center gap-2  ">
-        <Button variant="ghost" size="icon" onClick={handleNavigateBack}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleNavigateBack}
+          aria-label="Back to notes"
+          title="Back to notes"
+        >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         {/*{unsaved && (
@@ -49,6 +55,8 @@ export const NoteHeader = memo(function NoteHeader() {
         <Button
           variant="ghost"
           onClick={() => router.push("/help")}
+          aria-label="Help and shortcuts"
+          title="Help & shortcuts (?)"
           className="w-auto shadow-none "
         >
           <HelpCircle />

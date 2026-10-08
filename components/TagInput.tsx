@@ -181,6 +181,7 @@ export function TagInput({ value, onChange, suggestions }: Props) {
                 removeTag(index);
               }}
               aria-label={`Remove tag ${tag}`}
+              title={`Remove tag ${tag}`}
               className="ml-1 transition-opacity cursor-pointer rounded-full bg-foreground text-background p-1"
             >
               <X className="w-3 h-3" />
