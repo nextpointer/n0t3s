@@ -229,19 +229,7 @@ export const NoteContent = memo(
       const chars = trackedContent.length;
       const lines = trackedContent.split("\n").length;
       const minutes = Math.max(1, Math.ceil(words / 200));
-      const tasks = scanTaskRefs(trackedContent);
-      const done = tasks.reduce(
-        (total, task) => total + (task.marker.toLowerCase() === "x" ? 1 : 0),
-        0,
-      );
-      return {
-        words,
-        chars,
-        lines,
-        readingTime: `${minutes} min`,
-        tasksDone: done,
-        tasksTotal: tasks.length,
-      };
+      return { words, chars, lines, readingTime: `${minutes} min` };
     })();
 
     const syncToContent = useSetAtom(syncEditorToContentAtom);
@@ -571,16 +559,6 @@ export const NoteContent = memo(
             <div className="flex flex-row items-center" style={{ borderColor: "var(--editor-text)" }}>
               <span>{stats.chars} characters</span>
             </div>
-            {stats.tasksTotal > 0 && (
-              <div
-                className="flex flex-row items-center"
-                style={{ borderColor: "var(--editor-text)" }}
-              >
-                <span>
-                  {stats.tasksDone}/{stats.tasksTotal} tasks
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </div>
