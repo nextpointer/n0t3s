@@ -20,7 +20,7 @@ Start typing in any note. Markdown formats as you go — \`**bold**\`, \`*italic
 
 ## Toolbar
 
-The formatting toolbar sits at the top of the editor, centred, and stays visible while you type. On a phone it moves to the bottom of the screen and rides just above the on-screen keyboard.
+The formatting toolbar sits at the top of the editor, centred, and stays visible while you type. On a phone it moves to the bottom of the screen and appears only while the on-screen keyboard is up, so it never sits on top of what you are reading.
 
 Use it for **Bold**, *Italic*, \`code\`, **H1**/**H2**/**H3**, bullet/numbered/task lists, quotes and links. A button lights up when the caret is inside that kind of text, so you can see what you're about to change.
 
@@ -51,9 +51,27 @@ The eye button on the right of the toolbar switches between three modes:
 
 ### Task lists
 
-Write \`- [ ] todo\` and it becomes a checkbox. In preview mode, click a checkbox to tick it off — the markdown updates, the note saves, and the count at the bottom left (\`1/3 tasks\`) keeps track.
+Write \`- [ ] todo\` and it becomes a checkbox. With the caret on that line, \`Ctrl+Enter\` ticks or unticks it. In read mode you can just click the checkbox. Either way the markdown updates and the note saves.
 
 Ticking an item also dims and strikes through the text so you can see what is already done.
+
+---
+
+### Colour and size
+
+Settings ⚙️ has two switches that change how things look:
+
+**Preview colours** — on, rendered preview keeps the coloured headings, bold and italic. Off, the whole note reads monochrome. Code blocks stay syntax-highlighted either way.
+
+**Font size** — a slider from 12px to 22px. It applies to the editor straight away, and phones get a slightly smaller size automatically so lines still fit.
+
+---
+
+## Reading
+
+\`Ctrl+/\` toggles read mode, and the eye button in the bottom bar does the same. In read mode the formatting toolbar steps out of the way, syntax markers disappear, and the note is just the rendered document.
+
+Task checkboxes stay clickable in read mode: tick one and the markdown, the word count and the note itself all update.
 
 ---
 
@@ -95,6 +113,8 @@ Select any text first, then use a shortcut.
 Open Settings ⚙️ inside any note → **Export Note** → saves as \`.md\`.
 
 Auto Save lives in that same menu. Turn it off if you would rather press Save yourself.
+
+**No AI** is in there too. Switching it on hides every AI button and shortcut, so nothing can ever send your notes anywhere.
 
 ---
 
