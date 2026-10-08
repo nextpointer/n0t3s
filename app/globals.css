@@ -457,3 +457,22 @@
     }
 
 }
+
+/* Hide both overlay scrollbars.
+   OverType hard-codes `scrollbar-width: auto !important` from an *unlayered*
+   stylesheet, which outranks anything inside @layer base, so this rule has to
+   live outside the layer too and carry one more class than OverType's.
+   Both layers scroll the same content, so hiding both keeps their client
+   widths identical — which is what the overlay depends on — while wheel and
+   keyboard scrolling still work. */
+.note-editor-container .overtype-wrapper .overtype-input,
+.note-editor-container .overtype-wrapper .overtype-preview {
+    scrollbar-width: none !important;
+}
+
+.note-editor-container .overtype-wrapper .overtype-input::-webkit-scrollbar,
+.note-editor-container .overtype-wrapper .overtype-preview::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
