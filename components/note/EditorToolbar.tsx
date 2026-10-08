@@ -213,7 +213,7 @@ export const EditorToolbar = memo(function EditorToolbar({
                 <DropdownMenuRadioItem
                   key={mode}
                   value={mode}
-                  className="flex items-center justify-between gap-2 rounded-xs text-sm"
+                  className="flex items-center justify-between gap-2 text-sm"
                 >
                   <span className="flex items-center gap-2">
                     <Icon className="size-4" />
