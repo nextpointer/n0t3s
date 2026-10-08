@@ -4,6 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+    /* Tell the UA to render native widgets (checkbox, radio, scrollbar) for
+       the active theme — otherwise unchecked checkboxes stay light grey. */
+    color-scheme: light;
     --background: oklch(1 0 0);
     --foreground: oklch(0.141 0.005 285.823);
     --card: oklch(1 0 0);
@@ -77,9 +80,16 @@
     --editor-syntax: rgba(0, 0, 0, 0.25);
     --editor-cursor: #000000;
     --editor-selection: rgba(124, 58, 237, 0.15);
+
+    /* Interactive accent for editor chrome.
+       OverType redefines --primary/--border/--accent on .overtype-container,
+       so those tokens are shadowed inside the editor. Alias them here, on the
+       root, to a name the library never overrides. */
+    --note-accent: var(--primary);
 }
 
 .dark {
+    color-scheme: dark;
     --background: oklch(0.141 0.005 285.823);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.21 0.006 285.885);
@@ -152,6 +162,8 @@
     --editor-syntax: rgba(255, 255, 255, 0.35);
     --editor-cursor: #ffffff;
     --editor-selection: rgba(192, 132, 252, 0.2);
+
+    --note-accent: var(--primary);
 }
 
 @theme inline {
@@ -287,6 +299,83 @@
     .note-editor-container .overtype-input::placeholder {
         color: var(--editor-text) !important;
         opacity: 0.2;
+    }
+
+    /* Preview mode renders task checkboxes as real inputs. Keep them on the
+       app's interactive token (not an editor-syntax colour, which read as a
+       yellow/amber box) and make a completed task visibly completed. */
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-preview li.task-list input[type="checkbox"] {
+        cursor: pointer !important;
+        accent-color: var(--note-accent);
+        width: 14px;
+        height: 14px;
+    }
+
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-preview li.task-list:has(input:checked) {
+        opacity: 0.55;
+        /* OverType's stylesheet resets text-decoration with !important. */
+        text-decoration: line-through !important;
+        text-decoration-color: var(--editor-syntax) !important;
+    }
+
+    /* Custom formatting toolbar: fully transparent, centred on desktop and
+       pinned above the mobile keyboard. `safe` keeps the row start-aligned and
+       scrollable when it overflows, so the leading buttons stay reachable.
+       --ot-bottom-inset is kept in sync with visualViewport by NoteContent
+       (keyboard height when open, otherwise clear of the fixed action bar).
+       Note: OverType injects an *unlayered* stylesheet, which outranks this
+       `@layer base` block at equal specificity — the selectors below are
+       deliberately more specific than the rules they override. */
+    .note-toolbar {
+        justify-content: safe center;
+        flex-wrap: nowrap;
+        background: transparent;
+        border: none;
+    }
+
+    /* Preview mode typography. OverType forces a Georgia serif at 16px/1.8,
+       which fights the app's monospace identity and reads worse. Reuse the
+       editor's own instance metrics instead. */
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview {
+        font-family: inherit !important;
+        font-size: var(--instance-font-size, 15px) !important;
+        line-height: var(--instance-line-height, 1.7) !important;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* Preview headings: OverType sets line-height: 1, which clips descenders. */
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview h1,
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview h2,
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview h3 {
+        line-height: 1.3 !important;
+        margin-top: 0.6em !important;
+    }
+
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview h1:first-child,
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview h2:first-child,
+    .note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview h3:first-child {
+        margin-top: 0 !important;
+    }
+
+    @media (max-width: 640px) {
+        .note-toolbar {
+            position: fixed;
+            top: auto;
+            left: 0;
+            right: 0;
+            bottom: var(--ot-bottom-inset, 72px);
+            width: auto;
+            z-index: 40;
+            background: transparent;
+            border: none;
+            backdrop-filter: none;
+        }
+
+        /* Reserve room for the on-screen keyboard so the caret and the last
+           line can still be scrolled into the visible viewport. */
+        .note-editor-container {
+            padding-bottom: var(--ot-keyboard, 0px);
+        }
     }
 
 }

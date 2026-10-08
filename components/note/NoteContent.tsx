@@ -3,9 +3,18 @@
 import { useEffect, useRef, memo, useCallback, useState } from "react";
 import { useSetAtom, useAtomValue } from "jotai";
 import { OverType } from "overtype";
-import { syncEditorToContentAtom, contentAtom } from "@/store/noteAtom";
+import {
+  syncEditorToContentAtom,
+  contentAtom,
+  toolbarEnabledAtom,
+} from "@/store/noteAtom";
 import { shikiPool } from "@/lib/shiki-worker-pool";
 import { useTheme } from "next-themes";
+import {
+  EditorToolbar,
+  type ToolbarEditor,
+  type ViewMode,
+} from "./EditorToolbar";
 
 interface NoteContentProps {
   initialContent: string;
@@ -15,34 +24,184 @@ interface NoteContentProps {
 const highlightCache = new Map<string, string>();
 const pendingHighlights = new Set<string>();
 
-// Read CSS variables into a plain object — avoids stale getComputedStyle
-function readEditorColors(): Record<string, string> {
+interface TaskRef {
+  /** Offset of the "[" of the checkbox marker */
+  markerStart: number;
+  /** Current marker character: " " (unchecked) or "x"/"X" (checked) */
+  marker: string;
+}
+
+/**
+ * Locate every GFM task list item in a markdown source.
+ *
+ * Mirrors OverType's parser so that the Nth entry always corresponds to the Nth
+ * `input[type="checkbox"]` rendered in the preview layer, which is what lets a
+ * preview-mode click be mapped back onto its source line. Fenced code blocks
+ * are skipped because the parser does not render them as task lists — note that
+ * OverType only recognises backtick fences, not tildes.
+ */
+function scanTaskRefs(text: string): TaskRef[] {
+  const refs: TaskRef[] = [];
+  let offset = 0;
+  let openFenceLength: number | null = null;
+
+  for (const line of text.split("\n")) {
+    if (openFenceLength !== null) {
+      const close = /^( {0,3})(`{3,})[\t ]*$/.exec(line);
+      if (close && close[2].length >= openFenceLength) openFenceLength = null;
+      offset += line.length + 1;
+      continue;
+    }
+
+    const open = /^( {0,3})(`{3,})([^`]*)$/.exec(line);
+    if (open) {
+      openFenceLength = open[2].length;
+      offset += line.length + 1;
+      continue;
+    }
+
+    // Requires at least one space after the marker, matching the parser.
+    const task = /^([ ]*)-([ \t]+)\[([ xX])\]([ \t]*)(.*)$/.exec(line);
+    if (task && (task[4] !== "" || task[5] === "")) {
+      refs.push({
+        markerStart: offset + task[1].length + 1 + task[2].length + 1,
+        marker: task[3],
+      });
+    }
+
+    offset += line.length + 1;
+  }
+
+  return refs;
+}
+
+/**
+ * Flip the Nth task in the textarea source and notify OverType.
+ *
+ * The textarea is `display: none` in preview mode, so `execCommand` is not
+ * available — the value is rewritten directly and an `input` event is emitted,
+ * which routes through OverType's global input listener to `updatePreview()`
+ * and `onChange`.
+ */
+function toggleTaskByIndex(textarea: HTMLTextAreaElement, index: number) {
+  const ref = scanTaskRefs(textarea.value)[index];
+  if (!ref) return;
+
+  const next =
+    textarea.value.slice(0, ref.markerStart) +
+    (ref.marker.toLowerCase() === "x" ? " " : "x") +
+    textarea.value.slice(ref.markerStart + 1);
+
+  textarea.value = next;
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/**
+ * Tag every rendered preview checkbox with its source-line index.
+ *
+ * OverType replaces `preview.innerHTML` on each render, so a click can be
+ * followed by a re-render (async syntax highlighting, or the browser's own
+ * default handling) before `change` fires — leaving `event.target` detached.
+ * `indexOf` against a live NodeList would then fail and the toggle would
+ * silently do nothing. A `data-` attribute survives detachment, so reading it
+ * off the event target stays correct either way.
+ */
+function stampTaskIndices(preview: HTMLElement) {
+  const boxes = preview.querySelectorAll<HTMLInputElement>(
+    'li.task-list input[type="checkbox"]',
+  );
+  boxes.forEach((box, index) => {
+    box.dataset.taskIndex = String(index);
+  });
+}
+
+/**
+ * Read CSS variables into a plain object — avoids stale getComputedStyle.
+ *
+ * `colors` drives edit mode. Preview mode reads a completely separate set of
+ * `--preview-*` variables and, when `previewColors` is omitted, silently falls
+ * back to OverType's baked-in defaults (a navy serif palette that clashes with
+ * the app). Feeding it the same tokens keeps preview on-brand and legible.
+ *
+ * `strong`/`em` intentionally reuse the body text colour: OverType applies the
+ * accent to the whole element in preview mode, and pastel pink/cyan body copy
+ * is far harder to read than the weight/italic already conveying the emphasis.
+ * Headings, links, code and quotes keep their accents, where the colour aids
+ * scanning rather than competing with it.
+ */
+function readEditorColors(): {
+  colors: Record<string, string>;
+  previewColors: Record<string, string>;
+} {
   const s = getComputedStyle(document.documentElement);
+  const read = (name: string) => s.getPropertyValue(name).trim();
+
+  const text = read("--editor-text");
+  const h1 = read("--editor-h1");
+  const h2 = read("--editor-h2");
+  const h3 = read("--editor-h3");
+  const link = read("--editor-link");
+  const code = read("--editor-code");
+  const codeBg = read("--editor-code-bg");
+  const blockquote = read("--editor-blockquote");
+  const hr = read("--editor-hr");
+  const strong = read("--editor-strong");
+  const em = read("--editor-em");
+  const syntax = read("--editor-syntax");
+  const cursor = read("--editor-cursor");
+  const selection = read("--editor-selection");
+
   return {
-    bgPrimary: "transparent",
-    bgSecondary: "transparent",
-    text: s.getPropertyValue("--editor-text").trim(),
-    h1: s.getPropertyValue("--editor-h1").trim(),
-    h2: s.getPropertyValue("--editor-h2").trim(),
-    h3: s.getPropertyValue("--editor-h3").trim(),
-    strong: s.getPropertyValue("--editor-strong").trim(),
-    em: s.getPropertyValue("--editor-em").trim(),
-    link: s.getPropertyValue("--editor-link").trim(),
-    code: s.getPropertyValue("--editor-code").trim(),
-    codeBg: s.getPropertyValue("--editor-code-bg").trim(),
-    blockquote: s.getPropertyValue("--editor-blockquote").trim(),
-    hr: s.getPropertyValue("--editor-hr").trim(),
-    syntaxMarker: s.getPropertyValue("--editor-syntax").trim(),
-    cursor: s.getPropertyValue("--editor-cursor").trim(),
-    selection: s.getPropertyValue("--editor-selection").trim(),
+    colors: {
+      bgPrimary: "transparent",
+      bgSecondary: "transparent",
+      text,
+      h1,
+      h2,
+      h3,
+      strong,
+      em,
+      link,
+      code,
+      codeBg,
+      blockquote,
+      hr,
+      syntaxMarker: syntax,
+      cursor,
+      selection,
+    },
+    previewColors: {
+      bg: "transparent",
+      text,
+      h1,
+      h2,
+      h3,
+      strong: text,
+      em: text,
+      link,
+      code,
+      codeBg,
+      blockquote,
+      hr,
+    },
   };
 }
 
 export const NoteContent = memo(
   function NoteContent({ initialContent }: NoteContentProps) {
     const { resolvedTheme } = useTheme();
+    const toolbarEnabled = useAtomValue(toolbarEnabledAtom);
+
+    // Records in IndexedDB are not runtime-validated, so a malformed/legacy
+    // note can hand us undefined here and crash every derived value below.
+    const startContent =
+      typeof initialContent === "string" ? initialContent : "";
 
     const containerRef = useRef<HTMLDivElement | null>(null);
+    // Root wrapper — owns --ot-bottom-inset, which the toolbar reads. The
+    // toolbar is a sibling of the OverType host, so the var cannot live on
+    // containerRef or it would not inherit into the toolbar.
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const editorRef = useRef<any>(null);
     const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -51,15 +210,37 @@ export const NoteContent = memo(
     const isExternalUpdateRef = useRef(false);
     const isTypingRef = useRef(false);
     // Survives effect cleanup — tracks latest editor content
-    const contentRef = useRef(initialContent);
+    const contentRef = useRef(startContent);
 
-    const [trackedContent, setTrackedContent] = useState(initialContent);
+    // Lives in state (not just the ref) so the custom toolbar re-renders when
+    // the editor is created/destroyed — a ref change would not notify React.
+    const [editor, setEditor] = useState<ToolbarEditor | null>(null);
+    const [viewMode, setViewMode] = useState<ViewMode>("edit");
+    // Lets the init effect restore the current mode after a theme rebuild
+    // without listing viewMode as a dependency (which would re-create the
+    // editor on every mode switch).
+    const viewModeRef = useRef(viewMode);
+    viewModeRef.current = viewMode;
+
+    const [trackedContent, setTrackedContent] = useState(startContent);
     const stats = (() => {
       const words = trackedContent.trim() ? trackedContent.trim().split(/\s+/).length : 0;
       const chars = trackedContent.length;
       const lines = trackedContent.split("\n").length;
       const minutes = Math.max(1, Math.ceil(words / 200));
-      return { words, chars, lines, readingTime: `${minutes} min` };
+      const tasks = scanTaskRefs(trackedContent);
+      const done = tasks.reduce(
+        (total, task) => total + (task.marker.toLowerCase() === "x" ? 1 : 0),
+        0,
+      );
+      return {
+        words,
+        chars,
+        lines,
+        readingTime: `${minutes} min`,
+        tasksDone: done,
+        tasksTotal: tasks.length,
+      };
     })();
 
     const syncToContent = useSetAtom(syncEditorToContentAtom);
@@ -91,10 +272,87 @@ export const NoteContent = memo(
     const handleChangeRef = useRef(handleChange);
     handleChangeRef.current = handleChange;
 
-    // Viewport scroll handler
+    /**
+     * OverType skips its own click-to-toggle handler in preview mode
+     * (`container.dataset.mode === "preview"`), so the rendered checkbox only
+     * flips its own DOM state and the markdown is never updated. Rewrite the
+     * source line here so the toggle counts: it re-renders, syncs, saves and
+     * lands in undo history.
+     */
+    const handlePreviewTaskChange = useCallback((event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.type !== "checkbox") {
+        return;
+      }
+      const current = editorRef.current;
+      const textarea = current?.textarea as HTMLTextAreaElement | undefined;
+      if (!textarea) return;
+
+      const index = Number(target.dataset.taskIndex);
+      if (!Number.isInteger(index)) return;
+
+      toggleTaskByIndex(textarea, index);
+    }, []);
+
+    /** Single owner of view-mode state: switches the editor and the React state. */
+    const applyViewMode = useCallback((mode: ViewMode) => {
+      const instance = editorRef.current;
+      if (!instance) return;
+      if (mode === "edit") instance.showNormalEditMode();
+      else if (mode === "plain") instance.showPlainTextarea();
+      else instance.showPreviewMode();
+      setViewMode(mode);
+    }, []);
+
+    const toggleReadMode = useCallback(() => {
+      applyViewMode(viewModeRef.current === "preview" ? "edit" : "preview");
+    }, [applyViewMode]);
+
+    /**
+     * Read mode = rendered preview, no markdown syntax.
+     *
+     * Bound to Ctrl+/ (Cmd+/ on macOS). Every other shortcut in this app uses
+     * Ctrl+Shift+<letter>, but those collide with browser commands (new window,
+     * devtools, private window, quit, …), so this one deliberately avoids the
+     * Shift modifier — Ctrl+/ is unbound in Chrome, Firefox and Safari.
+     */
+    useEffect(() => {
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key !== "/" || !(e.ctrlKey || e.metaKey) || e.altKey) return;
+        e.preventDefault();
+        toggleReadMode();
+      };
+      // Also reachable from the command palette ("Toggle read mode").
+      const onReadModeEvent = () => toggleReadMode();
+
+      window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("note:readmode", onReadModeEvent);
+      return () => {
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("note:readmode", onReadModeEvent);
+      };
+    }, [toggleReadMode]);
+
+    // Viewport scroll handler + toolbar keyboard offset
     useEffect(() => {
       const vv = window.visualViewport;
       if (!vv) return;
+
+      const syncToolbarOffset = () => {
+        const host = wrapperRef.current ?? containerRef.current;
+        if (!host) return;
+        // How much of the layout viewport the keyboard/URL bar is covering.
+        const keyboard = Math.max(
+          0,
+          Math.round(window.innerHeight - vv.height - vv.offsetTop),
+        );
+        // With no keyboard up, keep clear of the fixed action bar instead.
+        const reserved = keyboard > 24 ? 0 : 72;
+        host.style.setProperty("--ot-bottom-inset", `${keyboard + reserved}px`);
+        // Editor padding so the last line can scroll above the keyboard.
+        host.style.setProperty("--ot-keyboard", `${keyboard}px`);
+      };
+
       const handler = () => {
         const focused = document.activeElement as HTMLElement;
         if (!focused || !containerRef.current) return;
@@ -103,11 +361,15 @@ export const NoteContent = memo(
           window.scrollBy({ top: rect.bottom - vv.height + 24, behavior: "smooth" });
         }
       };
+
+      syncToolbarOffset();
       vv.addEventListener("resize", handler);
       vv.addEventListener("scroll", handler);
+      window.addEventListener("resize", syncToolbarOffset);
       return () => {
         vv.removeEventListener("resize", handler);
         vv.removeEventListener("scroll", handler);
+        window.removeEventListener("resize", syncToolbarOffset);
       };
     }, []);
 
@@ -134,21 +396,48 @@ export const NoteContent = memo(
       const raf = requestAnimationFrame(() => {
         if (!containerRef.current) return;
 
-        const colors = readEditorColors();
+        const { colors, previewColors } = readEditorColors();
         const [editorInstance] = OverType.init(containerRef.current, {
           value: currentContent,
           onChange: (v: string) => handleChangeRef.current(v),
           placeholder: "Start writing...",
+          clickToToggleTasks: true,
+          // OverType's own toolbar is unthemed (hard-coded CSS vars) and cannot
+          // sit above the mobile keyboard, so the app renders its own.
+          toolbar: false,
           autofocus: false,
           fontSize: "15px",
           lineHeight: 1.7,
           mobile: { fontSize: "12px", lineHeight: 1.3 },
-          theme: { name: "minimal-hierarchy", colors },
+          theme: { name: "minimal-hierarchy", colors, previewColors },
           smartLists: true,
           textareaProps: { spellCheck: false },
+          onRender: (previewEl: HTMLElement, mode: string) => {
+            if (mode === "preview") stampTaskIndices(previewEl);
+          },
         });
 
         editorRef.current = editorInstance;
+        setEditor(editorInstance as ToolbarEditor);
+
+        // OverType drops per-instance `previewColors` on first build: the
+        // injected stylesheet bakes `--preview-*-default` from the *global*
+        // solar theme, and the inline vars written during init include only
+        // `colors`. Re-applying the theme is the documented path that emits
+        // both, which is what keeps preview text on-theme instead of navy.
+        editorInstance.setTheme({ name: "minimal-hierarchy", colors, previewColors });
+
+        // The editor is rebuilt on theme change, which resets it to edit mode.
+        // Restore whatever the user was actually looking at.
+        const remembered = viewModeRef.current;
+        if (remembered === "preview") editorInstance.showPreviewMode();
+        else if (remembered === "plain") editorInstance.showPlainTextarea();
+
+        // Make preview-mode checkboxes write back to the markdown source.
+        // Delegated on the preview root because its innerHTML is replaced on
+        // every re-render.
+        const previewEl = editorInstance.preview as HTMLElement | undefined;
+        previewEl?.addEventListener("change", handlePreviewTaskChange);
 
         // Attach Shiki highlighter immediately after editor creation
         const currentShikiTheme = resolvedTheme === "dark" ? "github-dark" : "github-light";
@@ -186,6 +475,7 @@ export const NoteContent = memo(
       return () => {
         cancelAnimationFrame(raf);
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+        setEditor(null);
         if (editorRef.current) {
           editorRef.current.destroy();
           editorRef.current = null;
@@ -208,10 +498,20 @@ export const NoteContent = memo(
     }, [externalContent]);
 
     return (
-      <div className="relative flex flex-col w-full h-full">
+      <div
+        ref={wrapperRef}
+        className="relative flex flex-col w-full h-full"
+      >
+        {toolbarEnabled && (
+          <EditorToolbar
+            editor={editor}
+            viewMode={viewMode}
+            onViewModeChange={applyViewMode}
+          />
+        )}
         <div
           ref={containerRef}
-          className="note-editor-container flex-1"
+          className="note-editor-container flex-1 min-h-0"
           style={{
             width: "100%",
             height: "100%",
@@ -233,6 +533,16 @@ export const NoteContent = memo(
             <div className="flex flex-row items-center" style={{ borderColor: "var(--editor-text)" }}>
               <span>{stats.chars} characters</span>
             </div>
+            {stats.tasksTotal > 0 && (
+              <div
+                className="flex flex-row items-center"
+                style={{ borderColor: "var(--editor-text)" }}
+              >
+                <span>
+                  {stats.tasksDone}/{stats.tasksTotal} tasks
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
