@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSetAtom, useAtomValue, useAtom } from "jotai";
 import { Loader } from "@/components/ui/loader";
+import { Button } from "@/components/ui/button";
 import { TagInput } from "@/components/TagInput";
 import { NoteHeader } from "@/components/note/NoteHeader";
 import { NoteTitle } from "@/components/note/NoteTitle";
@@ -32,6 +33,7 @@ export default function Page() {
   // Get note ID from URL
   const params = useParams<{ slug: string }>();
   const id = params.slug;
+  const router = useRouter();
 
   /**
    * Local state to hold loaded note
@@ -39,6 +41,7 @@ export default function Page() {
    * component doesn't render until note is fully loaded
    */
   const [loadedNote, setLoadedNote] = useState<Note | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [searchOpen, setSearchOpen] = useAtom(search);
   const [notes, setNotes] = useState<Note[]>([]);
   const zen = useAtomValue(zenMode);
@@ -78,6 +81,7 @@ export default function Page() {
 
     // This ensures conditional render shows loader
     setLoadedNote(null);
+    setNotFound(false);
 
     // Load note from storage
     getNotes().then((data) => {
@@ -87,6 +91,9 @@ export default function Page() {
       if (foundNote) {
         initializeNote(foundNote);
         setLoadedNote(foundNote);
+      } else {
+        // Unknown/deleted id — stop spinning and say so.
+        setNotFound(true);
       }
 
       // Load all tags for suggestions
@@ -108,10 +115,28 @@ export default function Page() {
     [setTags, checkUnsaved],
   );
 
-  if (pageLoading || !loadedNote) {
+  if (pageLoading || (!loadedNote && !notFound)) {
     return (
       <div className="w-full h-[100dvh] flex items-center justify-center">
         <Loader />
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="w-full h-[100dvh] flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          This note no longer exists.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+          onClick={() => router.push("/")}
+        >
+          Back to notes
+        </Button>
       </div>
     );
   }
@@ -137,7 +162,7 @@ export default function Page() {
 
       {/* Node Editor */}
       <div className="flex-1 min-h-0 overflow-y-auto pb-28 sm:pb-0">
-        <NoteContent key={id} initialContent={loadedNote.content} />
+        <NoteContent key={id} initialContent={loadedNote?.content ?? ""} />
       </div>
 
       {/* Footer actions (save, delete, etc.) */}
