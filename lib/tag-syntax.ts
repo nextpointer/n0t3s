@@ -19,8 +19,10 @@ import OverTypeLib from "overtype";
  * for a token the never lands on a note. The shared rule:
  *
  *   `#` immediately followed by tag characters, where the character before
- *   `#` is not alphanumeric/underscore, another `#`, `/` or `.` (that last
- *   one keeps URL fragments like example.com/#frag out). `#tag` must also
+ *   `#` is not alphanumeric/underscore, another `#`, `/`, `.` (that last one
+ *   keeps URL fragments like example.com/#frag out) or `&` (the parser
+ *   escapes text before the renderer sees it, so a literal `&#39;` — an
+ *   apostrophe entity — must never read as a `#39` tag). `#tag` must also
  *   contain at least one letter or underscore — `#2024` is not a tag — and
  *   trailing separators never match, so `#work.` tags `work` and leaves the
  *   dot alone. Nested subtags are allowed: `#work/urgent`.
@@ -83,10 +85,10 @@ export function extractTags(source: string): string[] {
 
     for (const match of line.matchAll(tagRe)) {
       // Obsidian boundary: the character before `#` may not fold a tag into
-      // a word (`foo#bar`) or a URL path (`a.com/#frag`).
+      // a word (`foo#bar`), a URL path (`a.com/#frag`) or an entity (`&#39;`).
       if (match.index > 0) {
         const prev = line[match.index - 1];
-        if (/[A-Za-z0-9_#/.]/.test(prev)) continue;
+        if (/[A-Za-z0-9_#/.&]/.test(prev)) continue;
         // `\#` escapes the marker in markdown.
         if (prev === "\\") continue;
       }
@@ -197,7 +199,7 @@ export function getTagTriggerAt(
   // not an escaped `\#`.
   if (start > 1) {
     const before = source[start - 2];
-    if (/[A-Za-z0-9_#/.]/.test(before) || before === "\\") return null;
+    if (/[A-Za-z0-9_#/.&]/.test(before) || before === "\\") return null;
   }
 
   const query = source.slice(start, caret);
@@ -293,7 +295,11 @@ function renderTagsInLine(html: string): string {
             : lastChar;
       const folded =
         boundary !== undefined &&
-        (/[\w#/.]/.test(boundary) || boundary === "\\");
+        // Same boundary rule as extraction, entity-aware `&` included; pure
+        // numbers (#2024, #39 out of &#39;) never render as pills either —
+        // extraction rejects them, so rendering must too.
+        (/[\w#/.&]/.test(boundary) || boundary === "\\") ||
+        !isTaggable(match[1]);
 
       if (folded) {
         runOut += match[0];
