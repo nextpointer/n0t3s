@@ -14,7 +14,7 @@ A markdown note editor with AI. Everything stays on your browser.
 
 ## Writing
 
-Start typing in any note. Markdown formats as you go — \`**bold**\`, \`*italic*\`, \`# headings\`, \`> blockquotes\`, code blocks. Notes save automatically, no button needed.
+Start typing in any note. Markdown formats as you go — \`**bold**\`, \`*italic*\`, \`# headings\` (space after the #), \`> blockquotes\`, code blocks. Notes save automatically, no button needed. Tags are written like \`#tag\` — see Tags below.
 
 ---
 
@@ -75,11 +75,13 @@ Task checkboxes stay clickable in read mode: tick one and the markdown, the word
 
 ---
 
-## Tags & Pinning
+## Tags
 
-Add tags below the note title. Type a word, press Enter.
+Mention a tag anywhere in the text: type \`#work\` — even mid-sentence — and it becomes a pill. While typing, a suggestion list offers tags from all your notes; pick one with Enter or Tab.
 
-The \`pin\` tag is special — it locks that note to the top of your list permanently.
+Tags are collected wherever you mention them: filter by one on the home screen, or search in the palette.
+
+The \`#pin\` tag is special — put it in a note and it locks to the top of your list permanently.
 
 ---
 
