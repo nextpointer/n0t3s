@@ -14,6 +14,7 @@ import {
 } from "@/store/noteAtom";
 import { shikiPool } from "@/lib/shiki-worker-pool";
 import { normalizeLang } from "@/lib/shiki-langs";
+import { installTagSyntax } from "@/lib/tag-syntax";
 import { useTheme } from "next-themes";
 import { EditorToolbar, type ToolbarEditor } from "./EditorToolbar";
 
@@ -532,6 +533,9 @@ export const NoteContent = memo(
     useEffect(() => {
       if (!containerRef.current) return;
 
+      // Register the inline #tag renderer once; global by design.
+      installTagSyntax();
+
       // Capture current content before destroy
       const currentContent = editorRef.current
         ? editorRef.current.getValue()
@@ -696,6 +700,7 @@ export const NoteContent = memo(
         )}
         <div
           ref={containerRef}
+          data-preview-monochrome={previewColorsOn ? undefined : "true"}
           className="note-editor-container note-editor-host relative flex-1 min-h-0"
           style={{
             width: "100%",

@@ -3,6 +3,7 @@
 import { useEffect, useRef, memo } from "react";
 import { OverType } from "overtype";
 import { shikiPool } from "@/lib/shiki-worker-pool";
+import { installTagSyntax } from "@/lib/tag-syntax";
 import { useTheme } from "next-themes";
 
 interface ReadOnlyEditorProps {
@@ -22,6 +23,9 @@ export const ReadOnlyEditor = memo(
 
     useEffect(() => {
       if (!containerRef.current || editorRef.current) return;
+
+      // Same global tag renderer as the note editor, so manual.md demos it.
+      installTagSyntax();
 
       const styles = getComputedStyle(document.documentElement);
 
