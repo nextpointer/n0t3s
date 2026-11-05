@@ -47,16 +47,17 @@ export async function updateNote(updatedNote: Note): Promise<void> {
 }
 
 /**
- * A brand new note starts empty. The title input takes focus with its
- * placeholder text selected, so the first keystroke replaces it and Enter
- * drops straight into the body.
+ * A brand new note starts with nothing: empty title, empty body. The title
+ * input takes focus so the first keystroke is the title, and Enter drops
+ * straight into the body. Empty titles render as "Untitled" wherever notes
+ * are listed.
  */
 export const NEW_NOTE_CONTENT = "";
 
 /** Set when a note is created, consumed once by the note page. */
 const NEW_NOTE_FLAG = "n0t3s:new-note";
 
-export async function createNote(title = "Untitled Note"): Promise<Note> {
+export async function createNote(title = ""): Promise<Note> {
   const now = Date.now();
   const note: Note = {
     id: crypto.randomUUID(),

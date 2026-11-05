@@ -28,7 +28,7 @@ const NoteCard = React.memo(function NoteCard({ note, onClick }: Props) {
       <div className="flex items-start justify-between gap-2 sm:gap-3 w-full">
         <div className="flex-1 min-w-0 overflow-hidden">
           <h3 className="font-medium text-[13px] sm:text-[14px] text-foreground/90 truncate tracking-tight leading-snug">
-            {note.title}
+            {note.title || "Untitled"}
           </h3>
           <p className="text-[10px] sm:text-[11px] text-muted-foreground/50 font-medium tracking-wide mt-0.5">
             {new Date(note.createdAt).toLocaleDateString("en-US", {

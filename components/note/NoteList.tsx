@@ -6,7 +6,7 @@ import NoteCard from "./NoteCard";
 import { ChevronDown } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
-import { addNote } from "@/lib/storage";
+import { createNote } from "@/lib/storage";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 function CollapsibleSection({
@@ -149,16 +149,9 @@ const NotesList = React.memo(function NotesList({
   }, [router]);
 
   const handleNewNote = useCallback(async () => {
-    const id = crypto.randomUUID();
-    const now = Date.now();
-    await addNote({
-      id,
-      title: "Untitled Note",
-      content: "",
-      createdAt: now,
-      updatedAt: now,
-    });
-    router.push(`/note/${id}`);
+    // Same path as the header button: a blank note that opens on the title.
+    const note = await createNote();
+    router.push(`/note/${note.id}`);
   }, [router]);
 
   if (loading) {

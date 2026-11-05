@@ -12,7 +12,7 @@ export const NoteTitle = memo(function NoteTitle() {
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   // zen mode state
   const zen = useAtomValue(zenMode);
-  // A brand new note opens with the title pre-selected so typing replaces it.
+  // A brand new note opens on the empty title input, ready to type.
   const isNewNoteRef = useRef(false);
 
   // first load focus and select
