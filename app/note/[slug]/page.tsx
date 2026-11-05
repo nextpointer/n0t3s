@@ -19,6 +19,7 @@ import {
   tagsAtom,
   initializeNoteAtom,
   checkUnsavedAtom,
+  discardEmptyNoteAtom,
   zenMode,
   search,
 } from "@/store/noteAtom";
@@ -57,6 +58,7 @@ export default function Page() {
   const setTags = useSetAtom(tagsAtom);
   const initializeNote = useSetAtom(initializeNoteAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
+  const discardIfEmpty = useSetAtom(discardEmptyNoteAtom);
 
   // Initialize auto-save functionality
   const { save } = useNoteOperations();
@@ -106,6 +108,23 @@ export default function Page() {
       cancelled = true;
     };
   }, [id, setPageLoading, initializeNote, setAllTags]);
+
+  /**
+   * Every exit from this note (browser back, a palette jump, tag navigation)
+   * leaves a note the user never wrote anything in behind. Discard it
+   * silently — no toast, no save prompt.
+   *
+   * The cleanup runs before the note-load effect below re-initializes the
+   * atoms for the next id, so on a note-to-note switch the atoms still hold
+   * the note being abandoned, and passing the explicit id keeps the discard
+   * from ever touching the newly opened note.
+   */
+  useEffect(() => {
+    if (!id) return;
+    return () => {
+      void discardIfEmpty(id);
+    };
+  }, [id, discardIfEmpty]);
 
   const handleTagsChange = useCallback(
     (newTags: string[]) => {

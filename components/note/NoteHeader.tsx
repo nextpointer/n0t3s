@@ -13,6 +13,7 @@ import {
   autoSaveAtom,
   savePromptDialogOpenAtom,
   navigationTargetAtom,
+  discardEmptyNoteAtom,
 } from "@/store/noteAtom";
 
 export const NoteHeader = memo(function NoteHeader() {
@@ -22,17 +23,24 @@ export const NoteHeader = memo(function NoteHeader() {
   const setShowPrompt = useSetAtom(savePromptDialogOpenAtom);
   // setter
   const setTarget = useSetAtom(navigationTargetAtom);
+  const discardIfEmpty = useSetAtom(discardEmptyNoteAtom);
   const router = useRouter();
 
-  // hander for back navigation
-  const handleNavigateBack = useCallback(() => {
+  // handler for back navigation
+  const handleNavigateBack = useCallback(async () => {
+    // A note the user never wrote anything in is dropped quietly — no toast,
+    // no save prompt — instead of lingering as an untitled shell.
+    if (await discardIfEmpty()) {
+      router.push("/");
+      return;
+    }
     if (unsaved && !autoSave) {
       setTarget("/");
       setShowPrompt(true);
     } else {
       router.push("/");
     }
-  }, [unsaved, autoSave, router, setTarget, setShowPrompt]);
+  }, [unsaved, autoSave, router, setTarget, setShowPrompt, discardIfEmpty]);
 
   return (
     <div className="fixed top-0 left-0 w-screen xl:w-5xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed flex justify-between items-center gap-2 p-2">

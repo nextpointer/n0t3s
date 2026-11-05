@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { Note } from "@/lib/types";
 import { dbGet, dbPut } from "@/lib/db";
+import { deleteNote } from "@/lib/storage";
 
 function arraysEqual(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
@@ -373,6 +374,41 @@ export const redoAtom = atom(null, (get, set) => {
 
 // how many histories are capturing
 const HISTORY_CAP = 10;
+
+/**
+ * Silently removes the note currently being edited when it holds nothing:
+ * no title, no content, no tags. Called wherever the note page is left —
+ * the back arrow, the save prompt, a palette jump, or unmount — so notes the
+ * user abandoned before writing a word never litter the list as "Untitled".
+ *
+ * Passing @noteId only discards when it matches the open note, which lets the
+ * note-safe cleanup run in unmount effects without racing the next note's
+ * initialization. No toast, no prompt: an empty note has nothing to save or
+ * lose.
+ */
+export const discardEmptyNoteAtom = atom(
+  null,
+  async (get, set, ...args: unknown[]): Promise<boolean> => {
+    const noteId = args[0] as string | undefined;
+    const note = get(currentNoteAtom);
+    if (!note) return false;
+    if (noteId && note.id !== noteId) return false;
+
+    const title = (get(titleAtom) || "").trim();
+    const content = (get(contentAtom) || "").trim();
+    const tags = get(tagsAtom) || [];
+    if (title || content || tags.length > 0) return false;
+
+    try {
+      await deleteNote(note.id);
+    } catch {
+      return false;
+    }
+    set(currentNoteAtom, null);
+    set(unsavedAtom, false);
+    return true;
+  },
+);
 
 export const syncEditorToContentAtom = atom(
   null,
