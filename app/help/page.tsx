@@ -134,7 +134,7 @@ export default function HelpPage() {
     // (5xl, dashed rail borders at md+) so jumping between them doesn't
     // change the page's tune.
     <div className="flex flex-col h-full w-full selection:bg-primary/30">
-      <div className="w-full md:w-5xl mx-auto md:border-l-1 md:border-r-1 md:border-dashed flex flex-col flex-1">
+      <div className="w-full xl:w-5xl mx-auto md:border-l-1 md:border-r-1 md:border-dashed flex flex-col flex-1">
         {/* Header */}
         <header className="border-b border-dashed h-10 flex items-center px-4 shrink-0">
           <Button
