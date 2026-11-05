@@ -9,6 +9,7 @@ import {
   aiEnabledAtom,
   previewColorsAtom,
   editorFontSizeAtom,
+  storageReadyAtom,
   loadPersistedSettings,
 } from "@/store/noteAtom";
 import { migrateFromLocalStorage, migrateTagsToInline } from "@/lib/storage";
@@ -20,10 +21,13 @@ export function StorageInit() {
   const setAiEnabled = useSetAtom(aiEnabledAtom);
   const setPreviewColors = useSetAtom(previewColorsAtom);
   const setEditorFontSize = useSetAtom(editorFontSizeAtom);
+  const setStorageReady = useSetAtom(storageReadyAtom);
 
   useEffect(() => {
     migrateFromLocalStorage();
-    void migrateTagsToInline();
+    // Note/list loading waits for this: an editor that loads mid-migration
+    // could autosave untouched (pre-seed) content over the rewritten record.
+    migrateTagsToInline().finally(() => setStorageReady(true));
     loadPersistedSettings(
       setAutoSave,
       setZenMode,
@@ -39,6 +43,7 @@ export function StorageInit() {
     setAiEnabled,
     setPreviewColors,
     setEditorFontSize,
+    setStorageReady,
   ]);
 
   return null;

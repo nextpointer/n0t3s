@@ -195,6 +195,17 @@ export const navigationTargetAtom = atom<string | null>(null);
 // ACTION ATOMS (Write-only)
 
 /**
+ * Flips true once boot-time storage maintenance has finished — the
+ * localStorage→IndexedDB migration and the one-time legacy-tags→inline
+ * migration. Note/list loading effects gate on this so the first
+ * initialization (and its autosave afterwards) can never read or overwrite
+ * a record while the tag migration is halfway through rewriting it: a save
+ * that lands in that window would persist pre-migration content and drop
+ * the note's legacy tags forever.
+ */
+export const storageReadyAtom = atom<boolean>(false);
+
+/**
  * Checks if current note has unsaved changes
  * Compares current editing state with original note data
  * Updates unsavedAtom accordingly

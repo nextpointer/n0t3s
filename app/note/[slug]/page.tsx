@@ -17,6 +17,7 @@ import {
   allTagsAtom,
   initializeNoteAtom,
   discardEmptyNoteAtom,
+  storageReadyAtom,
   zenMode,
   search,
 } from "@/store/noteAtom";
@@ -47,6 +48,7 @@ export default function Page() {
 
   // Read-only atoms
   const pageLoading = useAtomValue(pageLoadingAtom);
+  const storageReady = useAtomValue(storageReadyAtom);
 
   // setters
   const setPageLoading = useSetAtom(pageLoadingAtom);
@@ -70,7 +72,11 @@ export default function Page() {
   }, [searchOpen]);
 
   useEffect(() => {
-    if (!id) return;
+    // No initialization before the boot-time tag migration has landed: the
+    // note about to load may be rewritten by it right now, and initializing
+    // the editor mid-write hands the user pre-seed content whose autosave
+    // would overwrite the migrated record and drop the note's legacy tags.
+    if (!id || !storageReady) return;
 
     let cancelled = false;
     setPageLoading(true);
@@ -104,7 +110,7 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, [id, setPageLoading, initializeNote, setAllTags]);
+  }, [id, setPageLoading, initializeNote, setAllTags, storageReady]);
 
   /**
    * Every exit from this note (browser back, a palette jump, tag navigation)
@@ -160,7 +166,7 @@ export default function Page() {
       <NoteTitle />
 
       {/* Node Editor */}
-      <div className="flex-1 min-h-0 overflow-y-auto pb-28 sm:pb-0">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-14 sm:pb-0">
         <NoteContent key={id} initialContent={loadedNote?.content ?? ""} />
       </div>
 

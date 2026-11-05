@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSetAtom } from "jotai";
-import { allTagsAtom } from "@/store/noteAtom";
+import { useAtomValue, useSetAtom } from "jotai";
+import { allTagsAtom, storageReadyAtom } from "@/store/noteAtom";
 import { getNotes, createNote } from "@/lib/storage";
 import { getNoteTags } from "@/lib/tag-syntax";
 import { Note } from "@/lib/types";
@@ -20,6 +20,9 @@ import { NewNote } from "@/components/icons/NewNote";
 export default function Home() {
   const router = useRouter();
   const setAllTags = useSetAtom(allTagsAtom);
+  // The list may render the content the tag migration is writing, so wait
+  // for boot-time storage maintenance.
+  const storageReady = useAtomValue(storageReadyAtom);
 
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,6 +32,8 @@ export default function Home() {
 
   // Initial load
   useEffect(() => {
+    if (!storageReady) return;
+
     let cancelled = false;
     setLoading(true);
     getNotes().then((allNotes) => {
@@ -46,7 +51,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [setAllTags]);
+  }, [setAllTags, storageReady]);
 
   const allTags = useMemo(() => {
     return Array.from(new Set(notes.flatMap((note) => getNoteTags(note))));
