@@ -17,6 +17,7 @@ import { normalizeLang } from "@/lib/shiki-langs";
 import { installTagSyntax } from "@/lib/tag-syntax";
 import { useTheme } from "next-themes";
 import { EditorToolbar, type ToolbarEditor } from "./EditorToolbar";
+import { TagAutocomplete } from "./TagAutocomplete";
 
 interface NoteContentProps {
   initialContent: string;
@@ -709,6 +710,9 @@ export const NoteContent = memo(
             fontWeight: "800",
           }}
         />
+        {/* #tag completion; anchored to this wrapper so the popover keeps
+            position when the page around it scrolls. */}
+        <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
         <div
           className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3 "
           style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
