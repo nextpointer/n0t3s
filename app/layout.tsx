@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Viewport } from "next";
 import { StorageInit } from "@/components/StorageInit";
+import { PwaInit } from "@/components/PwaInit";
 
 export const metadata: Metadata = {
   title: "N0T3S",
@@ -67,6 +68,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <StorageInit />
+          <PwaInit />
           <main
             className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 overflow-hidden ${sg.className} `}
           >
