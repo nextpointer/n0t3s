@@ -11,7 +11,7 @@ import {
   editorFontSizeAtom,
   loadPersistedSettings,
 } from "@/store/noteAtom";
-import { migrateFromLocalStorage } from "@/lib/storage";
+import { migrateFromLocalStorage, migrateTagsToInline } from "@/lib/storage";
 
 export function StorageInit() {
   const setAutoSave = useSetAtom(autoSaveAtom);
@@ -23,6 +23,7 @@ export function StorageInit() {
 
   useEffect(() => {
     migrateFromLocalStorage();
+    void migrateTagsToInline();
     loadPersistedSettings(
       setAutoSave,
       setZenMode,

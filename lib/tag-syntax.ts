@@ -126,19 +126,29 @@ export function getNoteTags(note: {
 }
 
 /**
- * Turn any legacy tag list into tokens that respect the inline syntax, used
- * by the migration. Spaces become dashes, empties and pure numbers dropped.
+ * Turn one legacy/free-typed tag into a token the inline syntax accepts:
+ * lowercased, spaces dashed, punctuation stripped. Returns null when
+ * nothing taggable remains (pure numbers like #2024 are not tags).
+ */
+export function legacyTagToToken(tag: unknown): string | null {
+  if (typeof tag !== "string") return null;
+  const token = tag
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9_/-]+/g, "");
+  return token && isTaggable(token) ? token : null;
+}
+
+/**
+ * Convert a legacy tag list into inline-ready tokens (used by migration).
  */
 export function legacyTagsToInline(tags: string[]): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
   for (const tag of tags) {
-    const token = tag
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^#a-z0-9_/-]+/g, "");
-    if (!token || !isTaggable(token) || seen.has(token)) continue;
+    const token = legacyTagToToken(tag);
+    if (!token || seen.has(token)) continue;
     seen.add(token);
     out.push(token);
   }
