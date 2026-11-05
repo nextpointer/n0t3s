@@ -18,6 +18,7 @@ import { installTagSyntax } from "@/lib/tag-syntax";
 import { useTheme } from "next-themes";
 import { EditorToolbar, type ToolbarEditor } from "./EditorToolbar";
 import { TagAutocomplete } from "./TagAutocomplete";
+import { registerNoteEditor } from "@/lib/editor-registry";
 
 interface NoteContentProps {
   initialContent: string;
@@ -579,6 +580,7 @@ export const NoteContent = memo(
 
         editorRef.current = editorInstance;
         setEditor(editorInstance as ToolbarEditor);
+        registerNoteEditor(editorInstance as ToolbarEditor);
 
         // OverType drops per-instance `previewColors` on first build: the
         // injected stylesheet bakes `--preview-*-default` from the *global*
@@ -664,6 +666,7 @@ export const NoteContent = memo(
         pendingFrameRef.current = null;
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         setEditor(null);
+        registerNoteEditor(null);
         if (editorRef.current) {
           editorRef.current.destroy();
           editorRef.current = null;
@@ -672,17 +675,41 @@ export const NoteContent = memo(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resolvedTheme]);
 
-    // Sync external changes to editor
+    // Sync atom-driven content changes back into the editor. Fires for AI
+    // rewrites only — note switches remount this component via `key`.
     useEffect(() => {
       if (!editorRef.current || isTypingRef.current) return;
       const currentEditorValue = editorRef.current.getValue();
-      if (externalContent !== currentEditorValue) {
-        isExternalUpdateRef.current = true;
-        editorRef.current.setValue(externalContent);
-        contentRef.current = externalContent;
-        setStats(computeStats(externalContent));
-        requestAnimationFrame(() => { isExternalUpdateRef.current = false; });
+      if (externalContent === currentEditorValue) return;
+
+      const instance = editorRef.current;
+      const textarea = instance.textarea as HTMLTextAreaElement;
+      isExternalUpdateRef.current = true;
+
+      // Splice the rewrite into the textarea through the browser's editing
+      // stack: select all, then execCommand. The rewrite then lands on the
+      // native undo history as ONE step, so Cmd/Ctrl+Z walks straight back
+      // from the AI output — same stack the toolbar and the OS menu use.
+      // A plain `.value` assignment would discard that stack and strand the
+      // caret wherever the engine parks it after the swap.
+      try {
+        textarea.focus({ preventScroll: true });
+        textarea.setSelectionRange(0, textarea.value.length);
+        const replaced =
+          externalContent === ""
+            ? document.execCommand("delete")
+            : document.execCommand("insertText", false, externalContent);
+        if (!replaced) throw new Error("execCommand unavailable");
+      } catch {
+        // Fallback: direct write through OverType. The preview still
+        // re-renders; the native undo stack resets — pre-existing behaviour.
+        instance.setValue(externalContent);
       }
+      contentRef.current = externalContent;
+      setStats(computeStats(externalContent));
+      requestAnimationFrame(() => {
+        isExternalUpdateRef.current = false;
+      });
     }, [externalContent]);
 
     return (
@@ -714,11 +741,11 @@ export const NoteContent = memo(
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
         <div
-          className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3 "
+          className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3"
           style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
           <div
-            className="flex flex-col xl:flex-row gap-1 xl:gap-4 text-[8px] xl:text-[10px] tracking-[0.2em] pointer-events-auto xl:w-full w-32 "
+            className="flex flex-col xl:flex-row gap-1 xl:gap-4 text-[8px] xl:text-[10px] tracking-[0.2em] pointer-events-auto xl:w-full w-32"
             style={{ color: "var(--editor-text)", opacity: 0.4 }}
           >
             <div className="flex flex-row items-center">

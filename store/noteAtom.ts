@@ -184,34 +184,13 @@ export const exportDialogOpenAtom = atom<boolean>(false);
 export const navigationTargetAtom = atom<string | null>(null);
 
 // HISTORY STATE ATOMS (Undo/Redo)
-
-/**
- * Array of content snapshots for undo/redo
- * Each entry represents a state in history
- */
-export const historyAtom = atom<string[]>([]);
-
-/**
- * Current position in history array
- * Points to the current active state
- */
-export const historyIndexAtom = atom<number>(-1);
-
-/**
- * Computed atom: Returns true if undo is available
- * Used to enable/disable undo button
- */
-export const canUndoAtom = atom((get) => get(historyIndexAtom) > 0);
-
-/**
- * Computed atom: Returns true if redo is available
- * Used to enable/disable redo button
- */
-export const canRedoAtom = atom((get) => {
-  const history = get(historyAtom);
-  const index = get(historyIndexAtom);
-  return index < history.length - 1;
-});
+//
+// Removed: the app previously kept a parallel snapshot history here so the
+// toolbar could undo/redo. It rebuilt content through programmatic
+// `setValue`, which cleared the browser's native undo stack on every press
+// and could yank the caret — the opposite of syncing with the OS undo
+// system. Undo/redo now all ride the textarea's native stack (see
+// HistoryControls), which OverType itself preserves for formatting actions.
 
 // ACTION ATOMS (Write-only)
 
@@ -254,93 +233,9 @@ export const initializeNoteAtom = atom(null, (get, set, note: Note) => {
   set(titleAtom, note.title);
   set(contentAtom, note.content);
 
-  // Initialize history with current content
-  set(historyAtom, [note.content]);
-  set(historyIndexAtom, 0);
-
   // Reset UI state
   set(unsavedAtom, false);
   set(pageLoadingAtom, false);
-});
-
-/**
- * Adds new content to history for undo/redo
- * Truncates forward history if new content added after undo
- *
- * @param newContent - Content to add to history
- */
-export const addToHistoryAtom = atom(null, (get, set, newContent: string) => {
-  const history = get(historyAtom);
-  const index = get(historyIndexAtom);
-
-  // Don't add if content is same as current
-  if (history[index] === newContent) return;
-
-  // Remove any forward history (after current index)
-  const newHistory = history.slice(0, index + 1);
-
-  // Add new state
-  newHistory.push(newContent);
-
-  // Update atoms
-  set(historyAtom, newHistory);
-  set(historyIndexAtom, newHistory.length - 1);
-});
-
-/**
- * Undo action: Reverts to previous state in history
- * Updates contentAtom which triggers editor sync
- *
- * @returns Previous content or null if can't undo
- */
-export const undoAtom = atom(null, (get, set) => {
-  const index = get(historyIndexAtom);
-
-  // Can't undo if at start of history
-  if (index <= 0) return null;
-
-  const history = get(historyAtom);
-  const newIndex = index - 1;
-  const newContent = history[newIndex];
-
-  // Move back in history
-  set(historyIndexAtom, newIndex);
-
-  // Update content (triggers editor sync via useEffect)
-  set(contentAtom, newContent);
-
-  // Check if this creates unsaved changes
-  set(checkUnsavedAtom);
-
-  return newContent;
-});
-
-/**
- * Redo action: Moves forward to next state in history
- * Updates contentAtom which triggers editor sync
- *
- * @returns Next content or null if can't redo
- */
-export const redoAtom = atom(null, (get, set) => {
-  const history = get(historyAtom);
-  const index = get(historyIndexAtom);
-
-  // Can't redo if at end of history
-  if (index >= history.length - 1) return null;
-
-  const newIndex = index + 1;
-  const newContent = history[newIndex];
-
-  // Move forward in history
-  set(historyIndexAtom, newIndex);
-
-  // Update content (triggers editor sync via useEffect)
-  set(contentAtom, newContent);
-
-  // Check if this creates unsaved changes
-  set(checkUnsavedAtom);
-
-  return newContent;
 });
 
 /**
@@ -349,14 +244,13 @@ export const redoAtom = atom(null, (get, set) => {
  *
  * This is the bridge between isolated editor and app state:
  * 1. Updates contentAtom (source of truth)
- * 2. Adds to history for undo/redo
- * 3. Checks for unsaved changes
+ * 2. Checks for unsaved changes
+ *
+ * Undo/redo bookkeeping is intentionally absent: the textarea's native
+ * stack (driven by the browser, not app state) owns history.
  *
  * @param newContent - Latest content from editor
  */
-
-// how many histories are capturing
-const HISTORY_CAP = 10;
 
 /**
  * Silently removes the note currently being edited when it holds nothing:
@@ -404,23 +298,6 @@ export const syncEditorToContentAtom = atom(
 
     // Update main content
     set(contentAtom, newContent);
-
-    // Add to history
-    const history = get(historyAtom);
-    const index = get(historyIndexAtom);
-
-    if (history[index] !== newContent) {
-      const sliceStart = Math.max(0, index + 1 - HISTORY_CAP);
-      // Truncate forward history
-      const newHistory = history.slice(sliceStart, index + 1);
-
-      // Add new state
-      newHistory.push(newContent);
-
-      // Update atoms
-      set(historyAtom, newHistory);
-      set(historyIndexAtom, newHistory.length - 1);
-    }
 
     // Check for unsaved changes
     const note = get(currentNoteAtom);

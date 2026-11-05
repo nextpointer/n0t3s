@@ -3,7 +3,6 @@ import { useAtomValue, useSetAtom } from "jotai";
 import {
   contentAtom,
   aiLoadingAtom,
-  addToHistoryAtom,
   checkUnsavedAtom,
   zenMode,
   persistZenMode,
@@ -17,7 +16,6 @@ export function UseAIShortcuts() {
   const content = useAtomValue(contentAtom);
   const loading = useAtomValue(aiLoadingAtom);
   const setContent = useSetAtom(contentAtom);
-  const addToHistory = useSetAtom(addToHistoryAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
   const setZenMode = useSetAtom(zenMode);
   const { executeAction } = UseAIActions();
@@ -32,11 +30,10 @@ export function UseAIShortcuts() {
       const result = await executeAction(action as any, content);
       if (result) {
         setContent(result);
-        addToHistory(result);
         checkUnsaved();
       }
     },
-    [content, executeAction, setContent, addToHistory, checkUnsaved],
+    [content, executeAction, setContent, checkUnsaved],
   );
 
   const handleAIActionRef = useRef(handleAIAction);
@@ -58,13 +55,14 @@ export function UseAIShortcuts() {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Zen mode toggle: Ctrl/Cmd+Shift+Z — not an AI action, so this stays
-      // registered even when AI is switched off.
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "z"
-      ) {
+      // Zen mode toggle: Ctrl/Cmd+Shift+Space — not an AI action, so this
+      // stays registered even when AI is switched off.
+      //
+      // Deliberately NOT Ctrl/Cmd+Shift+Z: that is the OS-standard redo
+      // gesture (and the browser's redo for the textarea), and toggling zen
+      // on top of it made redo hijack the window.
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === "Space") {
+        e.preventDefault();
         setZenMode((prev) => {
           const next = !prev;
           persistZenMode(next);

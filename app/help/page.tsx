@@ -98,9 +98,11 @@ Select any text first, then use a shortcut.
 \`Ctrl+Shift+P\` — Ask AI anything
 
 
+Undo and redo use the system edit history — press \`Ctrl/Cmd+Z\` or \`Ctrl/Cmd+Shift+Z\`, use the toolbar arrows or the browser's own Edit menu, and they all stay in one stack. Because tags are plain text, deleting a \`#tag\` is undoable like any other typing.
+
 ## Zen Mode
 
-\`Ctrl+Shift+Z\` — hides everything except the editor. Same shortcut to exit.
+\`Ctrl/Cmd+Shift+Space\` — hides everything except the editor. Same shortcut to exit.
 
 ---
 

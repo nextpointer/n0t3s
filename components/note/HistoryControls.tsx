@@ -1,39 +1,41 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Undo2, Redo2 } from "lucide-react";
-import { canUndoAtom, canRedoAtom, undoAtom, redoAtom } from "@/store/noteAtom";
-import toast from "react-hot-toast";
+import { getNoteEditor } from "@/lib/editor-registry";
+
+/**
+ * Walk the browser's native undo/redo stack — the same one Ctrl+Z and the
+ * OS edit menu drive. Keeping one stack for typing, formatting and these
+ * buttons is what lets Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z and this toolbar behave
+ * identically; the app-level snapshot history it replaces rebuilt unedited
+ * documents on a parallel stack and its programmatic `setValue` wiped the
+ * native one on every press.
+ *
+ * No toasts on purpose: undo and redo state is visible in the document
+ * itself, and a "Nothing to undo" flash over a plain no-op is noise. Like
+ * every OS edit menu the buttons stay enabled and simply do nothing when the
+ * stack is empty.
+ */
+function nativeHistory(command: "undo" | "redo"): void {
+  const textarea = getNoteEditor()?.textarea;
+  if (!textarea) return;
+
+  // execCommand targets the editable that has focus; the button click moves
+  // focus to the button, so return it to the textarea first. If the document
+  // was never focused this no-ops harmlessly.
+  if (document.activeElement !== textarea) {
+    textarea.focus({ preventScroll: true });
+  }
+  document.execCommand(command);
+}
 
 export const HistoryControls = memo(function HistoryControls() {
-  // getter
-  const canUndo = useAtomValue(canUndoAtom);
-  const canRedo = useAtomValue(canRedoAtom);
-  // setter
-  const undo = useSetAtom(undoAtom);
-  const redo = useSetAtom(redoAtom);
-
-  // handler for undo
-  const handleUndo = useCallback(() => {
-    const result = undo();
-    if (result !== null) {
-      toast.success("Undo successful", { id: "undo" });
-    } else {
-      toast.error("Nothing to undo", { id: "undo" });
-    }
-  }, [undo]);
-
-  // handler for redo
-  const handleRedo = useCallback(() => {
-    const result = redo();
-    if (result !== null) {
-      toast.success("Redo successful", { id: "redo" });
-    } else {
-      toast.error("Nothing to redo", { id: "redo" });
-    }
-  }, [redo]);
+  // Native engine state (stack depth) is not observable, so the buttons rely
+  // on the same affordance as browser edit menus: enabled, no-op when spent.
+  const handleUndo = useCallback(() => nativeHistory("undo"), []);
+  const handleRedo = useCallback(() => nativeHistory("redo"), []);
 
   return (
     <>
@@ -41,9 +43,8 @@ export const HistoryControls = memo(function HistoryControls() {
         variant="ghost"
         size="sm"
         onClick={handleUndo}
-        disabled={!canUndo}
         aria-label="Undo"
-        title="Undo"
+        title="Undo (Ctrl/Cmd+Z)"
       >
         <Undo2 className="w-4 h-4" />
       </Button>
@@ -51,9 +52,8 @@ export const HistoryControls = memo(function HistoryControls() {
         variant="ghost"
         size="sm"
         onClick={handleRedo}
-        disabled={!canRedo}
         aria-label="Redo"
-        title="Redo"
+        title="Redo (Ctrl/Cmd+Shift+Z)"
       >
         <Redo2 className="w-4 h-4" />
       </Button>

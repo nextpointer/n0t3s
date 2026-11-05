@@ -23,7 +23,6 @@ import {
   aiLoadingAtom,
   aiEnabledAtom,
   contentAtom,
-  addToHistoryAtom,
   checkUnsavedAtom,
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
@@ -65,7 +64,6 @@ export const AIMenu = memo(function AIMenu() {
   const aiEnabled = useAtomValue(aiEnabledAtom);
   const content = useAtomValue(contentAtom);
   const setContent = useSetAtom(contentAtom);
-  const addToHistory = useSetAtom(addToHistoryAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
   const { executeAction } = UseAIActions();
 
@@ -81,11 +79,10 @@ export const AIMenu = memo(function AIMenu() {
       const result = await executeAction(action as any, content);
       if (result) {
         setContent(result);
-        addToHistory(result);
         checkUnsaved();
       }
     },
-    [content, executeAction, setContent, addToHistory, checkUnsaved],
+    [content, executeAction, setContent, checkUnsaved],
   );
 
   if (!aiEnabled) return null;

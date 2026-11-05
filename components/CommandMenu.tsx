@@ -55,7 +55,7 @@ const COMMANDS: Item[] = [
   { id: "export", label: "Export note", shortcut: "", kind: "action", scope: "note" },
   { id: "help", label: "Help & shortcuts", shortcut: "?", kind: "action", scope: "global" },
   { id: "theme", label: "Toggle theme", shortcut: "", kind: "action", scope: "global" },
-  { id: "zen", label: "Toggle zen mode", shortcut: "⌘⇧Z", kind: "action", scope: "note" },
+  { id: "zen", label: "Toggle zen mode", shortcut: "⌘⇧Space", kind: "action", scope: "note" },
   { id: "readmode", label: "Toggle read mode", shortcut: "⌘/", kind: "action", scope: "note" },
   { id: "ai:summarize", label: "Summarize", shortcut: "⌘⇧S", kind: "ai", scope: "note" },
   { id: "ai:rewrite", label: "Rewrite", shortcut: "⌘⇧R", kind: "ai", scope: "note" },
