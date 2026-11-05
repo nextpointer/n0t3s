@@ -301,6 +301,14 @@
         opacity: 0.2;
     }
 
+    /* The placeholder layer inherits the editor container's heavy font
+       weight, which makes "Start writing..." read as typed text instead of
+       an empty-state hint. Nothing else sets a weight on it, so a plain
+       author rule is enough to beat the inherited 800. */
+    .note-editor-container .overtype-placeholder {
+        font-weight: 400;
+    }
+
     /* Preview mode renders task checkboxes as real inputs. Keep them on the
        app's interactive token (not an editor-syntax colour, which read as a
        yellow/amber box) and make a completed task visibly completed. */
