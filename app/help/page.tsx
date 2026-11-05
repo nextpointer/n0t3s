@@ -125,10 +125,14 @@ export default function HelpPage() {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-background selection:bg-primary/30">
-      <div className="w-full max-w-2xl mx-auto border-l border-r border-dashed border-foreground/20 flex flex-col flex-1">
+    // No background of its own: the app shell's canvas shows through, the
+    // same as the home and note pages. The column matches the note editor
+    // (5xl, dashed rail borders at md+) so jumping between them doesn't
+    // change the page's tune.
+    <div className="flex flex-col h-full w-full selection:bg-primary/30">
+      <div className="w-full md:w-5xl mx-auto md:border-l-1 md:border-r-1 md:border-dashed flex flex-col flex-1">
         {/* Header */}
-        <header className="border-b border-dashed border-foreground/20 h-10 flex items-center px-4 shrink-0">
+        <header className="border-b border-dashed h-10 flex items-center px-4 shrink-0">
           <Button
             onClick={() => router.back()}
             variant="ghost"
