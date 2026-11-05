@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Note } from "@/lib/types";
 import NoteCard from "./NoteCard";
 import { ChevronDown } from "lucide-react";
@@ -16,12 +16,18 @@ function CollapsibleSection({
   isExpanded,
   onToggle,
   onNoteClick,
+  selecting,
+  selectedIds,
+  onSelect,
 }: {
   title: string;
   notes: Note[];
   isExpanded: boolean;
   onToggle: () => void;
   onNoteClick: (id: string) => void;
+  selecting: boolean;
+  selectedIds: Set<string>;
+  onSelect: (id: string, shiftKey: boolean) => void;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +81,9 @@ function CollapsibleSection({
                     <NoteCard
                       note={notes[virtualRow.index]}
                       onClick={() => onNoteClick(notes[virtualRow.index].id)}
+                      selecting={selecting}
+                      selected={selectedIds.has(notes[virtualRow.index].id)}
+                      onSelect={onSelect}
                     />
                   </div>
                 ))}
@@ -87,6 +96,9 @@ function CollapsibleSection({
                   key={note.id}
                   note={note}
                   onClick={() => onNoteClick(note.id)}
+                  selecting={selecting}
+                  selected={selectedIds.has(note.id)}
+                  onSelect={onSelect}
                 />
               ))}
             </div>
@@ -102,6 +114,9 @@ type Props = {
   orderBy: "newest" | "oldest";
   tagFilter: string;
   loading: boolean;
+  /** Notes the user has ticked for bulk actions, keyed by id. */
+  selectedIds: Set<string>;
+  onSelectionChange: (ids: Set<string>) => void;
 };
 
 const NotesList = React.memo(function NotesList({
@@ -109,6 +124,8 @@ const NotesList = React.memo(function NotesList({
   orderBy,
   tagFilter,
   loading,
+  selectedIds,
+  onSelectionChange,
 }: Props) {
   const router = useRouter();
   const [expandedSections, setExpandedSections] = useState<
@@ -153,6 +170,63 @@ const NotesList = React.memo(function NotesList({
   });
 
   const sortedNotes = [...pinnedNotes, ...sortedNonPinned];
+  const orderedIds = sortedNotes.map((note) => note.id);
+  const selecting = selectedIds.size > 0;
+
+  // Shift-click extends the selection to the whole ordered span between the
+  // last touched card and the current one (Notion's anchoring).
+  const lastAnchorRef = useRef<string | null>(null);
+
+  const toggleSelect = useCallback(
+    (id: string) => {
+      const next = new Set(selectedIds);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      lastAnchorRef.current = id;
+      onSelectionChange(next);
+    },
+    [selectedIds, onSelectionChange],
+  );
+
+  const rangeSelect = useCallback(
+    (id: string) => {
+      const anchor = lastAnchorRef.current;
+      if (anchor && anchor !== id) {
+        const from = orderedIds.indexOf(anchor);
+        const to = orderedIds.indexOf(id);
+        if (from !== -1 && to !== -1) {
+          const next = new Set(selectedIds);
+          for (let i = Math.min(from, to); i <= Math.max(from, to); i++) {
+            next.add(orderedIds[i]);
+          }
+          onSelectionChange(next);
+          return;
+        }
+      }
+      toggleSelect(id);
+    },
+    [orderedIds, selectedIds, toggleSelect, onSelectionChange],
+  );
+
+  const handleCardSelect = useCallback(
+    (id: string, shiftKey: boolean) => {
+      if (shiftKey) rangeSelect(id);
+      else toggleSelect(id);
+    },
+    [rangeSelect, toggleSelect],
+  );
+
+  // Escape leaves selection mode, matching the same gesture in Notion.
+  useEffect(() => {
+    if (!selecting) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      lastAnchorRef.current = null;
+      onSelectionChange(new Set());
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selecting, onSelectionChange]);
 
   const navigateToNote = useCallback((id: string) => {
     router.push(`/note/${id}`);
@@ -233,6 +307,9 @@ const NotesList = React.memo(function NotesList({
               isExpanded={expandedSections.tagged ?? true}
               onToggle={() => toggleSection("tagged")}
               onNoteClick={navigateToNote}
+              selecting={selecting}
+              selectedIds={selectedIds}
+              onSelect={handleCardSelect}
             />
           )}
           {untaggedNotes.length > 0 && (
@@ -242,6 +319,9 @@ const NotesList = React.memo(function NotesList({
               isExpanded={expandedSections.untagged ?? true}
               onToggle={() => toggleSection("untagged")}
               onNoteClick={navigateToNote}
+              selecting={selecting}
+              selectedIds={selectedIds}
+              onSelect={handleCardSelect}
             />
           )}
         </>
@@ -252,6 +332,9 @@ const NotesList = React.memo(function NotesList({
           isExpanded={expandedSections[tagFilter] ?? true}
           onToggle={() => toggleSection(tagFilter)}
           onNoteClick={navigateToNote}
+          selecting={selecting}
+          selectedIds={selectedIds}
+          onSelect={handleCardSelect}
         />
       )}
     </div>

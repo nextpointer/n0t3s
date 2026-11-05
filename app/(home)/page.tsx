@@ -3,19 +3,31 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { allTagsAtom, storageReadyAtom } from "@/store/noteAtom";
-import { getNotes, createNote } from "@/lib/storage";
+import { getNotes, createNote, deleteNote } from "@/lib/storage";
 import { getNoteTags } from "@/lib/tag-syntax";
 import { Note } from "@/lib/types";
 import { ModeToggle } from "@/components/Theme-Mode";
-import { Github } from "lucide-react";
+import { Github, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import NotesFilters from "@/components/note/NoteFilters";
 import NotesList from "@/components/note/NoteList";
 import { CommandMenu } from "@/components/CommandMenu";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { NewNote } from "@/components/icons/NewNote";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
@@ -30,28 +42,38 @@ export default function Home() {
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
 
+  // Bulk selection (Notion-style): an empty set means normal browsing; any
+  // entry turns the list into selection mode.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Single source of truth for re-reading the store, so the tag aggregation
+  // after a delete matches the initial load exactly.
+  const refreshNotes = useCallback(async () => {
+    const allNotes = await getNotes();
+    setNotes(allNotes);
+    setLoading(false);
+    setAllTags(
+      Array.from(new Set(allNotes.flatMap((note) => getNoteTags(note)))),
+    );
+  }, [setAllTags]);
+
   // Initial load
   useEffect(() => {
     if (!storageReady) return;
-
-    let cancelled = false;
     setLoading(true);
-    getNotes().then((allNotes) => {
-      if (cancelled) return;
-      setNotes(allNotes);
-      setLoading(false);
+    void refreshNotes();
+  }, [refreshNotes, storageReady]);
 
-      // Collect all tags for the filter dropdown — inline #mentions plus the
-      // legacy field until migration folds it into the content.
-      const tags = Array.from(
-        new Set(allNotes.flatMap((note) => getNoteTags(note))),
-      );
-      setAllTags(tags);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [setAllTags, storageReady]);
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const deleteSelected = useCallback(async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    // Independent deletes: one bad record must not abort the rest.
+    await Promise.all(ids.map((id) => deleteNote(id).catch(() => undefined)));
+    clearSelection();
+    await refreshNotes();
+  }, [selectedIds, clearSelection, refreshNotes]);
 
   const allTags = useMemo(() => {
     return Array.from(new Set(notes.flatMap((note) => getNoteTags(note))));
@@ -61,6 +83,8 @@ export default function Home() {
     const note = await createNote();
     router.push(`/note/${note.id}`);
   }, [router]);
+
+  const selectedCount = selectedIds.size;
 
   return (
     <>
@@ -119,8 +143,59 @@ export default function Home() {
             orderBy={orderBy}
             tagFilter={tagFilter}
             loading={loading}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
           />
         </div>
+
+        {/* Bulk actions bar (Notion-style) — appears only while selecting */}
+        {selectedCount > 0 && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-xl border border-border bg-popover/95 backdrop-blur px-1.5 py-1.5 shadow-lg w-max max-w-[calc(100vw-2rem)]">
+            <span className="px-2 text-xs font-medium text-muted-foreground whitespace-nowrap">
+              {selectedCount} {selectedCount === 1 ? "note" : "notes"} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+              aria-label="Clear selection"
+              title="Clear selection (Esc)"
+            >
+              <X />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 />
+                  <span className="hidden sm:block">Delete</span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Permanently delete{" "}
+                    {selectedCount === 1 ? "1 note" : `${selectedCount} notes`}
+                    ?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes them from this device&apos;s storage — the
+                    notes and their &quot;#&quot;tags are gone for good and
+                    cannot be recovered.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className={cn(buttonVariants({ variant: "destructive" }))}
+                    onClick={() => void deleteSelected()}
+                  >
+                    Delete {selectedCount === 1 ? "note" : `${selectedCount} notes`}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
       </div>
     </>
   );
