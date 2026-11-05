@@ -23,7 +23,7 @@ const NoteCard = React.memo(function NoteCard({ note, onClick }: Props) {
       }}
       role="link"
       tabIndex={0}
-      className="group relative cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 bg-background/40 hover:bg-accent/30 border border-dashed border-border/40 hover:border-border/60 transition-all duration-200 rounded-[14px] sm:rounded-[16px] backdrop-blur-sm active:scale-[0.99] overflow-hidden"
+      className="group relative cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 bg-accent/40 hover:bg-accent/70 border border-dashed border-border/40 hover:border-border/60 transition-all duration-200 rounded-[14px] sm:rounded-[16px] backdrop-blur-sm active:scale-[0.99] overflow-hidden"
     >
       <div className="flex items-start justify-between gap-2 sm:gap-3 w-full">
         <div className="flex-1 min-w-0 overflow-hidden">
