@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSetAtom, useAtomValue, useAtom } from "jotai";
 import { Loader } from "@/components/ui/loader";
 import { Button } from "@/components/ui/button";
-import { TagInput } from "@/components/TagInput";
 import { NoteHeader } from "@/components/note/NoteHeader";
 import { NoteTitle } from "@/components/note/NoteTitle";
 import { NoteContent } from "@/components/note/NoteContent";
@@ -16,14 +15,13 @@ import { SavePromptDialog } from "@/components/dialogs/SavePromptDialog";
 import {
   pageLoadingAtom,
   allTagsAtom,
-  tagsAtom,
   initializeNoteAtom,
-  checkUnsavedAtom,
   discardEmptyNoteAtom,
   zenMode,
   search,
 } from "@/store/noteAtom";
 import { getNotes } from "@/lib/storage";
+import { getNoteTags } from "@/lib/tag-syntax";
 import { useNoteOperations } from "@/hooks/useNoteOperations";
 import { Note } from "@/lib/types";
 import { ExportDialog } from "@/components/dialogs/ExportDialog";
@@ -49,15 +47,11 @@ export default function Page() {
 
   // Read-only atoms
   const pageLoading = useAtomValue(pageLoadingAtom);
-  const allTags = useAtomValue(allTagsAtom);
-  const tags = useAtomValue(tagsAtom);
 
   // setters
   const setPageLoading = useSetAtom(pageLoadingAtom);
   const setAllTags = useSetAtom(allTagsAtom);
-  const setTags = useSetAtom(tagsAtom);
   const initializeNote = useSetAtom(initializeNoteAtom);
-  const checkUnsaved = useSetAtom(checkUnsavedAtom);
   const discardIfEmpty = useSetAtom(discardEmptyNoteAtom);
 
   // Initialize auto-save functionality
@@ -98,8 +92,11 @@ export default function Page() {
         setNotFound(true);
       }
 
-      // Load all tags for suggestions
-      setAllTags(Array.from(new Set(data.flatMap((n) => n.tags || []))));
+      // Suggestions for the #autocomplete: inline tags plus the legacy
+      // field (until the migration folds it into content).
+      setAllTags(
+        Array.from(new Set(data.flatMap((n) => getNoteTags(n)))),
+      );
 
       setPageLoading(false);
     });
@@ -125,14 +122,6 @@ export default function Page() {
       void discardIfEmpty(id);
     };
   }, [id, discardIfEmpty]);
-
-  const handleTagsChange = useCallback(
-    (newTags: string[]) => {
-      setTags(newTags);
-      checkUnsaved();
-    },
-    [setTags, checkUnsaved],
-  );
 
   if (pageLoading || (!loadedNote && !notFound)) {
     return (
@@ -169,15 +158,6 @@ export default function Page() {
 
       {/* Note title editor */}
       <NoteTitle />
-
-      {/* Tag input with suggestions */}
-      {!zen && (
-        <TagInput
-          onChange={handleTagsChange}
-          value={tags}
-          suggestions={allTags}
-        />
-      )}
 
       {/* Node Editor */}
       <div className="flex-1 min-h-0 overflow-y-auto pb-28 sm:pb-0">

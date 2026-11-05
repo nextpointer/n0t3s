@@ -11,6 +11,7 @@ import React, {
   useRef,
 } from "react";
 import { Note } from "@/lib/types";
+import { getNoteTags } from "@/lib/tag-syntax";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -129,7 +130,7 @@ export const CommandMenu = React.memo(function CommandMenu({
         (c.kind !== "ai" || aiEnabled),
     );
     const tagSet = new Set<string>();
-    notes.forEach((n) => (n.tags || []).forEach((t) => tagSet.add(t)));
+    notes.forEach((n) => getNoteTags(n).forEach((t) => tagSet.add(t)));
     const tags = Array.from(tagSet).sort();
     const tagItems: Item[] = tags.map((t) => ({
       id: `tag:${t}`, label: t, shortcut: "", kind: "tag" as const, tag: t,

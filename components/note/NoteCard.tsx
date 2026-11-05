@@ -1,5 +1,6 @@
 import React from "react";
 import { Note } from "@/lib/types";
+import { getNoteTags } from "@/lib/tag-syntax";
 import { Pin } from "lucide-react";
 
 type Props = {
@@ -8,8 +9,11 @@ type Props = {
 };
 
 const NoteCard = React.memo(function NoteCard({ note, onClick }: Props) {
-  const isPinned = note.tags?.includes("pin");
-  const otherTags = note.tags?.filter((t) => t !== "pin") ?? [];
+  // Tags are #mentions in the content; the legacy field rides along until
+  // the migration folds it in.
+  const tags = getNoteTags(note);
+  const isPinned = tags.includes("pin");
+  const otherTags = tags.filter((t) => t !== "pin");
   const maxTagsToShow = 2;
 
   return (

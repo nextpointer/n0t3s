@@ -4,12 +4,12 @@ import {
   currentNoteAtom,
   titleAtom,
   contentAtom,
-  tagsAtom,
   unsavedAtom,
   saveLoadingAtom,
   autoSaveAtom,
 } from "@/store/noteAtom";
 import { updateNote } from "@/lib/storage";
+import { extractTags } from "@/lib/tag-syntax";
 import toast from "react-hot-toast";
 
 export function useNoteOperations() {
@@ -17,7 +17,6 @@ export function useNoteOperations() {
 
   const title = useAtomValue(titleAtom);
   const content = useAtomValue(contentAtom);
-  const tags = useAtomValue(tagsAtom);
 
   const [unsaved, setUnsaved] = useAtom(unsavedAtom);
   const autoSave = useAtomValue(autoSaveAtom);
@@ -40,7 +39,9 @@ export function useNoteOperations() {
           ...note,
           title,
           content,
-          tags,
+          // Tags live in the text: every #mention becomes a note tag, and
+          // edits to the text alone can retire them.
+          tags: extractTags(content),
           updatedAt: Date.now(),
         };
 
@@ -57,7 +58,7 @@ export function useNoteOperations() {
         setSaveLoading(false);
       }
     },
-    [note, title, content, tags, setNote, setSaveLoading, setUnsaved],
+    [note, title, content, setNote, setSaveLoading, setUnsaved],
   );
 
   // Auto-save effect
@@ -79,7 +80,7 @@ export function useNoteOperations() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [title, content, tags, autoSave, unsaved, note, save]);
+  }, [title, content, autoSave, unsaved, note, save]);
 
   return { save };
 }

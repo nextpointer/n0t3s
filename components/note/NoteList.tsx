@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
 import { createNote } from "@/lib/storage";
+import { getNoteTags } from "@/lib/tag-syntax";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 function CollapsibleSection({
@@ -124,17 +125,26 @@ const NotesList = React.memo(function NotesList({
     }));
   };
 
+  // Tag mentions live in the note text now; the legacy field rides along
+  // until the migration. Extraction is cheap (per note, per render of this
+  // list) and the lists are small enough that memoising buys nothing yet.
+  const tagsOf = useCallback(
+    (note: Note): string[] => getNoteTags(note),
+    [],
+  );
+
   const filteredNotes = notes.filter((note) => {
+    const noteTags = tagsOf(note);
     if (tagFilter === "all") return true;
-    if (tagFilter === "untagged") return !note.tags || note.tags.length === 0;
-    return note.tags?.includes(tagFilter);
+    if (tagFilter === "untagged") return noteTags.length === 0;
+    return noteTags.includes(tagFilter);
   });
 
   const pinnedNotes = filteredNotes.filter((note) =>
-    note.tags?.includes("pin"),
+    tagsOf(note).includes("pin"),
   );
   const nonPinnedNotes = filteredNotes.filter(
-    (note) => !note.tags?.includes("pin"),
+    (note) => !tagsOf(note).includes("pin"),
   );
 
   const sortedNonPinned = nonPinnedNotes.sort((a, b) => {
@@ -209,8 +219,8 @@ const NotesList = React.memo(function NotesList({
     );
   }
 
-  const taggedNotes = sortedNotes.filter((note) => note.tags?.length);
-  const untaggedNotes = sortedNotes.filter((note) => !note.tags?.length);
+  const taggedNotes = sortedNotes.filter((note) => tagsOf(note).length > 0);
+  const untaggedNotes = sortedNotes.filter((note) => tagsOf(note).length === 0);
 
   return (
     <div className="w-full max-w-full overflow-hidden space-y-2.5 sm:space-y-3">

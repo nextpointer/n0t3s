@@ -3,14 +3,6 @@ import { Note } from "@/lib/types";
 import { dbGet, dbPut } from "@/lib/db";
 import { deleteNote } from "@/lib/storage";
 
-function arraysEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
 // PERSISTED SETTINGS ATOMS
 // Plain atoms with defaults; loaded from IndexedDB on mount.
 export const autoSaveAtom = atom<boolean>(true);
@@ -137,12 +129,6 @@ export const titleAtom = atom<string>("");
  */
 export const contentAtom = atom<string>("");
 
-/**
- * Current note tags
- * Synced with TagInput component
- */
-export const tagsAtom = atom<string[]>([]);
-
 // UI STATE ATOMS
 /**
  * Indicates if current note has unsaved changes
@@ -234,7 +220,9 @@ export const canRedoAtom = atom((get) => {
  * Compares current editing state with original note data
  * Updates unsavedAtom accordingly
  *
- * Called after any edit (title, content, tags)
+ * Called after any edit (title, content). Tags are `#mentions` inside the
+ * content, so a tag change shows up as a content change — there is no
+ * separate tag list to compare.
  */
 export const checkUnsavedAtom = atom(null, (get, set) => {
   const note = get(currentNoteAtom);
@@ -242,13 +230,9 @@ export const checkUnsavedAtom = atom(null, (get, set) => {
 
   const title = get(titleAtom);
   const content = get(contentAtom);
-  const tags = get(tagsAtom);
 
   // Compare current state with original note
-  const changed =
-    title !== note.title ||
-    content !== note.content ||
-    !arraysEqual(tags, note.tags || []);
+  const changed = title !== note.title || content !== note.content;
 
   set(unsavedAtom, changed);
 });
@@ -269,7 +253,6 @@ export const initializeNoteAtom = atom(null, (get, set, note: Note) => {
   // Initialize editing state
   set(titleAtom, note.title);
   set(contentAtom, note.content);
-  set(tagsAtom, note.tags || []);
 
   // Initialize history with current content
   set(historyAtom, [note.content]);
@@ -396,8 +379,9 @@ export const discardEmptyNoteAtom = atom(
 
     const title = (get(titleAtom) || "").trim();
     const content = (get(contentAtom) || "").trim();
-    const tags = get(tagsAtom) || [];
-    if (title || content || tags.length > 0) return false;
+    // `#tag` mentions are also content, so a note carrying only a tag is
+    // never considered empty — the user typed something.
+    if (title || content) return false;
 
     try {
       await deleteNote(note.id);
@@ -443,12 +427,8 @@ export const syncEditorToContentAtom = atom(
     if (!note) return;
 
     const title = get(titleAtom);
-    const tags = get(tagsAtom);
 
-    const changed =
-      title !== note.title ||
-      newContent !== note.content ||
-      !arraysEqual(tags, note.tags || []);
+    const changed = title !== note.title || newContent !== note.content;
 
     set(unsavedAtom, changed);
   },

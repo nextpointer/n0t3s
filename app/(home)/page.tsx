@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSetAtom } from "jotai";
 import { allTagsAtom } from "@/store/noteAtom";
 import { getNotes, createNote } from "@/lib/storage";
+import { getNoteTags } from "@/lib/tag-syntax";
 import { Note } from "@/lib/types";
 import { ModeToggle } from "@/components/Theme-Mode";
 import { Github } from "lucide-react";
@@ -35,9 +36,10 @@ export default function Home() {
       setNotes(allNotes);
       setLoading(false);
 
-      // Collect all tags for filter dropdown
+      // Collect all tags for the filter dropdown — inline #mentions plus the
+      // legacy field until migration folds it into the content.
       const tags = Array.from(
-        new Set(allNotes.flatMap((note) => note.tags || [])),
+        new Set(allNotes.flatMap((note) => getNoteTags(note))),
       );
       setAllTags(tags);
     });
@@ -47,7 +49,7 @@ export default function Home() {
   }, [setAllTags]);
 
   const allTags = useMemo(() => {
-    return Array.from(new Set(notes.flatMap((note) => note.tags || [])));
+    return Array.from(new Set(notes.flatMap((note) => getNoteTags(note))));
   }, [notes]);
 
   const handleNewNote = useCallback(async () => {
@@ -106,7 +108,7 @@ export default function Home() {
         <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
 
         {/* Content */}
-        <div className="w-full mt-6 overflow-y-scroll overflow-x-hidden px-4 py-4">
+        <div className="w-full mt-6 overflow-y-scroll overflow-x-hidden py-4">
           <NotesList
             notes={notes}
             orderBy={orderBy}
