@@ -59,7 +59,10 @@ export default function RootLayout({
       <body className={`${sm.variable} overflow-hidden`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          // An explicit default would force every first visit to light; the
+          // system theme is what the user actually chose. A manual toggle
+          // still overrides it (next-themes persists the choice).
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
