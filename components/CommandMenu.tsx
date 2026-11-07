@@ -150,6 +150,39 @@ export const CommandMenu = React.memo(function CommandMenu({
     }
   }, [open]);
 
+  // Lift the phone sheet above the virtual keyboard. Android's
+  // `resizes-content` shrinks the layout viewport, so `bottom-0` already
+  // lands there; iOS overlays the keyboard instead, and the gap between
+  // the visual and layout viewports is exactly the keyboard's height (the
+  // same tracking the note editor uses). The inline style overrides the
+  // sheet's `bottom-0` only while it can answer for a keyboard.
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  useEffect(() => {
+    if (!open || !isPhone) {
+      setKeyboardInset(0);
+      return;
+    }
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = () => {
+      const inset =
+        Math.round(window.innerHeight) -
+        Math.round(vv.height) -
+        Math.round(vv.offsetTop);
+      setKeyboardInset(Math.max(0, inset));
+    };
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    window.addEventListener("orientationchange", sync);
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+      window.removeEventListener("orientationchange", sync);
+      setKeyboardInset(0);
+    };
+  }, [open, isPhone]);
+
   // Build items once
   const allItems = useMemo<Item[]>(() => {
     const commands = COMMANDS.filter(
@@ -380,6 +413,7 @@ export const CommandMenu = React.memo(function CommandMenu({
         <SheetContent
           side="bottom"
           showCloseButton={false}
+          style={keyboardInset > 0 ? { bottom: keyboardInset } : undefined}
           className="rounded-t-2xl border-border/60 overflow-hidden p-0 gap-0"
         >
           <div aria-hidden className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-muted-foreground/30" />
