@@ -500,24 +500,18 @@
     height: 0 !important;
 }
 
-/* Desktop: the formatting toolbar stops living at the top of the sheet and
-   floats instead as a glass pill, bottom-centred relative to the writing
-   column — not the viewport, which matters because the writing column is
-   left-anchored. Unlayered on purpose: the pill must out-rank the root
-   element's Tailwind width/padding utilities (w-full, px-1.5, py-1). */
+/* Desktop: the formatting toolbar lives where it always did — in the flow,
+   between the title and the writing canvas — but reads as a frosted-glass
+   pill: translucent, blurred, hairline border, soft shadow, --radius-xl
+   corners. Auto margins centre it ("upper centre"), and because it stays
+   in the flow nothing floats over the writing area. Unlayered on purpose:
+   it must out-rank the root element's Tailwind width/padding utilities
+   (w-full, px-1.5, py-1) and OverType's unlayered stylesheet. */
 @media (min-width: 768px) {
     .note-toolbar {
-        position: fixed;
-        top: auto;
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
         width: max-content;
-        max-width: calc(100vw - 3rem);
-        z-index: 45;
-        /* Clears the fixed in-page action bar (h-16 + padding) at every
-           desktop-ish width, md+ in-flow below 768 handled by the row. */
-        bottom: 88px;
+        max-width: 100%;
+        margin-inline: auto;
         background: color-mix(in srgb, var(--background) 70%, transparent);
         backdrop-filter: blur(14px) saturate(1.5);
         border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
