@@ -127,12 +127,38 @@ export const CommandMenu = React.memo(function CommandMenu({
   const setExportOpen = useSetAtom(exportDialogOpenAtom);
   const setZenMode = useSetAtom(zenMode);
 
-  // Global keybind
+  /**
+   * Two distinct tools in one shell: Ctrl+P is the command runner
+   * (commands only, never note listings) and Ctrl+O is the notes/tag
+   * searcher. Modes switch live while open, and the query resets each
+   * time because the two index different things.
+   */
+  const [mode, setMode] = useState<"commands" | "notes">("commands");
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  const openRef = useRef(open);
+  openRef.current = open;
+
+  useEffect(() => {
+    setQuery("");
+    idxRef.current = 0;
+  }, [mode]);
+
+  // Global keybinds. Ctrl+O is the browsers' "Open file…" — preventDefault
+  // on keydown owns it, the way web launchers do.
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if (e.key === "p" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        setOpen((p) => !p);
+      const meta = e.ctrlKey || e.metaKey;
+      if (!meta || e.altKey || e.shiftKey) return;
+      if (e.key !== "p" && e.key !== "o") return;
+      e.preventDefault();
+      const next = e.key === "p" ? "commands" : "notes";
+      if (openRef.current) {
+        if (modeRef.current === next) setOpen(false);
+        else setMode(next); // hop between the two tools without closing
+      } else {
+        setMode(next);
+        setOpen(true);
       }
     };
     document.addEventListener("keydown", h);
@@ -183,12 +209,15 @@ export const CommandMenu = React.memo(function CommandMenu({
     };
   }, [open, isPhone]);
 
-  // Build items once
+  // Build items for the active mode only — the command runner never lists
+  // notes or tags, and the note searcher never lists commands.
   const allItems = useMemo<Item[]>(() => {
-    const commands = COMMANDS.filter(
-      (c) => (c.scope !== "note" || Boolean(noteId)) &&
-        (c.kind !== "ai" || aiEnabled),
-    );
+    if (mode === "commands") {
+      return COMMANDS.filter(
+        (c) => (c.scope !== "note" || Boolean(noteId)) &&
+          (c.kind !== "ai" || aiEnabled),
+      );
+    }
     const tagSet = new Set<string>();
     notes.forEach((n) => getNoteTags(n).forEach((t) => tagSet.add(t)));
     const tags = Array.from(tagSet).sort();
@@ -205,8 +234,8 @@ export const CommandMenu = React.memo(function CommandMenu({
         noteId: n.id,
         sub: n.content?.slice(0, 50).replace(/[#*`\n]/g, " ").trim(),
       }));
-    return [...commands, ...tagItems, ...noteItems];
-  }, [notes, noteId, aiEnabled]);
+    return [...tagItems, ...noteItems];
+  }, [mode, notes, noteId, aiEnabled]);
 
   // Filter + rank: every item is scored by the fuzzy matcher against its
   // label (and, where present, its tag and content preview — the preview
@@ -345,7 +374,7 @@ export const CommandMenu = React.memo(function CommandMenu({
         <input
           ref={inputRef}
           className="flex-1 bg-transparent text-base outline-none sm:text-sm placeholder:text-muted-foreground/50"
-          placeholder="Type a command or search..."
+          placeholder={mode === "notes" ? "Search notes and #tags..." : "Type a command..."}
           value={query}
           onChange={(e) => { setQuery(e.target.value); idxRef.current = 0; }}
           onKeyDown={onInputKeyDown}
@@ -398,7 +427,7 @@ export const CommandMenu = React.memo(function CommandMenu({
       {/* Footer: keyboard hints only mean anything where a keyboard sits. */}
       <div className="hidden md:flex items-center justify-between px-4 py-2 border-t text-[10px] text-muted-foreground/30">
         <span>↑↓</span>
-        <span>↵ select</span>
+        <span>↵ {mode === "notes" ? "open" : "run"}</span>
         <span>esc</span>
       </div>
     </>
