@@ -13,6 +13,10 @@ import React, {
 import { Note } from "@/lib/types";
 import { getNoteTags } from "@/lib/tag-syntax";
 import { fuzzyScore } from "@/lib/fuzzy";
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -83,6 +87,21 @@ function sel(listEl: HTMLDivElement | null, idx: number) {
   }
 }
 
+/** Whether the viewport is phone-sized. Client-side only; before
+ * hydration (i.e. never, since the palette is closed then) it resolves to
+ * the desktop shape, matching the server render. */
+function useIsPhone(): boolean {
+  const [isPhone, setIsPhone] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setIsPhone(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return isPhone;
+}
+
 export const CommandMenu = React.memo(function CommandMenu({
   open,
   setOpen,
@@ -96,6 +115,7 @@ export const CommandMenu = React.memo(function CommandMenu({
   const lenRef = useRef(0);
   const router = useRouter();
   const { setTheme } = useTheme();
+  const isPhone = useIsPhone();
   const aiEnabled = useAtomValue(aiEnabledAtom);
   const setDeleteOpen = useSetAtom(deleteDialogOpenAtom);
   const setExportOpen = useSetAtom(exportDialogOpenAtom);
@@ -266,75 +286,104 @@ export const CommandMenu = React.memo(function CommandMenu({
 
   let gi = -1;
 
+  // One palette body shared by both shapes: the desktop floating card and
+  // the phone bottom sheet (radix mounts the sheet's portal; the ref wiring
+  // and keyboard handling are identical wherever this renders).
+  const body = (
+    <>
+      {/* Input */}
+      <div className="flex items-center gap-3 px-4 h-10 border-b">
+        <svg className="size-4 shrink-0 opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+        <input
+          ref={inputRef}
+          className="flex-1 bg-transparent text-base outline-none sm:text-sm placeholder:text-muted-foreground/50"
+          placeholder="Type a command or search..."
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); idxRef.current = 0; }}
+          onKeyDown={onInputKeyDown}
+        />
+      </div>
+
+      {/* Results */}
+      <div ref={listRef} className="max-h-[45svh] md:max-h-[340px] overflow-y-auto overscroll-contain py-1.5">
+        {lenRef.current === 0 ? (
+          <div className="py-8 text-center text-sm text-muted-foreground/50">No results</div>
+        ) : (
+          sections.map((sec) => (
+            <div key={sec.h}>
+              <div className="px-4 pt-3 pb-1.5 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/40">
+                {sec.h}
+              </div>
+              {sec.items.map((item) => {
+                const idx = ++gi;
+                return (
+                  <div
+                    key={item.id}
+                    data-i={idx}
+                    className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer mx-1 rounded-md data-[sel]:bg-accent data-[sel]:text-accent-foreground"
+                    onClick={() => run(item)}
+                    onMouseEnter={() => { idxRef.current = idx; sel(listRef.current, idx); }}
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="truncate">{item.label}</span>
+                      {item.kind === "tag" && <span className="text-muted-foreground/30 text-xs">#{item.tag}</span>}
+                      {item.kind === "note" && item.sub && (
+                        <span className="text-muted-foreground/30 text-xs truncate hidden sm:inline">{item.sub}</span>
+                      )}
+                    </span>
+                    <span className="flex items-center gap-2 shrink-0 ml-2">
+                      {item.kind === "ai" && <span className="text-[10px] text-muted-foreground/30 font-medium">AI</span>}
+                      {item.shortcut && (
+                        <kbd className="text-[10px] text-muted-foreground/40 font-mono bg-muted/30 px-1.5 py-0.5 rounded">
+                          {item.shortcut}
+                        </kbd>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Footer: keyboard hints only mean anything where a keyboard sits. */}
+      <div className="hidden md:flex items-center justify-between px-4 py-2 border-t text-[10px] text-muted-foreground/30">
+        <span>↑↓</span>
+        <span>↵ select</span>
+        <span>esc</span>
+      </div>
+    </>
+  );
+
+  // Phones get a bottom sheet (radix dialog under the hood, so Escape,
+  // focus trap and backdrop dismissal come for free); everything md+ keeps
+  // the floating palette near the top, where the shortcut muscle memory is.
+  if (isPhone) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="rounded-t-2xl border-border/60 overflow-hidden p-0 gap-0"
+        >
+          <div aria-hidden className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-muted-foreground/30" />
+          {body}
+          {/* Keep clear of the home indicator / gesture bar. */}
+          <div aria-hidden className="h-2 shrink-0 pb-[env(safe-area-inset-bottom)]" />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-[999] flex items-start justify-center pt-[15vh]">
       <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
       <div className="relative w-full max-w-lg mx-4 bg-popover text-popover-foreground rounded-lg border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        {/* Input */}
-        <div className="flex items-center gap-3 px-4 h-10 border-b">
-          <svg className="size-4 shrink-0 opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            ref={inputRef}
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
-            placeholder="Type a command or search..."
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); idxRef.current = 0; }}
-            onKeyDown={onInputKeyDown}
-          />
-        </div>
-
-        {/* Results */}
-        <div ref={listRef} className="max-h-[340px] overflow-y-auto overscroll-contain py-1.5">
-          {lenRef.current === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground/50">No results</div>
-          ) : (
-            sections.map((sec) => (
-              <div key={sec.h}>
-                <div className="px-4 pt-3 pb-1.5 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/40">
-                  {sec.h}
-                </div>
-                {sec.items.map((item) => {
-                  const idx = ++gi;
-                  return (
-                    <div
-                      key={item.id}
-                      data-i={idx}
-                      className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer mx-1 rounded-md data-[sel]:bg-accent data-[sel]:text-accent-foreground"
-                      onClick={() => run(item)}
-                      onMouseEnter={() => { idxRef.current = idx; sel(listRef.current, idx); }}
-                    >
-                      <span className="flex items-center gap-2 min-w-0">
-                        <span className="truncate">{item.label}</span>
-                        {item.kind === "tag" && <span className="text-muted-foreground/30 text-xs">#{item.tag}</span>}
-                        {item.kind === "note" && item.sub && (
-                          <span className="text-muted-foreground/30 text-xs truncate hidden sm:inline">{item.sub}</span>
-                        )}
-                      </span>
-                      <span className="flex items-center gap-2 shrink-0 ml-2">
-                        {item.kind === "ai" && <span className="text-[10px] text-muted-foreground/30 font-medium">AI</span>}
-                        {item.shortcut && (
-                          <kbd className="text-[10px] text-muted-foreground/40 font-mono bg-muted/30 px-1.5 py-0.5 rounded">
-                            {item.shortcut}
-                          </kbd>
-                        )}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-2 border-t text-[10px] text-muted-foreground/30">
-          <span>↑↓</span>
-          <span>↵ select</span>
-          <span>esc</span>
-        </div>
+        {body}
       </div>
     </div>
   );
