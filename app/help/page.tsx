@@ -112,7 +112,7 @@ Undo and redo use the system edit history — press \`Ctrl/Cmd+Z\` or \`Ctrl/Cmd
 
 \`Ctrl+P\` anywhere opens the palette. Search notes and tags, or run a command. Commands that act on the open note (save, delete, export, AI) only appear while you are inside one.
 
-The search is fuzzy and forgiving: \`ins cd\` finds the code block, \`hr\` finds the horizontal line, and best matches rise to the top of their section.
+The search is fuzzy and forgiving: \`ins cd\` finds the code block, \`hr\` finds the horizontal line, and best matches rise to the top of their section. Synonyms count too — typing \`light\` or \`dark\` reaches the theme toggle, \`trash\` finds delete, \`today\` finds the date insert.
 
 **Insert commands** land exactly where your cursor is, like typed text — one undo step: today's date, the current time, a fenced code block, a horizontal line, or a link. On a phone the palette slides up as a bottom sheet.
 
