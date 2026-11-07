@@ -23,6 +23,10 @@ import {
   QuoteIcon,
   TaskListIcon,
 } from "@/components/icons/EditorIcons";
+import { Save } from "lucide-react";
+import { HistoryControls } from "./HistoryControls";
+import { AIMenu } from "./AIMenu";
+import { SettingsMenu } from "./SettingsMenu";
 import { cn } from "@/lib/utils";
 
 /** Minimal shape of the OverType instance this toolbar drives. */
@@ -156,7 +160,7 @@ export const EditorToolbar = memo(function EditorToolbar({
       role="toolbar"
       aria-label="Formatting toolbar"
       data-mobile-visible={mobileVisible || undefined}
-      className="note-toolbar flex w-full items-center gap-1 overflow-x-auto px-1.5 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="note-toolbar flex w-full items-center gap-1 overflow-x-auto [overscroll-behavior-x:contain] px-1.5 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {GROUPS.map((group, gi) => (
         <div key={gi} className="flex shrink-0 items-center gap-1">
@@ -233,6 +237,30 @@ export const EditorToolbar = memo(function EditorToolbar({
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Phones only: the note-level actions the top header hosts, trailing
+          the format groups so the strip scrolls — with the platform's own
+          rubber-band at the edges — to reach them. Window save/listener
+          components are the exact instances the header renders, so state
+          (autosave toggles, AI loading) stays in one place. */}
+      <div className="md:hidden flex shrink-0 items-center gap-1" aria-label="Note actions">
+        <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-border" />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          title="Save (Ctrl/Cmd+S)"
+          aria-label="Save"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => window.dispatchEvent(new CustomEvent("note:save"))}
+          className="size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        >
+          <Save className="size-4" />
+        </Button>
+        <HistoryControls />
+        <AIMenu />
+        <SettingsMenu />
+      </div>
     </div>
   );
 });
