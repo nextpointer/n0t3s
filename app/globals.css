@@ -499,3 +499,41 @@
     width: 0 !important;
     height: 0 !important;
 }
+
+/* Desktop: the formatting toolbar stops living at the top of the sheet and
+   floats instead as a glass pill, bottom-centred relative to the writing
+   column — not the viewport, which matters because the writing column is
+   left-anchored. Unlayered on purpose: the pill must out-rank the root
+   element's Tailwind width/padding utilities (w-full, px-1.5, py-1). */
+@media (min-width: 768px) {
+    .note-toolbar {
+        position: fixed;
+        top: auto;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100vw - 3rem);
+        z-index: 45;
+        /* Clears the fixed in-page action bar (h-16 + padding) at every
+           desktop-ish width, md+ in-flow below 768 handled by the row. */
+        bottom: 88px;
+        background: color-mix(in srgb, var(--background) 70%, transparent);
+        backdrop-filter: blur(14px) saturate(1.5);
+        border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.35);
+        padding: 8px 10px;
+    }
+}
+
+/* One left line for the whole writing sheet: the header's back glyph, the
+   title input and the editor's first character all sit on the same edge.
+   OverType pads the editing/preview canvas 16px left by default, which put
+   the note text ~16px right of the title above it; the stats row mirrored
+   that padding with its own margin. Unlayered + !important because OverType
+   injects an unlayered stylesheet of its own at equal specificity. */
+.note-editor-container .overtype-wrapper .overtype-input,
+.note-editor-container .overtype-wrapper .overtype-preview {
+    padding-left: 0 !important;
+}

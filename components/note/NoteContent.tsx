@@ -846,7 +846,7 @@ export const NoteContent = memo(
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
         <div
-          className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3"
+          className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none"
           style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
           <div

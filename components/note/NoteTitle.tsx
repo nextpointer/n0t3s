@@ -54,9 +54,7 @@ export const NoteTitle = memo(function NoteTitle() {
       className={`sticky top-0 z-40 w-full bg-transparent ${zen ? "pt-4" : "pt-13"} pb-2`}
     >
       <input
-        className={`${
-          zen ? "ml-3" : ""
-        } text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none bg-transparent border-none`}
+        className={`text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none bg-transparent border-none`}
         ref={titleInputRef}
         value={title}
         onChange={handleChange}

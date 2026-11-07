@@ -20,7 +20,7 @@ Start typing in any note. Markdown formats as you go — \`**bold**\`, \`*italic
 
 ## Toolbar
 
-The formatting toolbar sits at the top of the editor, centred, and stays visible while you type. On a phone it moves to the bottom of the screen and appears only while the on-screen keyboard is up, so it never sits on top of what you are reading.
+On desktop the formatting toolbar is a floating frosted-glass pill at the bottom centre of the sheet, and it stays visible while you type. On a phone it lives at the bottom of the screen and appears only while the on-screen keyboard is up, so it never sits on top of what you are reading.
 
 On a phone the strip carries **everything** — swipe it sideways (it bounces at the edges) and past the format buttons you'll find save, undo, redo, AI and settings, so nothing needs the top bar while the keyboard is up.
 
