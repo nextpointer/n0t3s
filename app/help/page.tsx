@@ -22,6 +22,8 @@ Start typing in any note. Markdown formats as you go — \`**bold**\`, \`*italic
 
 The formatting toolbar sits at the top of the editor, centred, and stays visible while you type. On a phone it moves to the bottom of the screen and appears only while the on-screen keyboard is up, so it never sits on top of what you are reading.
 
+On a phone the strip carries **everything** — swipe it sideways (it bounces at the edges) and past the format buttons you'll find save, undo, redo, AI and settings, so nothing needs the top bar while the keyboard is up.
+
 Use it for **Bold**, *Italic*, \`code\`, **H1**/**H2**/**H3**, bullet/numbered/task lists, quotes and links. A button lights up when the caret is inside that kind of text, so you can see what you're about to change.
 
 Every button has a tooltip — hover it to see the name and the keyboard shortcut.
@@ -109,6 +111,10 @@ Undo and redo use the system edit history — press \`Ctrl/Cmd+Z\` or \`Ctrl/Cmd
 ## Command Palette
 
 \`Ctrl+P\` anywhere opens the palette. Search notes and tags, or run a command. Commands that act on the open note (save, delete, export, AI) only appear while you are inside one.
+
+The search is fuzzy and forgiving: \`ins cd\` finds the code block, \`hr\` finds the horizontal line, and best matches rise to the top of their section.
+
+**Insert commands** land exactly where your cursor is, like typed text — one undo step: today's date, the current time, a fenced code block, a horizontal line, or a link. On a phone the palette slides up as a bottom sheet.
 
 ---
 
