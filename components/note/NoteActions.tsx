@@ -96,14 +96,14 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
   }, [unsaved, autoSave, router, setTarget, setShowPrompt, discardIfEmpty]);
 
   return (
-    <div className="md:relative fixed right-8 bottom-3 md:bottom-0 left-0 flex flex-row h-16 pb-1 gap-4 items-center justify-end z-30 ">
+    <div className="md:relative fixed right-3 bottom-3 md:bottom-0 md:right-8 left-0 flex flex-row h-16 pb-1 gap-2 md:gap-4 items-end md:items-center justify-end z-30 ">
       {!zen && (
         <button
           type="button"
           onClick={() => void handleOpenNoteList()}
           aria-label="Back to note list"
           title="All notes"
-          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
           <List className="size-4 pointer-events-none text-foreground/70" />
         </button>
@@ -115,7 +115,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           onClick={() => setSearchOpen(true)}
           aria-label="Command palette"
           title="Search & commands (Ctrl+P)"
-          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
           <Search className="size-4 pointer-events-none text-foreground/70" />
         </button>
@@ -127,7 +127,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         aria-pressed={previewing}
         aria-label="Toggle read mode"
         title="Read mode (Ctrl+/)"
-        className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+        className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
       >
         <EyeIcon
           className={cn(
@@ -143,7 +143,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         aria-pressed={toolbarEnabled}
         aria-label="Toggle formatting toolbar"
         title="Toggle formatting toolbar"
-        className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+        className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
       >
         <ToolbarIcon
           className={cn(
@@ -161,7 +161,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           onClick={handleToggleZen}
           aria-label="Exit zen mode"
           title="Exit zen mode (Ctrl+Shift+Z)"
-          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
           <Cross className="size-4 pointer-events-none text-foreground/70" />
         </button>
@@ -171,7 +171,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           onClick={handleToggleZen}
           aria-label="Enter zen mode"
           title="Zen mode (Ctrl+Shift+Z)"
-          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
           <Zen className="size-4 pointer-events-none" />
         </button>
@@ -183,7 +183,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           onClick={handleOpenAskDialog}
           aria-label="Ask AI"
           title="Ask AI"
-          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
           <Spark className="size-4 mr-1 text-foreground/50" />
         </button>
@@ -192,7 +192,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
       {!zen && !autoSave && (
         <Button
           variant={unsaved ? "default" : "ghost"}
-          className="text-xs sm:text-sm rounded-full py-0.1 mt-10"
+          className="text-xs sm:text-sm rounded-full py-0.1 md:mt-10"
           onClick={handleSave}
           disabled={!unsaved || loading}
         >
