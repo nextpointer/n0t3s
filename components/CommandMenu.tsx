@@ -12,6 +12,7 @@ import React, {
 } from "react";
 import { Note } from "@/lib/types";
 import { getNoteTags } from "@/lib/tag-syntax";
+import { fuzzyScore } from "@/lib/fuzzy";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -65,11 +66,6 @@ const COMMANDS: Item[] = [
   { id: "ai:todo", label: "Create todo list", shortcut: "⌘⇧Q", kind: "ai", scope: "note" },
   { id: "ai:prompt", label: "Custom prompt", shortcut: "⌘⇧P", kind: "ai", scope: "note" },
 ];
-
-function match(q: string, t: string): boolean {
-  if (!q) return true;
-  return t.toLowerCase().includes(q.toLowerCase());
-}
 
 function sel(listEl: HTMLDivElement | null, idx: number) {
   if (!listEl) return;
@@ -148,17 +144,45 @@ export const CommandMenu = React.memo(function CommandMenu({
     return [...commands, ...tagItems, ...noteItems];
   }, [notes, noteId, aiEnabled]);
 
-  // Filter
+  // Filter + rank: every item is scored by the fuzzy matcher against its
+  // label (and, where present, its tag and content preview — the preview
+  // counts less so running notes never eclipse the commands). With an
+  // empty query everything scores 0 and the stable sort keeps the curated
+  // order; with a query, best matches rise inside each section.
   const q = query.toLowerCase();
-  const sections: { h: string; items: Item[] }[] = [];
-  const a: Item[] = [], t: Item[] = [], n: Item[] = [];
-  for (const i of allItems) {
-    if (!q || match(q, i.label) || match(q, i.tag || "") || match(q, i.sub || "")) {
-      if (i.kind === "note") n.push(i);
-      else if (i.kind === "tag") t.push(i);
-      else a.push(i);
+  type Scored = { item: Item; score: number };
+  const scoreItem = (item: Item): Scored | null => {
+    if (!q) return { item, score: 0 };
+    let best: number | null = fuzzyScore(q, item.label);
+    if (item.tag) {
+      const tagScore = fuzzyScore(q, item.tag);
+      if (tagScore !== null && (best === null || tagScore > best)) best = tagScore;
+      const hashScore = fuzzyScore(q, `#${item.tag}`);
+      if (hashScore !== null && (best === null || hashScore > best)) best = hashScore;
     }
+    if (item.sub) {
+      const subScore = fuzzyScore(q, item.sub);
+      if (subScore !== null && (best === null || subScore * 0.4 > best)) {
+        best = subScore * 0.4;
+      }
+    }
+    return best === null ? null : { item, score: best };
+  };
+  const commandsMatched: Scored[] = [];
+  const tagsMatched: Scored[] = [];
+  const notesMatched: Scored[] = [];
+  for (const item of allItems) {
+    const scored = scoreItem(item);
+    if (!scored) continue;
+    if (item.kind === "note") notesMatched.push(scored);
+    else if (item.kind === "tag") tagsMatched.push(scored);
+    else commandsMatched.push(scored);
   }
+  const byBest = (a: Scored, b: Scored) => b.score - a.score;
+  const a = commandsMatched.sort(byBest).map((s) => s.item);
+  const t = tagsMatched.sort(byBest).map((s) => s.item);
+  const n = notesMatched.sort(byBest).map((s) => s.item);
+  const sections: { h: string; items: Item[] }[] = [];
   if (a.length) sections.push({ h: "Commands", items: a });
   if (t.length) sections.push({ h: "Tags", items: t });
   if (n.length) sections.push({ h: "Notes", items: n });
