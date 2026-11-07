@@ -13,6 +13,7 @@ import React, {
 import { Note } from "@/lib/types";
 import { getNoteTags } from "@/lib/tag-syntax";
 import { fuzzyScore } from "@/lib/fuzzy";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import {
   Sheet,
   SheetContent,
@@ -91,21 +92,6 @@ function sel(listEl: HTMLDivElement | null, idx: number) {
     next.setAttribute("data-sel", "true");
     next.scrollIntoView({ block: "nearest" });
   }
-}
-
-/** Whether the viewport is phone-sized. Client-side only; before
- * hydration (i.e. never, since the palette is closed then) it resolves to
- * the desktop shape, matching the server render. */
-function useIsPhone(): boolean {
-  const [isPhone, setIsPhone] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const sync = () => setIsPhone(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-  return isPhone;
 }
 
 export const CommandMenu = React.memo(function CommandMenu({
