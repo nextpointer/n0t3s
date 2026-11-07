@@ -49,31 +49,37 @@ interface Item {
   tag?: string;
   noteId?: string;
   sub?: string;
+  /**
+   * Alternative search words — synonyms for what the command does, not
+   * what it is called. Typing "light" should reach the theme toggle even
+   * though neither word shares a root with "theme".
+   */
+  keywords?: string;
   /** "note" = only offered while a note is open. */
   scope?: "global" | "note";
 }
 
 const COMMANDS: Item[] = [
-  { id: "new", label: "New note", shortcut: "", kind: "action", scope: "global" },
-  { id: "save", label: "Save", shortcut: "⌘S", kind: "action", scope: "note" },
-  { id: "ins:date", label: "Insert current date", shortcut: "", kind: "insert", scope: "note" },
-  { id: "ins:time", label: "Insert current time", shortcut: "", kind: "insert", scope: "note" },
-  { id: "ins:code", label: "Insert code block", shortcut: "", kind: "insert", scope: "note" },
-  { id: "ins:hr", label: "Insert horizontal line", shortcut: "", kind: "insert", scope: "note" },
-  { id: "ins:link", label: "Insert link", shortcut: "⌘K", kind: "insert", scope: "note" },
-  { id: "delete", label: "Delete note", shortcut: "", kind: "action", scope: "note" },
-  { id: "export", label: "Export note", shortcut: "", kind: "action", scope: "note" },
-  { id: "help", label: "Help & shortcuts", shortcut: "?", kind: "action", scope: "global" },
-  { id: "theme", label: "Toggle theme", shortcut: "", kind: "action", scope: "global" },
-  { id: "zen", label: "Toggle zen mode", shortcut: "⌘⇧Space", kind: "action", scope: "note" },
-  { id: "readmode", label: "Toggle read mode", shortcut: "⌘/", kind: "action", scope: "note" },
-  { id: "ai:summarize", label: "Summarize", shortcut: "⌘⇧S", kind: "ai", scope: "note" },
-  { id: "ai:rewrite", label: "Rewrite", shortcut: "⌘⇧R", kind: "ai", scope: "note" },
-  { id: "ai:grammar", label: "Fix grammar", shortcut: "⌘⇧G", kind: "ai", scope: "note" },
-  { id: "ai:expand", label: "Expand", shortcut: "⌘⇧E", kind: "ai", scope: "note" },
-  { id: "ai:simplify", label: "Simplify", shortcut: "⌘⇧I", kind: "ai", scope: "note" },
-  { id: "ai:todo", label: "Create todo list", shortcut: "⌘⇧Q", kind: "ai", scope: "note" },
-  { id: "ai:prompt", label: "Custom prompt", shortcut: "⌘⇧P", kind: "ai", scope: "note" },
+  { id: "new", label: "New note", shortcut: "", kind: "action", scope: "global", keywords: "create add" },
+  { id: "save", label: "Save", shortcut: "⌘S", kind: "action", scope: "note", keywords: "store write disk" },
+  { id: "ins:date", label: "Insert current date", shortcut: "", kind: "insert", scope: "note", keywords: "today today's" },
+  { id: "ins:time", label: "Insert current time", shortcut: "", kind: "insert", scope: "note", keywords: "clock now" },
+  { id: "ins:code", label: "Insert code block", shortcut: "", kind: "insert", scope: "note", keywords: "fence" },
+  { id: "ins:hr", label: "Insert horizontal line", shortcut: "", kind: "insert", scope: "note", keywords: "divider separator rule" },
+  { id: "ins:link", label: "Insert link", shortcut: "⌘K", kind: "insert", scope: "note", keywords: "hyperlink url" },
+  { id: "delete", label: "Delete note", shortcut: "", kind: "action", scope: "note", keywords: "remove trash" },
+  { id: "export", label: "Export note", shortcut: "", kind: "action", scope: "note", keywords: "download markdown backup" },
+  { id: "help", label: "Help & shortcuts", shortcut: "?", kind: "action", scope: "global", keywords: "manual docs guide" },
+  { id: "theme", label: "Toggle theme", shortcut: "", kind: "action", scope: "global", keywords: "light dark appearance mode" },
+  { id: "zen", label: "Toggle zen mode", shortcut: "⌘⇧Space", kind: "action", scope: "note", keywords: "focus distraction hide" },
+  { id: "readmode", label: "Toggle read mode", shortcut: "⌘/", kind: "action", scope: "note", keywords: "preview render" },
+  { id: "ai:summarize", label: "Summarize", shortcut: "⌘⇧S", kind: "ai", scope: "note", keywords: "tldr brief" },
+  { id: "ai:rewrite", label: "Rewrite", shortcut: "⌘⇧R", kind: "ai", scope: "note", keywords: "paraphrase rephrase" },
+  { id: "ai:grammar", label: "Fix grammar", shortcut: "⌘⇧G", kind: "ai", scope: "note", keywords: "spelling mistakes" },
+  { id: "ai:expand", label: "Expand", shortcut: "⌘⇧E", kind: "ai", scope: "note", keywords: "lengthen more" },
+  { id: "ai:simplify", label: "Simplify", shortcut: "⌘⇧I", kind: "ai", scope: "note", keywords: "plain easier" },
+  { id: "ai:todo", label: "Create todo list", shortcut: "⌘⇧Q", kind: "ai", scope: "note", keywords: "checklist tasks" },
+  { id: "ai:prompt", label: "Custom prompt", shortcut: "⌘⇧P", kind: "ai", scope: "note", keywords: "ask question" },
 ];
 
 function sel(listEl: HTMLDivElement | null, idx: number) {
@@ -179,6 +185,12 @@ export const CommandMenu = React.memo(function CommandMenu({
   const scoreItem = (item: Item): Scored | null => {
     if (!q) return { item, score: 0 };
     let best: number | null = fuzzyScore(q, item.label);
+    // An alias hit reaches a command by meaning ("light" → theme) but a
+    // label hit should always outrank it when both exist.
+    if (item.keywords) {
+      const kwScore = fuzzyScore(q, item.keywords);
+      if (kwScore !== null) best = kwScore * 0.75;
+    }
     if (item.tag) {
       const tagScore = fuzzyScore(q, item.tag);
       if (tagScore !== null && (best === null || tagScore > best)) best = tagScore;
