@@ -30,7 +30,9 @@ Every button has a tooltip — hover it to see the name and the keyboard shortcu
 
 ### Show / hide it
 
-The toolbar toggle is the small formatting-bar icon in the bottom bar (next to search). Click it to hide or bring the toolbar back. The choice is remembered.
+### Show / hide it
+
+The toolbar toggle is the small formatting-bar icon in the bottom bar (next to search — which is also the palette: note & tag search via \`Ctrl+O\`, commands via \`Ctrl+P\`, and the list icon takes you straight back to all notes). Click it to hide or bring the toolbar back. The choice is remembered.
 
 The same formatting also works from the keyboard:
 

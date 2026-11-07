@@ -1,10 +1,12 @@
 "use client";
 
 import { memo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
+import { List } from "lucide-react";
 import {
   unsavedAtom,
   saveLoadingAtom,
@@ -15,6 +17,9 @@ import {
   search,
   toolbarEnabledAtom,
   viewModeAtom,
+  navigationTargetAtom,
+  savePromptDialogOpenAtom,
+  discardEmptyNoteAtom,
   persistZenMode,
   persistToolbarEnabled,
 } from "@/store/noteAtom";
@@ -33,6 +38,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
   const [zen, setZenMode] = useAtom(zenMode);
   const [toolbarEnabled, setToolbarEnabled] = useAtom(toolbarEnabledAtom);
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
+  const router = useRouter();
 
   const handleToggleZen = useCallback(() => {
     const next = !zen;
@@ -59,6 +65,9 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
   // setter
   const setAskDialogOpen = useSetAtom(askDialogOpenAtom);
   const setSearchOpen = useSetAtom(search);
+  const setTarget = useSetAtom(navigationTargetAtom);
+  const setShowPrompt = useSetAtom(savePromptDialogOpenAtom);
+  const discardIfEmpty = useSetAtom(discardEmptyNoteAtom);
   const handleSave = useCallback(() => {
     save(false);
   }, [save]);
@@ -68,14 +77,44 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
     setAskDialogOpen(true);
   }, [setAskDialogOpen]);
 
+  // The bottom bar's route to the note list. It mirrors the back arrow in
+  // the header exactly — quiet discarded empties, a save prompt when a
+  // manual-save note has edits — so leaving via either door can never lose
+  // data differently. Keep the two in step if either changes.
+  const handleOpenNoteList = useCallback(async () => {
+    // A note the user never wrote anything in is dropped quietly.
+    if (await discardIfEmpty()) {
+      router.push("/");
+      return;
+    }
+    if (unsaved && !autoSave) {
+      setTarget("/");
+      setShowPrompt(true);
+    } else {
+      router.push("/");
+    }
+  }, [unsaved, autoSave, router, setTarget, setShowPrompt, discardIfEmpty]);
+
   return (
     <div className="md:relative fixed right-8 bottom-3 md:bottom-0 left-0 flex flex-row h-16 pb-1 gap-4 items-center justify-end z-30 ">
       {!zen && (
         <button
           type="button"
+          onClick={() => void handleOpenNoteList()}
+          aria-label="Back to note list"
+          title="All notes"
+          className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
+        >
+          <List className="size-4 pointer-events-none text-foreground/70" />
+        </button>
+      )}
+
+      {!zen && (
+        <button
+          type="button"
           onClick={() => setSearchOpen(true)}
-          aria-label="Search notes"
-          title="Search notes (Ctrl+P)"
+          aria-label="Command palette"
+          title="Search & commands (Ctrl+P)"
           className="mt-10 cursor-pointer py-0.5 p-0.5 rounded-full"
         >
           <Search className="size-4 pointer-events-none text-foreground/70" />
