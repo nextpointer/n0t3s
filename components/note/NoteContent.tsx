@@ -145,6 +145,70 @@ function toggleTaskAtCaret(textarea: HTMLTextAreaElement): boolean {
 }
 
 /**
+ * The text a palette "note:insert" command splices at the caret. Date and
+ * time are local-clock and markdown-friendly (`2026-11-07`, `14:35`).
+ *
+ * The rule keeps its own line: a `---` glued beneath a paragraph line is a
+ * CommonMark setext heading that would swallow the paragraph into an H2, so
+ * a break is inserted first whenever the caret's line (or the one above)
+ * carries text. The code block opens a fenced block and leaves the caret
+ * parked on the empty line inside it.
+ *
+ * `link` is not text — it routes to OverType's insertLink engine.
+ */
+function insertionFor(kind: string, textarea: HTMLTextAreaElement): string | null {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  switch (kind) {
+    case "date": {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+    case "time": {
+      const d = new Date();
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    case "hr": {
+      const before = textarea.value.slice(0, textarea.selectionStart);
+      const lineStart = before.lastIndexOf("\n") + 1;
+      const onCaretLine = before.slice(lineStart).trim().length > 0;
+      if (onCaretLine) return "\n---\n";
+      // Fresh line: the rule still needs a separator unless an empty line
+      // already sits above (or the rule starts the document), else `line1`
+      // followed by `---` collapses into a setext H2.
+      const above = before.slice(0, lineStart);
+      const blankAbove = lineStart === 0 || /\n[ \t]*\n$/.test(above);
+      return `${blankAbove ? "" : "\n"}---\n`;
+    }
+    case "code":
+      return "```\n\n```";
+    default:
+      return null;
+  }
+}
+
+/**
+ * Splice `text` into a textarea exactly at its caret — the same native
+ * execCommand("insertText") path the AI rewrite and undo/redo ride, so it
+ * is one step on the browser's undo stack and fires the input event that
+ * syncs OverType, stats and autosave.
+ *
+ * The element's selection survives blur (the palette held focus), so
+ * capturing and re-asserting it around focus restores "where the cursor
+ * was" precisely. Wonky environments that refuse focus are reported via
+ * the return value so the caller can defer to a mode switch first.
+ */
+function insertAtCaret(textarea: HTMLTextAreaElement, text: string): boolean {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  if (document.activeElement !== textarea) {
+    textarea.focus({ preventScroll: true });
+  }
+  if (document.activeElement !== textarea) return false;
+  textarea.setSelectionRange(start, end);
+  return document.execCommand("insertText", false, text);
+}
+
+/**
  * Read CSS variables into a plain object — avoids stale getComputedStyle.
  *
  * `colors` drives edit mode. Preview mode reads a completely separate set of
@@ -434,6 +498,47 @@ export const NoteContent = memo(
         window.removeEventListener("keydown", onKeyDown);
         window.removeEventListener("note:readmode", onReadModeEvent);
       };
+    }, [toggleReadMode]);
+
+    /**
+     * The command palette's Insert commands (date, time, code block,
+     * horizontal line) splice at the caret. NoteContent owns the editor,
+     * so the palette asks via a window event and this effect answers —
+     * including switching out of preview first, where the hidden textarea
+     * cannot take the focus execCommand needs.
+     */
+    useEffect(() => {
+      const onInsert = (event: Event) => {
+        const kind = (event as CustomEvent<string>).detail;
+        const instance = editorRef.current;
+        const textarea = instance?.textarea as HTMLTextAreaElement | undefined;
+        if (!textarea) return;
+
+        // Same engine as the toolbar's link button (Ctrl+K).
+        if (kind === "link") {
+          void instance.performAction("insertLink");
+          return;
+        }
+
+        // Preview hides the textarea, so focus (and therefore the splice)
+        // fails: return to the editor, then insert once the mode effect has
+        // applied. The selection survives blurring, so the caret is where
+        // the user last parked it.
+        if (instance.container.dataset.mode === "preview") {
+          toggleReadMode(); // preview -> edit
+          setTimeout(() => {
+            const text = insertionFor(kind, textarea);
+            if (text !== null) insertAtCaret(textarea, text);
+          }, 60);
+          return;
+        }
+
+        const text = insertionFor(kind, textarea);
+        if (text !== null) insertAtCaret(textarea, text);
+      };
+
+      window.addEventListener("note:insert", onInsert);
+      return () => window.removeEventListener("note:insert", onInsert);
     }, [toggleReadMode]);
 
     /**

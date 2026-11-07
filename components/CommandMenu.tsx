@@ -41,7 +41,7 @@ interface Item {
   id: string;
   label: string;
   shortcut: string;
-  kind: "action" | "ai" | "tag" | "note";
+  kind: "action" | "ai" | "tag" | "note" | "insert";
   tag?: string;
   noteId?: string;
   sub?: string;
@@ -52,6 +52,11 @@ interface Item {
 const COMMANDS: Item[] = [
   { id: "new", label: "New note", shortcut: "", kind: "action", scope: "global" },
   { id: "save", label: "Save", shortcut: "⌘S", kind: "action", scope: "note" },
+  { id: "ins:date", label: "Insert current date", shortcut: "", kind: "insert", scope: "note" },
+  { id: "ins:time", label: "Insert current time", shortcut: "", kind: "insert", scope: "note" },
+  { id: "ins:code", label: "Insert code block", shortcut: "", kind: "insert", scope: "note" },
+  { id: "ins:hr", label: "Insert horizontal line", shortcut: "", kind: "insert", scope: "note" },
+  { id: "ins:link", label: "Insert link", shortcut: "⌘K", kind: "insert", scope: "note" },
   { id: "delete", label: "Delete note", shortcut: "", kind: "action", scope: "note" },
   { id: "export", label: "Export note", shortcut: "", kind: "action", scope: "note" },
   { id: "help", label: "Help & shortcuts", shortcut: "?", kind: "action", scope: "global" },
@@ -171,25 +176,29 @@ export const CommandMenu = React.memo(function CommandMenu({
   const commandsMatched: Scored[] = [];
   const tagsMatched: Scored[] = [];
   const notesMatched: Scored[] = [];
+  const insertsMatched: Scored[] = [];
   for (const item of allItems) {
     const scored = scoreItem(item);
     if (!scored) continue;
     if (item.kind === "note") notesMatched.push(scored);
     else if (item.kind === "tag") tagsMatched.push(scored);
+    else if (item.kind === "insert") insertsMatched.push(scored);
     else commandsMatched.push(scored);
   }
   const byBest = (a: Scored, b: Scored) => b.score - a.score;
   const a = commandsMatched.sort(byBest).map((s) => s.item);
   const t = tagsMatched.sort(byBest).map((s) => s.item);
+  const ins = insertsMatched.sort(byBest).map((s) => s.item);
   const n = notesMatched.sort(byBest).map((s) => s.item);
   const sections: { h: string; items: Item[] }[] = [];
   if (a.length) sections.push({ h: "Commands", items: a });
+  if (ins.length) sections.push({ h: "Insert", items: ins });
   if (t.length) sections.push({ h: "Tags", items: t });
   if (n.length) sections.push({ h: "Notes", items: n });
 
-  // Sync lenRef + highlight after render (not during)
+  // useLayoutEffect tracks the *ranked* total per render.
   useLayoutEffect(() => {
-    lenRef.current = a.length + t.length + n.length;
+    lenRef.current = a.length + ins.length + t.length + n.length;
     if (open) sel(listRef.current, idxRef.current);
   });
 
@@ -199,6 +208,14 @@ export const CommandMenu = React.memo(function CommandMenu({
       setOpen(false);
       if (item.kind === "note" && item.noteId) { router.push(`/note/${item.noteId}`); return; }
       if (item.kind === "tag" && item.tag) { router.push(`/?tag=${item.tag}`); return; }
+      if (item.id.startsWith("ins:")) {
+        // NoteContent owns the insertion so the caret and preview mode
+        // handling stay beside the editor it mutates.
+        window.dispatchEvent(
+          new CustomEvent("note:insert", { detail: item.id.slice(4) }),
+        );
+        return;
+      }
       switch (item.id) {
         case "new": {
           import("@/lib/storage").then(async ({ createNote }) => {
