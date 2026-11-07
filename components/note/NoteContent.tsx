@@ -834,7 +834,12 @@ export const NoteContent = memo(
         <div
           ref={containerRef}
           data-preview-monochrome={previewColorsOn ? undefined : "true"}
-          className="note-editor-container note-editor-host relative flex-1 min-h-0"
+          className={`note-editor-container note-editor-host relative flex-1 min-h-0 ${
+            // The desktop pill floats over the canvas: without a reserved
+            // band, the caret line slides under it near the bottom and the
+            // cursor disappears while writing. Only when the pill exists.
+            toolbarEnabled && viewMode !== "preview" ? "md:pb-40" : ""
+          }`}
           style={{
             width: "100%",
             height: "100%",
@@ -846,7 +851,7 @@ export const NoteContent = memo(
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
         <div
-          className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none"
+          className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none xl:ml-4 ml-3"
           style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
           <div

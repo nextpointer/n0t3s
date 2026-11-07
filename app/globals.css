@@ -537,3 +537,14 @@
 .note-editor-container .overtype-wrapper .overtype-preview {
     padding-left: 0 !important;
 }
+
+/* Single placeholder. OverType layers its absolutely-positioned
+   .overtype-placeholder shim - padded to the canvas's old 16px inset - on
+   top of the textarea's native ::placeholder, and the app restyles the
+   native one (faded, at the caret line). The two used to coincide
+   pixel-for-pixel while the canvas carried its 16px padding, so they read
+   as one; with the padding gone they split 16px apart and "Start writing…"
+   doubled. The native one is the truthful marker: hide the shim. */
+.note-editor-container .overtype-wrapper .overtype-placeholder {
+    display: none !important;
+}
