@@ -65,7 +65,7 @@ Settings ⚙️ has two switches that change how things look:
 
 **Preview colours** — on, rendered preview keeps the coloured headings, bold and italic. Off, the whole note reads monochrome. Code blocks stay syntax-highlighted either way.
 
-**Font size** — a slider from 12px to 22px. It applies to the editor straight away, and phones get a slightly smaller size automatically so lines still fit.
+**Font size** — an elastic slider from 12px to 22px: drag or click anywhere on the track (it bounces past the edges and snaps to the marks), or focus it and use arrow keys (Shift for 10×). It applies to the editor straight away, and phones get a slightly smaller size automatically so lines still fit. On a phone the whole settings menu opens as a bottom sheet.
 
 ---
 
@@ -110,7 +110,7 @@ Undo and redo use the system edit history — press \`Ctrl/Cmd+Z\` or \`Ctrl/Cmd
 
 ## Command Palette
 
-\`Ctrl+P\` anywhere opens the palette. Search notes and tags, or run a command. Commands that act on the open note (save, delete, export, AI) only appear while you are inside one.
+\`Ctrl+P\` anywhere opens the command runner — commands and insert items only. \`Ctrl+O\` opens note & tag search instead; the two shortcuts hop between them while open. Commands that act on the open note (save, delete, export, AI) only appear while you are inside one.
 
 The search is fuzzy and forgiving: \`ins cd\` finds the code block, \`hr\` finds the horizontal line, and best matches rise to the top of their section. Synonyms count too — typing \`light\` or \`dark\` reaches the theme toggle, \`trash\` finds delete, \`today\` finds the date insert.
 
