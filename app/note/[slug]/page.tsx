@@ -60,6 +60,14 @@ export default function Page() {
   const { save } = useNoteOperations();
   UseAIShortcuts();
 
+  // The command palette's Save runs this event instead of importing the
+  // hook again — route it to the real save so the ⌘S entry isn't a no-op.
+  useEffect(() => {
+    const onSave = () => void save();
+    window.addEventListener("note:save", onSave);
+    return () => window.removeEventListener("note:save", onSave);
+  }, [save]);
+
   // for fetching the notes
   useEffect(() => {
     let cancelled = false;
