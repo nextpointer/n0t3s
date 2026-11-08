@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@ai-sdk/groq": "^3.0.35",
+    "@iconify-json/solar": "^1.2.14",
+    "@iconify/react": "^6.0.4",
     "@radix-ui/react-alert-dialog": "^1.2.1",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -37,6 +39,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
+    "@iconify/utils": "^3.1.7",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20.19.27",
     "@types/react": "^19.2.7",
