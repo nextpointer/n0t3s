@@ -117,24 +117,26 @@ export default function Home() {
           </Button>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-row w-full gap-2 mt-12 justify-start items-center">
-          <NotesFilters
-            loading={loading}
-            allTags={allTags}
-            orderBy={orderBy}
-            setOrderBy={setOrderBy}
-            tagFilter={tagFilter}
-            setTagFilter={setTagFilter}
-            setSearchOpen={setSearchOpen}
-          />
-        </div>
+        {/* Filters — hidden on a fresh/empty library */}
+        {!loading && notes.length > 0 && (
+          <div className="flex flex-row w-full gap-2 mt-12 justify-start items-center">
+            <NotesFilters
+              loading={loading}
+              allTags={allTags}
+              orderBy={orderBy}
+              setOrderBy={setOrderBy}
+              tagFilter={tagFilter}
+              setTagFilter={setTagFilter}
+              setSearchOpen={setSearchOpen}
+            />
+          </div>
+        )}
 
         {/* Search command */}
         <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
 
         {/* Content */}
-        <div className="w-full mt-6 overflow-y-scroll overflow-x-hidden py-4">
+        <div className={cn("w-full overflow-y-scroll overflow-x-hidden py-2", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
           <NotesList
             notes={notes}
             orderBy={orderBy}

@@ -105,7 +105,7 @@ const NoteCard = React.memo(function NoteCard({
         role="link"
         tabIndex={0}
         data-selected={selected || undefined}
-        className="group relative flex-1 min-w-0 cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 bg-accent/25 data-[selected=true]:bg-accent/60 hover:bg-accent/55 transition-colors duration-150 rounded-xl active:scale-[0.995] overflow-hidden"
+        className="group relative flex-1 min-w-0 cursor-pointer px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg bg-transparent data-[selected=true]:bg-foreground/[0.06] hover:bg-foreground/[0.04] transition-colors duration-100 overflow-hidden"
         onPointerDown={(e) => {
           if (e.pointerType !== "touch") return;
           pressOriginRef.current = { x: e.clientX, y: e.clientY };

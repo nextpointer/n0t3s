@@ -105,8 +105,9 @@ export const EditorToolbar = memo(function EditorToolbar({
   mobileVisible = false,
 }: EditorToolbarProps) {
   const [activeFormats, setActiveFormats] = useState<string[]>([]);
-  // Cheap guard so we don't setState on every selection tick.
   const activeRef = useRef<string[]>([]);
+  const barRef = useRef<HTMLDivElement>(null);
+  const touchRef = useRef<{ x: number; atRight: boolean; atLeft: boolean } | null>(null);
 
   const refreshActiveFormats = useCallback(() => {
     if (!editor?.textarea) return;
@@ -164,7 +165,7 @@ export const EditorToolbar = memo(function EditorToolbar({
   const strike = useCallback(() => {
     if (!editor?.textarea) return;
     const t = editor.textarea;
-    t.focus({ preventScroll: true });
+    t.focus();
     let start = t.selectionStart;
     let end = t.selectionEnd;
     if (start === end) {
@@ -209,7 +210,7 @@ export const EditorToolbar = memo(function EditorToolbar({
       if (!editor?.textarea) return;
       const t = editor.textarea;
       if (document.activeElement !== t) {
-        t.focus({ preventScroll: true });
+        t.focus();
         t.setSelectionRange(t.value.length, t.value.length);
       }
       if (editor.insertAtCursor) {
@@ -260,14 +261,52 @@ export const EditorToolbar = memo(function EditorToolbar({
     [onViewModeChange],
   );
 
+  // Elastic nudge on phones: a hard pull at a scroll edge reveals the
+  // action icons (right end) or snaps back to the format tools (left).
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const onStart = (e: TouchEvent) => {
+      const max = el.scrollWidth - el.clientWidth;
+      touchRef.current = {
+        x: e.touches[0].clientX,
+        atRight: max > 8 && el.scrollLeft >= max - 2,
+        atLeft: el.scrollLeft <= 2,
+      };
+    };
+    const onMove = (e: TouchEvent) => {
+      const t = touchRef.current;
+      if (!t) return;
+      const dx = e.touches[0].clientX - t.x;
+      // pulling left (dx negative) at the right edge → reveal actions
+      if (t.atRight && dx < -36) {
+        el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+        touchRef.current = null;
+      } else if (t.atLeft && dx > 36) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+        touchRef.current = null;
+      }
+    };
+    const onEnd = () => { touchRef.current = null; };
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: true });
+    el.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+    };
+  }, []);
+
   const CurrentIcon = VIEW_MODES[viewMode].Icon;
 
   return (
     <div
+      ref={barRef}
       role="toolbar"
       aria-label="Formatting toolbar"
       data-mobile-visible={mobileVisible || undefined}
-      className="note-toolbar flex w-full items-center gap-1 overflow-x-auto [overscroll-behavior-x:contain] px-1.5 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="note-toolbar flex w-full items-center gap-1 overflow-x-auto [overscroll-behavior-x:contain] px-2 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {GROUPS.map((group, gi) => (
         <div key={gi} className="flex shrink-0 items-center gap-1">

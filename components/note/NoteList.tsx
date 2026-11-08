@@ -117,6 +117,14 @@ const NotesList = React.memo(function NotesList({
   }
 
   if (sortedNotes.length === 0) {
+    // Notes exist but nothing matches the active filter/tag.
+    if (notes.length > 0) {
+      return (
+        <div className="flex w-full items-center justify-center py-16 text-sm text-muted-foreground/60">
+          No notes match this filter.
+        </div>
+      );
+    }
     return (
       <div className="flex w-full flex-col items-center justify-center px-4 mt-30 text-center sm:mt-24 select-none">
         <h1 className="mb-4 text-3xl font-thin leading-tight tracking-tight text-foreground md:text-5xl text-balance ">
@@ -152,7 +160,7 @@ const NotesList = React.memo(function NotesList({
 
   // A single flat list — no section boxes/borders. Pinned notes stay first.
   return (
-    <div className="w-full max-w-full flex flex-col gap-1.5">
+    <div className="w-full max-w-full flex flex-col gap-0.5">
       {sortedNotes.map((note) => (
         <NoteCard
           key={note.id}

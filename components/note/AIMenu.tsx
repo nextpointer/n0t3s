@@ -136,7 +136,8 @@ export const AIMenu = memo(function AIMenu({
       <DropdownMenuContent
         className="w-38 md:w-68 shadow"
         align="end"
-        side="bottom"
+        side={trigger === "bar" ? "top" : "bottom"}
+        sideOffset={10}
         collisionPadding={16}
       >
         {AI_ACTIONS.map(({ id, label, shortcut, icon }) => (

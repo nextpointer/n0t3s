@@ -141,6 +141,10 @@ function toggleTaskAtCaret(textarea: HTMLTextAreaElement): boolean {
   const next = match[2].toLowerCase() === "x" ? " " : "x";
   textarea.setRangeText(next, pos, pos + 1, "preserve");
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  // Keep the toggled line in view (list/todo edits near edges otherwise stick).
+  requestAnimationFrame(() => {
+    try { textarea.focus(); } catch { /* noop */ }
+  });
   return true;
 }
 
@@ -201,7 +205,7 @@ function insertAtCaret(textarea: HTMLTextAreaElement, text: string): boolean {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   if (document.activeElement !== textarea) {
-    textarea.focus({ preventScroll: true });
+    textarea.focus();
   }
   if (document.activeElement !== textarea) return false;
   textarea.setSelectionRange(start, end);
@@ -362,7 +366,10 @@ export const NoteContent = memo(
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         syncTimeoutRef.current = setTimeout(() => {
           syncToContent(content);
-          setStats(computeStats(content));
+          setStats((prev) => {
+            const next = computeStats(content);
+            return prev.words === next.words && prev.chars === next.chars ? prev : next;
+          });
           isTypingRef.current = false;
         }, 500);
       },
@@ -866,22 +873,19 @@ export const NoteContent = memo(
         {/* #tag completion; anchored to this wrapper so the popover keeps
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
-        {/* Sits just above the phone bottom bar (with safe-area clearance)
-            and clear of the desktop action row. */}
+        {/* Desktop: left-aligned to the writing column. Phone: tucked above
+            the full-width bottom bar, right-aligned so it stays clear of the
+            evenly spaced icons. Hidden while the keyboard is up. */}
         <div
-          className="note-stats fixed left-4 bottom-[calc(3.75rem+env(safe-area-inset-bottom)+0.25rem)] md:bottom-4 xl:bottom-6 pointer-events-none"
-          style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
+          className="note-stats pointer-events-none fixed right-4 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] md:absolute md:right-auto md:left-0 md:bottom-3 xl:bottom-4 z-20"
+          style={{ fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
           <div
-            className="flex flex-col xl:flex-row gap-1 xl:gap-4 text-[8px] xl:text-[10px] tracking-[0.2em] pointer-events-auto xl:w-full w-32"
-            style={{ color: "var(--editor-text)", opacity: 0.4 }}
+            className="flex items-center justify-end md:justify-start gap-2 text-[9px] md:text-[10px] tracking-[0.18em] text-foreground/35"
           >
-            <div className="flex flex-row items-center">
-              <span>{stats.words} words</span>
-            </div>
-            <div className="flex flex-row items-center" style={{ borderColor: "var(--editor-text)" }}>
-              <span>{stats.chars} characters</span>
-            </div>
+            <span>{stats.words}w</span>
+            <span aria-hidden className="text-foreground/20">·</span>
+            <span>{stats.chars}c</span>
           </div>
         </div>
       </div>

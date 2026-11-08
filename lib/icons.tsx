@@ -48,7 +48,7 @@ export const UI = {
   help: "solar:question-circle-bold-duotone",
   config: "solar:tuning-2-bold-duotone",
   save: "solar:diskette-bold-duotone",
-  back: "solar:alt-arrow-left-bold-duotone",
+  back: "solar:arrow-left-bold-duotone",
   // top bar
   undo: "solar:undo-left-bold-duotone",
   redo: "solar:undo-right-bold-duotone",
