@@ -10,20 +10,17 @@ import {
   unsavedAtom,
   saveLoadingAtom,
   autoSaveAtom,
-  aiEnabledAtom,
-  askDialogOpenAtom,
   zenMode,
   search,
-  toolbarEnabledAtom,
   viewModeAtom,
   navigationTargetAtom,
   savePromptDialogOpenAtom,
   discardEmptyNoteAtom,
   persistZenMode,
-  persistToolbarEnabled,
 } from "@/store/noteAtom";
 import { SolarIcon } from "@/lib/icons";
-import { ToolbarIcon } from "../icons/EditorIcons";
+import { AIMenu } from "./AIMenu";
+import { ConfigMenu } from "./ConfigMenu";
 
 interface NoteActionsProps {
   save: (isAutoSave?: boolean) => void;
@@ -32,7 +29,6 @@ interface NoteActionsProps {
 export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps) {
   // zen mode state
   const [zen, setZenMode] = useAtom(zenMode);
-  const [toolbarEnabled, setToolbarEnabled] = useAtom(toolbarEnabledAtom);
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
   const router = useRouter();
 
@@ -47,19 +43,12 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
     setViewMode(previewing ? "edit" : "preview");
   }, [previewing, setViewMode]);
 
-  const handleToggleToolbar = useCallback(() => {
-    const next = !toolbarEnabled;
-    setToolbarEnabled(next);
-    persistToolbarEnabled(next);
-  }, [toolbarEnabled, setToolbarEnabled]);
   // getter
   const unsaved = useAtomValue(unsavedAtom);
   const loading = useAtomValue(saveLoadingAtom);
   const autoSave = useAtomValue(autoSaveAtom);
-  const aiEnabled = useAtomValue(aiEnabledAtom);
 
   // setter
-  const setAskDialogOpen = useSetAtom(askDialogOpenAtom);
   const setSearchOpen = useSetAtom(search);
   const setTarget = useSetAtom(navigationTargetAtom);
   const setShowPrompt = useSetAtom(savePromptDialogOpenAtom);
@@ -68,15 +57,11 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
     save(false);
   }, [save]);
 
-  // handler for opening ask dialog
-  const handleOpenAskDialog = useCallback(() => {
-    setAskDialogOpen(true);
-  }, [setAskDialogOpen]);
-
-  // The bottom bar's route to the note list. It mirrors the back arrow in
-  // the header exactly — quiet discarded empties, a save prompt when a
-  // manual-save note has edits — so leaving via either door can never lose
-  // data differently. Keep the two in step if either changes.
+  // The bottom bar's route to the note list. It mirrors the fixed logic
+  // the header's back arrow used to run — quiet discarded empties, a save
+  // prompt when a manual-save note has edits. The header is now only
+  // undo/redo/settings, so this is the one door out of a note; if either
+  // it or the header path ever needs changing, keep them in step.
   const handleOpenNoteList = useCallback(async () => {
     // A note the user never wrote anything in is dropped quietly.
     if (await discardIfEmpty()) {
@@ -92,7 +77,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
   }, [unsaved, autoSave, router, setTarget, setShowPrompt, discardIfEmpty]);
 
   return (
-    <div className="md:relative fixed right-3 bottom-3 md:bottom-0 md:right-8 left-0 flex flex-row h-16 pb-1 gap-2 md:gap-4 items-end md:items-center justify-end z-30 ">
+    <div className="md:relative fixed right-3 bottom-3 md:bottom-0 md:right-8 left-0 flex flex-row h-16 pb-1 gap-2 md:gap-4 items-end md:items-center justify-end z-30">
       {!zen && (
         <button
           type="button"
@@ -134,24 +119,6 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         />
       </button>
 
-      <button
-        type="button"
-        onClick={handleToggleToolbar}
-        aria-pressed={toolbarEnabled}
-        aria-label="Toggle formatting toolbar"
-        title="Toggle formatting toolbar"
-        className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
-      >
-        <ToolbarIcon
-          className={cn(
-            "size-4 pointer-events-none transition-colors",
-            toolbarEnabled
-              ? "text-foreground"
-              : "text-foreground/30",
-          )}
-        />
-      </button>
-
       {zen ? (
         <button
           type="button"
@@ -174,17 +141,24 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         </button>
       )}
 
-      {!zen && aiEnabled && (
+      {/* leaving a note · finding · reading · focus · assist · prefs · save */}
+      {!zen && (
+        <AIMenu trigger="bar" />
+      )}
+
+      {!zen && (
         <button
           type="button"
-          onClick={handleOpenAskDialog}
-          aria-label="Ask AI"
-          title="Ask AI"
+          onClick={() => router.push("/help")}
+          aria-label="Help and shortcuts"
+          title="Help & shortcuts (?)"
           className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
-          <SolarIcon icon="ask" className="size-4 mr-1 text-foreground/50" />
+          <SolarIcon icon="help" className="size-4 pointer-events-none text-foreground/70" />
         </button>
       )}
+
+      {!zen && <ConfigMenu />}
 
       {!zen && !autoSave && (
         <Button

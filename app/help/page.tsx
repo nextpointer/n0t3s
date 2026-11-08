@@ -30,9 +30,7 @@ Every button has a tooltip — hover it to see the name and the keyboard shortcu
 
 ### Show / hide it
 
-### Show / hide it
-
-The toolbar toggle is the small formatting-bar icon in the bottom bar (next to search — which is also the palette: note & tag search via \`Ctrl+O\`, commands via \`Ctrl+P\`, and the list icon takes you straight back to all notes). Click it to hide or bring the toolbar back. The choice is remembered.
+Config (the sliders icon in the bottom bar) has a **Show toolbar** switch. Turn it off to write with no pill at all; bring it back the same way. The choice is remembered.
 
 The same formatting also works from the keyboard:
 
@@ -61,13 +59,19 @@ Ticking an item also dims and strikes through the text so you can see what is al
 
 ---
 
-### Colour and size
+### Colour, size and saving habits
 
-Settings ⚙️ has two switches that change how things look:
+Config (the sliders icon in the bottom bar) holds the editor preferences:
 
-**Preview colours** — on, rendered preview keeps the coloured headings, bold and italic. Off, the whole note reads monochrome. Code blocks stay syntax-highlighted either way.
+**Font size** — an elastic slider from 12px to 22px: drag or click anywhere on the track (it bounces past the edges and snaps to the marks), or focus it and use arrow keys (Shift for 10×). It applies to the editor straight away, and phones get a slightly smaller size automatically so lines still fit. On a phone the config menu opens as a bottom sheet.
 
-**Font size** — an elastic slider from 12px to 22px: drag or click anywhere on the track (it bounces past the edges and snaps to the marks), or focus it and use arrow keys (Shift for 10×). It applies to the editor straight away, and phones get a slightly smaller size automatically so lines still fit. On a phone the whole settings menu opens as a bottom sheet.
+**Show toolbar** — hides or brings back the formatting pill.
+
+**Auto Save** — on, edits save by themselves. Off, you press Save yourself; the bottom bar's Save pill lights up with unsaved edits so leaving a note never loses anything.
+
+**Preview colours** — on, the rendered preview keeps the coloured headings, bold and italic. Off, the whole note reads monochrome. Code blocks stay syntax-highlighted either way.
+
+**No AI** — switch it on to hide every AI button and shortcut, so nothing can ever send your notes anywhere.
 
 ---
 
@@ -101,8 +105,9 @@ Select any text first, then use a shortcut.
 \`Ctrl+Shift+Q\` — Extract todos
 \`Ctrl+Shift+P\` — Ask AI anything
 
+The wand button in the bottom bar opens the same actions as a menu — its last row, **Ask AI…**, opens a dialog where you type a question and the answer shows next to the note. Turning **No AI** on in Config makes all of this disappear.
 
-Undo and redo use the system edit history — press \`Ctrl/Cmd+Z\` or \`Ctrl/Cmd+Shift+Z\`, use the toolbar arrows or the browser's own Edit menu, and they all stay in one stack. Because tags are plain text, deleting a \`#tag\` is undoable like any other typing.
+Undo and redo use the system edit history — press \`Ctrl/Cmd+Z\` or \`Ctrl/Cmd+Shift+Z\`, use the arrows in the top bar or the browser's own Edit menu, and they all stay in one stack. Because tags are plain text, deleting a \`#tag\` is undoable like any other typing.
 
 ## Zen Mode
 
@@ -122,11 +127,13 @@ The search is fuzzy and forgiving: \`ins cd\` finds the code block, \`hr\` finds
 
 ## Export
 
-Open Settings ⚙️ inside any note → **Export Note** → saves as \`.md\`.
+Open Settings ⚙️ (top bar, next to undo and redo) → **Export Note** → saves as \`.md\`. Delete Note sits under it if a note has to go.
 
-Auto Save lives in that same menu. Turn it off if you would rather press Save yourself.
+---
 
-**No AI** is in there too. Switching it on hides every AI button and shortcut, so nothing can ever send your notes anywhere.
+## Layout of the note screen
+
+For orientation: the top bar carries only undo, redo and Settings ⚙️. The bottom bar holds everything else in a fixed order — all notes, the palette/search, read mode, zen mode, the AI menu, help, Config, and Save (manual saves only). On a phone the same two rows are used, and while the keyboard is up a swipeable strip above it carries the format buttons plus save, undo, redo, AI and Settings so nothing needs the bottom bar mid-writing.
 
 ---
 

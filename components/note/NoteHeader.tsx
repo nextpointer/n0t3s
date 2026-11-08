@@ -1,76 +1,21 @@
 "use client";
 
-import { memo, useCallback } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { memo } from "react";
 import { HistoryControls } from "./HistoryControls";
-import { AIMenu } from "./AIMenu";
 import { SettingsMenu } from "./SettingsMenu";
-import {
-  unsavedAtom,
-  autoSaveAtom,
-  savePromptDialogOpenAtom,
-  navigationTargetAtom,
-  discardEmptyNoteAtom,
-} from "@/store/noteAtom";
 
+/**
+ * The top bar is deliberately the smallest possible surface: undo, redo
+ * and Settings. Everything else about a note hangs off the bottom bar —
+ * leaving a note, searching, reading, zen, AI, help, config — so the
+ * writing area keeps the top free of chrome.
+ */
 export const NoteHeader = memo(function NoteHeader() {
-  //getter
-  const unsaved = useAtomValue(unsavedAtom);
-  const autoSave = useAtomValue(autoSaveAtom);
-  const setShowPrompt = useSetAtom(savePromptDialogOpenAtom);
-  // setter
-  const setTarget = useSetAtom(navigationTargetAtom);
-  const discardIfEmpty = useSetAtom(discardEmptyNoteAtom);
-  const router = useRouter();
-
-  // handler for back navigation
-  const handleNavigateBack = useCallback(async () => {
-    // A note the user never wrote anything in is dropped quietly — no toast,
-    // no save prompt — instead of lingering as an untitled shell.
-    if (await discardIfEmpty()) {
-      router.push("/");
-      return;
-    }
-    if (unsaved && !autoSave) {
-      setTarget("/");
-      setShowPrompt(true);
-    } else {
-      router.push("/");
-    }
-  }, [unsaved, autoSave, router, setTarget, setShowPrompt, discardIfEmpty]);
-
   return (
     <div className="fixed top-0 left-0 w-screen xl:w-5xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed flex justify-between items-center gap-2 p-2">
-      <div className="flex items-center gap-2  ">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleNavigateBack}
-          aria-label="Back to notes"
-          title="Back to notes"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        {/*{unsaved && (
-          <span className="h-3 w-3 bg-primary/30 rounded-full animate-pulse" />
-        )}*/}
-      </div>
-
+      <div />
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/help")}
-          aria-label="Help and shortcuts"
-          title="Help & shortcuts (?)"
-          className="w-auto shadow-none "
-        >
-          <HelpCircle />
-        </Button>
         <HistoryControls />
-        <AIMenu />
         <SettingsMenu />
       </div>
     </div>

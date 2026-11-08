@@ -845,8 +845,12 @@ export const NoteContent = memo(
         {/* #tag completion; anchored to this wrapper so the popover keeps
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
+        {/* Lifted past the bottom action bar on phones — the bar spans the
+            full width there, and the stats hide themselves while the
+            keyboard is up anyway. Desktop has side-by-side room, so it
+            keeps its low perch. */}
         <div
-          className="note-stats fixed bottom-4 xl:bottom-6 pointer-events-none"
+          className="note-stats fixed bottom-20 md:bottom-4 xl:bottom-6 pointer-events-none"
           style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
           <div
