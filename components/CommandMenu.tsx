@@ -15,9 +15,8 @@ import { getNoteTags } from "@/lib/tag-syntax";
 import { fuzzyScore } from "@/lib/fuzzy";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet";
+  SheetLite,
+} from "@/components/ui/sheet-lite";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -419,24 +418,18 @@ export const CommandMenu = React.memo(function CommandMenu({
     </>
   );
 
-  // Phones get a bottom sheet (radix dialog under the hood, so Escape,
-  // focus trap and backdrop dismissal come for free); everything md+ keeps
-  // the floating palette near the top, where the shortcut muscle memory is.
+  // Phones get a bottom sheet (Escape, scroll lock and backdrop dismissal
+  // come from SheetLite); everything md+ keeps the floating palette near
+  // the top, where the shortcut muscle memory is.
   if (isPhone) {
     return (
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent
-          side="bottom"
-          showCloseButton={false}
-          style={keyboardInset > 0 ? { bottom: keyboardInset } : undefined}
-          className="rounded-t-2xl border-border/60 overflow-hidden p-0 gap-0"
-        >
-          <div aria-hidden className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-muted-foreground/30" />
-          {body}
-          {/* Keep clear of the home indicator / gesture bar. */}
-          <div aria-hidden className="h-2 shrink-0 pb-[env(safe-area-inset-bottom)]" />
-        </SheetContent>
-      </Sheet>
+      <SheetLite
+        open={open}
+        onClose={() => setOpen(false)}
+        style={keyboardInset > 0 ? { bottom: keyboardInset } : undefined}
+      >
+        {body}
+      </SheetLite>
     );
   }
 
