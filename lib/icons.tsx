@@ -74,6 +74,9 @@ export const UI = {
   // settings menu items
   export: "solar:download-minimalistic-bold-duotone",
   delete: "solar:trash-bin-trash-bold-duotone",
+  // bulk selection
+  selectAll: "solar:checklist-minimalistic-bold-duotone",
+  selectNone: "solar:close-square-bold-duotone",
   // shared primitives
   close: "solar:close-circle-bold-duotone",
   checkCircle: "solar:check-circle-bold-duotone",

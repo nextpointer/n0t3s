@@ -152,9 +152,9 @@ export default function Home() {
         {/* Search command */}
         <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
 
-        {/* Content: gutter lets the tick hang outside-left while note text
-            aligns to the logo/search edge (scroller padding edge). */}
-        <div className={cn("w-full overflow-y-auto py-2 pl-6 -ml-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
+        {/* Content: gutter for outside-left tick; -mx-4/pr-4 aligns the right
+            edge exactly to the New Note button / filter selects. */}
+        <div className={cn("w-full overflow-y-auto py-2 pl-6 pr-4 -ml-4 -mr-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
           <NotesList
             notes={notes}
             orderBy={orderBy}
@@ -179,11 +179,11 @@ export default function Home() {
               <span className="text-xs font-medium text-foreground/80 whitespace-nowrap">selected</span>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" className="h-8 rounded-xl px-2.5 text-xs text-muted-foreground hover:text-foreground" onClick={selectAllVisible}>
-                All
+              <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-foreground" onClick={selectAllVisible} aria-label="Select all" title="Select all">
+                <SolarIcon icon="selectAll" className="size-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 rounded-xl px-2.5 text-xs text-muted-foreground hover:text-foreground" onClick={selectNone}>
-                None
+              <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-foreground" onClick={selectNone} aria-label="Select none" title="Select none">
+                <SolarIcon icon="selectNone" className="size-4" />
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
