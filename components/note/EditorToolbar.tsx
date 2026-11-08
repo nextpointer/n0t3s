@@ -23,7 +23,7 @@ import {
   QuoteIcon,
   TaskListIcon,
 } from "@/components/icons/EditorIcons";
-import { Save } from "lucide-react";
+import { CalendarClock, Save, Strikethrough } from "lucide-react";
 import { HistoryControls } from "./HistoryControls";
 import { AIMenu } from "./AIMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -33,6 +33,9 @@ import { cn } from "@/lib/utils";
 export interface ToolbarEditor {
   textarea: HTMLTextAreaElement;
   performAction(actionId: string): Promise<boolean>;
+  /** Present on the real OverType instance; typed separately because spec
+      buttons only need the markdown-action surface. */
+  insertAtCursor?(text: string): void;
 }
 
 export type ViewMode = "edit" | "plain" | "preview";
@@ -50,16 +53,28 @@ interface ToolbarButtonSpec {
   name: string;
   label: string;
   Icon: (props: { className?: string }) => React.ReactElement;
-  /** OverType action id from `defaultToolbarButtons` (drives shortcuts too) */
-  actionId: string;
+  /** OverType action id from `defaultToolbarButtons` (drives shortcuts too).
+      Omit for `custom` buttons. */
+  actionId?: string;
+  /** Named handler resolved by the component — tools that aren't
+      markdown-actions (timestamp, etc.). */
+  custom?: "strike" | "dateTime";
   /** Key in the `markdownActions.getActiveFormats()` result */
   format?: string;
 }
+
+/** lucide icons don't quite match the hand-drawn signature; the wrappers
+    adapt them to the same `Icon` contract the local EditorIcons use. */
+const StrikeIcon = (props: { className?: string }) => <Strikethrough {...props} />;
+const DateTimeIcon = (props: { className?: string }) => <CalendarClock {...props} />;
 
 const GROUPS: ToolbarButtonSpec[][] = [
   [
     { name: "bold", label: "Bold (Ctrl+B)", Icon: BoldIcon, actionId: "toggleBold", format: "bold" },
     { name: "italic", label: "Italic (Ctrl+I)", Icon: ItalicIcon, actionId: "toggleItalic", format: "italic" },
+    // No action id ships for strike, but the renderer parses ~~tildes~~ —
+    // applyCustomFormat is OverType's own extension point for it.
+    { name: "strike", label: "Strikethrough", Icon: StrikeIcon, custom: "strike" },
     { name: "code", label: "Inline code", Icon: CodeIcon, actionId: "toggleCode" },
   ],
   [
@@ -74,6 +89,7 @@ const GROUPS: ToolbarButtonSpec[][] = [
     { name: "quote", label: "Quote", Icon: QuoteIcon, actionId: "toggleQuote", format: "quote" },
   ],
   [{ name: "link", label: "Insert link (Ctrl+K)", Icon: LinkIcon, actionId: "insertLink" }],
+  [{ name: "dateTime", label: "Insert current date & time", Icon: DateTimeIcon, custom: "dateTime" }],
 ];
 
 interface EditorToolbarProps {
@@ -144,6 +160,86 @@ export const EditorToolbar = memo(function EditorToolbar({
     [editor, refreshActiveFormats],
   );
 
+  // OverType ships no strikethrough action id, though its renderer parses
+  // ~~tildes~~. calling markdownActions.applyCustomFormat here silently
+  // killed the textarea's native undo stack for every later edit (its
+  // internals probe with a contentEditable toggle and fall through to
+  // value splices), so the wrap is done with one plain execCommand
+  // instead — it stays in the system undo history like a keystroke and
+  // OverType re-renders off the input event it fires.
+  const strike = useCallback(() => {
+    if (!editor?.textarea) return;
+    const t = editor.textarea;
+    t.focus({ preventScroll: true });
+    let start = t.selectionStart;
+    let end = t.selectionEnd;
+    if (start === end) {
+      // nothing selected: wrap the word under the caret
+      const value = t.value;
+      while (start > 0 && !/\s/.test(value[start - 1])) start--;
+      while (end < value.length && !/\s/.test(value[end])) end++;
+      t.setSelectionRange(start, end);
+    }
+    const inner = t.value.slice(start, end);
+    const toggling = inner.startsWith("~~") && inner.endsWith("~~") && inner.length >= 4;
+    const next = toggling ? inner.slice(2, -2) : `~~${inner}~~`;
+    let ok;
+    try {
+      ok = document.execCommand("insertText", false, next);
+    } catch {
+      ok = false;
+    }
+    if (!ok) {
+      // execCommand unavailable in this browser: direct splice (loses the
+      // undo entry, keeps the edit), still synced through the input event.
+      t.value = t.value.slice(0, start) + next + t.value.slice(end);
+    }
+    // Select the (un)wrapped inner text so a second click toggles it back.
+    const sel =
+      toggling || !ok
+        ? [start, start + next.length]
+        : [start + 2, start + 2 + inner.length];
+    t.setSelectionRange(sel[0], sel[1]);
+    t.dispatchEvent(new Event("input", { bubbles: true }));
+    refreshActiveFormats();
+  }, [editor, refreshActiveFormats]);
+
+  // Inserts the current local date & time. Contract per the report: if the
+  // caret is not sitting in the editor, the stamp appends after the text —
+  // a textarea silently keeps a stale selection from its last focused
+  // state, so park the caret at the end before inserting. The instance's
+  // insertAtCursor execCommands first (native undo + input event) and
+  // splices-and-dispatches itself as fallback.
+  const insertStamp = useCallback(() => {
+    if (!editor?.textarea) return;
+    const t = editor.textarea;
+    const now = new Date();
+    const p = (n: number) => String(n).padStart(2, "0");
+    const stamp = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}`;
+    if (document.activeElement !== t) {
+      t.focus({ preventScroll: true });
+      t.setSelectionRange(t.value.length, t.value.length);
+    }
+    if (editor.insertAtCursor) {
+      editor.insertAtCursor(stamp);
+    } else {
+      const start = t.selectionStart;
+      const end = t.selectionEnd;
+      t.value = t.value.slice(0, start) + stamp + t.value.slice(end);
+      t.setSelectionRange(start + stamp.length, start + stamp.length);
+      t.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    refreshActiveFormats();
+  }, [editor, refreshActiveFormats]);
+
+  const customRun = useCallback(
+    (kind: "strike" | "dateTime") => {
+      if (kind === "strike") strike();
+      else insertStamp();
+    },
+    [strike, insertStamp],
+  );
+
   const switchView = useCallback(
     (mode: ViewMode) => {
       // NoteContent owns the editor switch so the keyboard shortcut and the
@@ -183,7 +279,9 @@ export const EditorToolbar = memo(function EditorToolbar({
                 // Keep the caret: without this the textarea blurs and the
                 // selection that markdown-actions reads is lost.
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => run(spec.actionId)}
+                onClick={() =>
+                  spec.custom ? customRun(spec.custom) : spec.actionId && run(spec.actionId)
+                }
                 className={cn(
                   "size-8 rounded-md text-muted-foreground transition-colors",
                   "hover:bg-accent hover:text-accent-foreground",

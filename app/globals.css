@@ -502,11 +502,11 @@
 
 /* Desktop: the formatting toolbar lives where it always did — in the flow,
    between the title and the writing canvas — but reads as a frosted-glass
-   pill: translucent, blurred, hairline border, soft shadow, --radius-xl
-   corners. Auto margins centre it ("upper centre"), and because it stays
-   in the flow nothing floats over the writing area. Unlayered on purpose:
-   it must out-rank the root element's Tailwind width/padding utilities
-   (w-full, px-1.5, py-1) and OverType's unlayered stylesheet. */
+   pill: translucent, blurred, --radius-xl corners, no border or shadow.
+   Auto margins centre it ("upper centre"), and because it stays in the
+   flow nothing floats over the writing area. Unlayered on purpose: it must
+   out-rank the root element's Tailwind width/padding utilities (w-full,
+   px-1.5, py-1) and OverType's unlayered stylesheet. */
 @media (min-width: 768px) {
     .note-toolbar {
         width: max-content;
@@ -514,9 +514,8 @@
         margin-inline: auto;
         background: color-mix(in srgb, var(--background) 70%, transparent);
         backdrop-filter: blur(14px) saturate(1.5);
-        border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+        border: none;
         border-radius: var(--radius-xl);
-        box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.35);
         padding: 8px 10px;
     }
 }
