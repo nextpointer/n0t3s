@@ -152,9 +152,9 @@ export default function Home() {
         {/* Search command */}
         <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
 
-        {/* Content — overflow-x visible so the hover tick can hang in the
-            left margin, aligned outside the note text. */}
-        <div className={cn("w-full overflow-y-auto py-2", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
+        {/* Content: gutter lets the tick hang outside-left while note text
+            aligns to the logo/search edge (scroller padding edge). */}
+        <div className={cn("w-full overflow-y-auto py-2 pl-6 -ml-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
           <NotesList
             notes={notes}
             orderBy={orderBy}
@@ -165,49 +165,58 @@ export default function Home() {
           />
         </div>
 
-        {/* Bulk actions — slides up when selection begins */}
+        {/* Bulk actions — bottom popup on phone, floating pill on desktop */}
         {selectedCount > 0 && (
-          <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-2xl border border-border/60 bg-popover/95 px-2.5 py-2 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-3 duration-200 w-max max-w-[calc(100vw-2rem)]">
-            <span className="px-1.5 text-xs font-medium text-muted-foreground whitespace-nowrap">
-              {selectedCount} selected
-            </span>
-            <Button variant="ghost" size="sm" className="h-7 rounded-xl px-2.5 text-xs" onClick={selectAllVisible}>
-              All
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 rounded-xl px-2.5 text-xs" onClick={selectNone}>
-              None
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" className="h-7 rounded-xl px-3 text-xs">
-                  <SolarIcon icon="delete" className="size-3.5 mr-1" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Permanently delete{" "}
-                    {selectedCount === 1 ? "1 note" : `${selectedCount} notes`}
-                    ?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This removes them from this device&apos;s storage — the
-                    notes and their &quot;#&quot;tags are gone for good and
-                    cannot be recovered.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    className={cn(buttonVariants({ variant: "destructive" }))}
-                    onClick={() => void deleteSelected()}
-                  >
-                    Delete {selectedCount === 1 ? "note" : `${selectedCount} notes`}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+          <div
+            className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex w-auto max-w-md items-center justify-between gap-2 rounded-2xl border border-border/60 bg-popover/95 px-3 py-2.5 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-4 duration-200 sm:inset-x-auto sm:left-1/2 sm:w-max sm:max-w-[calc(100vw-2rem)] sm:-translate-x-1/2 sm:justify-start sm:px-3"
+            role="region"
+            aria-label="Bulk actions"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/12 px-1.5 text-[11px] font-semibold text-primary tabular-nums">
+                {selectedCount}
+              </span>
+              <span className="text-xs font-medium text-foreground/80 whitespace-nowrap">selected</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="h-8 rounded-xl px-2.5 text-xs text-muted-foreground hover:text-foreground" onClick={selectAllVisible}>
+                All
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 rounded-xl px-2.5 text-xs text-muted-foreground hover:text-foreground" onClick={selectNone}>
+                None
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" className="h-8 rounded-xl px-3 text-xs">
+                    <SolarIcon icon="delete" className="size-3.5 mr-1" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Permanently delete{" "}
+                      {selectedCount === 1 ? "1 note" : `${selectedCount} notes`}
+                      ?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This removes them from this device&apos;s storage — the
+                      notes and their &quot;#&quot;tags are gone for good and
+                      cannot be recovered.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className={cn(buttonVariants({ variant: "destructive" }), "rounded-xl")}
+                      onClick={() => void deleteSelected()}
+                    >
+                      Delete {selectedCount === 1 ? "note" : `${selectedCount} notes`}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         )}
       </div>

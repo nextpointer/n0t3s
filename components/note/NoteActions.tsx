@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   search,
   viewModeAtom,
   persistZenMode,
+  contentAtom,
 } from "@/store/noteAtom";
 import { SolarIcon } from "@/lib/icons";
 import { AIMenu } from "./AIMenu";
@@ -43,13 +44,31 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
   const loading = useAtomValue(saveLoadingAtom);
   const autoSave = useAtomValue(autoSaveAtom);
   const setSearchOpen = useSetAtom(search);
+  const content = useAtomValue(contentAtom);
+
+  const stats = useMemo(() => {
+    const t = content || "";
+    const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+    return { words, chars: t.length };
+  }, [content]);
 
   const handleSave = useCallback(() => {
     save(false);
   }, [save]);
 
   return (
-    <div className="md:relative fixed inset-x-0 bottom-0 md:inset-x-auto md:right-8 flex flex-row h-14 md:h-auto pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-1 gap-1 md:gap-3 items-center md:items-end justify-evenly md:justify-end bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none border-t border-border/40 md:border-0 z-30">
+    <div className="md:relative fixed inset-x-0 bottom-0 md:inset-x-auto md:right-8 md:left-0 flex flex-row h-14 md:h-auto pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-1 gap-1 md:gap-3 items-center justify-evenly md:justify-between bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none border-t border-border/40 md:border-0 z-30">
+      {/* Desktop: word/char counter aligned with the bottom icons. Hidden on phone. */}
+      <div
+        className="note-stats pointer-events-none hidden md:flex items-center gap-2 text-[10px] tracking-[0.18em] text-foreground/35 md:pb-1"
+        style={{ fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
+        aria-label={`${stats.words} words, ${stats.chars} characters`}
+      >
+        <span>{stats.words}w</span>
+        <span aria-hidden className="text-foreground/20">·</span>
+        <span>{stats.chars}c</span>
+      </div>
+      <div className="flex flex-row items-center justify-evenly md:justify-end gap-1 md:gap-3 w-full md:w-auto">
       {!zen && (
         <button
           type="button"
@@ -143,6 +162,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           )}
         </Button>
       )}
+      </div>
     </div>
   );
 });

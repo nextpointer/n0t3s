@@ -287,26 +287,6 @@ function readEditorColors(withPreviewColor: boolean): {
   };
 }
 
-/**
- * Word/character/line counts.
- *
- * Deliberately NOT derived during render. Splitting a whole document into
- * words on every keystroke is O(n) and became the single biggest cost the app
- * added on top of OverType's own re-parse — ~10ms per key on a large note.
- * It is computed inside the debounced sync instead, which already runs once
- * typing pauses.
- */
-function computeStats(text: string) {
-  const trimmed = text.trim();
-  const words = trimmed ? trimmed.split(/\s+/).length : 0;
-  return {
-    words,
-    chars: text.length,
-    lines: text.split("\n").length,
-    readingTime: `${Math.max(1, Math.ceil(words / 200))} min`,
-  };
-}
-
 export const NoteContent = memo(
   function NoteContent({ initialContent }: NoteContentProps) {
     const { resolvedTheme } = useTheme();
@@ -354,7 +334,6 @@ export const NoteContent = memo(
     const viewModeRef = useRef(viewMode);
     viewModeRef.current = viewMode;
 
-    const [stats, setStats] = useState(() => computeStats(startContent));
     // True while the software keyboard covers part of the layout viewport.
     const [keyboardOpen, setKeyboardOpen] = useState(false);
 
@@ -366,10 +345,6 @@ export const NoteContent = memo(
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         syncTimeoutRef.current = setTimeout(() => {
           syncToContent(content);
-          setStats((prev) => {
-            const next = computeStats(content);
-            return prev.words === next.words && prev.chars === next.chars ? prev : next;
-          });
           isTypingRef.current = false;
         }, 500);
       },
@@ -862,7 +837,6 @@ export const NoteContent = memo(
         instance.setValue(externalContent);
       }
       contentRef.current = externalContent;
-      setStats(computeStats(externalContent));
       requestAnimationFrame(() => {
         isExternalUpdateRef.current = false;
       });
@@ -896,18 +870,6 @@ export const NoteContent = memo(
         {/* #tag completion; anchored to this wrapper so the popover keeps
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
-        {/* Desktop: left-aligned to the writing column, bottom corner.
-            Phone: hidden (kept out of the way for comfortable writing). */}
-        <div
-          className="note-stats pointer-events-none absolute left-0 bottom-3 xl:bottom-4 z-20 hidden md:block"
-          style={{ fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
-        >
-          <div className="flex items-center gap-2 text-[10px] tracking-[0.18em] text-foreground/35">
-            <span>{stats.words}w</span>
-            <span aria-hidden className="text-foreground/20">·</span>
-            <span>{stats.chars}c</span>
-          </div>
-        </div>
       </div>
     );
   },

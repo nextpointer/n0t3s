@@ -159,9 +159,9 @@ const NotesList = React.memo(function NotesList({
   }
 
   // Flat list. Note text aligns to the page's content edge (logo/search);
-  // the selection tick hangs in the left margin via each row's layout.
+  // the selection tick hangs outside-left in the gutter (scroller padding).
   return (
-    <div className="w-full max-w-full flex flex-col gap-0.5 pl-7">
+    <div className="flex w-full max-w-full flex-col gap-0.5">
       {sortedNotes.map((note) => (
         <NoteCard
           key={note.id}

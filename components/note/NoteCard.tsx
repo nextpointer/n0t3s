@@ -47,9 +47,10 @@ const NoteCard = React.memo(function NoteCard({
 
   return (
     <div className="group/row relative flex w-full items-center">
-      {/* Hangs outside-left of the note text (which aligns to logo/search).
-          Hidden at rest; row hover shows low opacity for this note only;
-          hovering the tick itself shows full opacity. Hold row on touch. */}
+      {/* Hangs outside-left of the note text (which aligns to logo/search),
+          sitting in the scroller's gutter. Hidden at rest; row hover shows low
+          opacity for this note only; hovering the tick itself shows full
+          opacity. Hold row on touch to select. */}
       <button
         type="button"
         role="checkbox"
@@ -61,7 +62,7 @@ const NoteCard = React.memo(function NoteCard({
         }}
         onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          "absolute -left-7 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-[4px]",
+          "absolute -left-[22px] top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-[4px]",
           selected
             ? "opacity-100 text-primary"
             : active
@@ -88,7 +89,12 @@ const NoteCard = React.memo(function NoteCard({
         role="link"
         tabIndex={0}
         data-selected={selected || undefined}
-        className="min-w-0 flex-1 cursor-pointer rounded-lg bg-transparent px-2 py-2.5 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
+        className="min-w-0 flex-1 cursor-pointer touch-pan-y select-none rounded-lg bg-transparent py-2.5 pl-0 pr-2 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
+        style={{ WebkitTouchCallout: "none" }}
+        onContextMenu={(e) => {
+          // Prevent iOS/Android long-press context menu so hold-to-select works.
+          if (pressTimerRef.current || suppressClickRef.current) e.preventDefault();
+        }}
         onPointerDown={(e) => {
           if (e.pointerType !== "touch") return;
           pressOriginRef.current = { x: e.clientX, y: e.clientY };
@@ -96,8 +102,11 @@ const NoteCard = React.memo(function NoteCard({
           pressTimerRef.current = setTimeout(() => {
             pressTimerRef.current = null;
             suppressClickRef.current = true;
+            if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+              try { navigator.vibrate(12); } catch { /* noop */ }
+            }
             onSelect(note.id, false);
-          }, 450);
+          }, 420);
         }}
         onPointerMove={(e) => {
           const origin = pressOriginRef.current;
@@ -106,6 +115,7 @@ const NoteCard = React.memo(function NoteCard({
         }}
         onPointerUp={clearPress}
         onPointerCancel={clearPress}
+        onPointerLeave={clearPress}
       >
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="min-w-0 flex-1 truncate text-[13px] font-medium tracking-tight text-foreground/90 sm:text-[14px]">

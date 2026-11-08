@@ -74,12 +74,15 @@ export default function RootLayout({
           >
             {children}
             <Toaster
+              position="bottom-center"
+              containerStyle={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
               toastOptions={{
                 className: "text-sm",
                 style: {
                   background: "var(--background)",
                   color: "var(--foreground)",
                   border: "1px solid var(--border)",
+                  borderRadius: "14px",
                 },
 
                 iconTheme: {
