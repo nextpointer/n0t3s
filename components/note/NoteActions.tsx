@@ -58,9 +58,10 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
 
   return (
     <div className="md:relative fixed inset-x-0 bottom-0 md:inset-x-auto md:right-8 md:left-0 flex flex-row h-14 md:h-auto pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-1 gap-1 md:gap-3 items-center justify-evenly md:justify-between bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none border-t border-border/40 md:border-0 z-30">
-      {/* Desktop: word/char counter aligned with the bottom icons. Hidden on phone. */}
+      {/* Desktop: word/char counter, vertically middle-aligned with the bottom
+          icons (shares their md:mt-10 offset). Hidden on phone. */}
       <div
-        className="note-stats pointer-events-none hidden md:flex items-center gap-2 text-[10px] tracking-[0.18em] text-foreground/35 md:pb-1"
+        className="note-stats pointer-events-none hidden md:mt-10 md:flex items-center gap-2.5 text-[10px] tracking-[0.18em] text-foreground/35 md:p-1"
         style={{ fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         aria-label={`${stats.words} words, ${stats.chars} characters`}
       >

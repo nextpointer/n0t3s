@@ -62,7 +62,7 @@ const NoteCard = React.memo(function NoteCard({
         }}
         onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          "absolute -left-[22px] top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-[4px]",
+          "absolute -left-6 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-[4px]",
           selected
             ? "opacity-100 text-primary"
             : active
@@ -89,7 +89,7 @@ const NoteCard = React.memo(function NoteCard({
         role="link"
         tabIndex={0}
         data-selected={selected || undefined}
-        className="min-w-0 flex-1 cursor-pointer touch-pan-y select-none rounded-lg bg-transparent py-2.5 pl-0 pr-2 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
+        className="min-w-0 flex-1 cursor-pointer touch-pan-y select-none rounded-lg bg-transparent py-3 pl-1 pr-3 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
         style={{ WebkitTouchCallout: "none" }}
         onContextMenu={(e) => {
           // Prevent iOS/Android long-press context menu so hold-to-select works.
@@ -117,14 +117,14 @@ const NoteCard = React.memo(function NoteCard({
         onPointerCancel={clearPress}
         onPointerLeave={clearPress}
       >
-        <div className="flex items-baseline justify-between gap-3">
+        <div className="flex items-center justify-between gap-4">
           <h3 className="min-w-0 flex-1 truncate text-[13px] font-medium tracking-tight text-foreground/90 sm:text-[14px]">
             {note.title || "Untitled"}
           </h3>
-          <div className="flex shrink-0 items-baseline gap-2 text-[11px] tabular-nums text-muted-foreground/45">
-            <span>{(note.content?.length ?? 0).toLocaleString()}c</span>
+          <div className="flex shrink-0 items-center justify-end gap-3 text-[11px] tabular-nums text-muted-foreground/45">
+            <span className="whitespace-nowrap px-0.5">{(note.content?.length ?? 0).toLocaleString()}c</span>
             <span aria-hidden className="text-muted-foreground/25">·</span>
-            <span>
+            <span className="whitespace-nowrap text-right">
               {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               {" "}
               {new Date(note.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
