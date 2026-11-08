@@ -474,7 +474,7 @@ export const NoteContent = memo(
 
         instance.reinit({
           fontSize: `${size}px`,
-          mobile: { fontSize: `${Math.max(12, size - 3)}px`, lineHeight: 1.3 },
+          mobile: { fontSize: `${Math.max(12, size - 3)}px`, lineHeight: 1.5 },
         });
 
         if (ta) {
@@ -569,6 +569,27 @@ export const NoteContent = memo(
     }, [toggleReadMode]);
 
     /**
+     * Ctrl+D toggles the todo marker on the current line (add/remove), like
+     * the task-list tool. preventDefault stops the browser bookmark dialog.
+     */
+    useEffect(() => {
+      const onKeyDown = (e: KeyboardEvent) => {
+        if ((e.key !== "d" && e.key !== "D") || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+        const instance = editorRef.current;
+        const textarea = instance?.textarea as HTMLTextAreaElement | undefined;
+        if (!textarea) return;
+        if (instance.container.dataset.mode === "preview") return;
+        if (document.activeElement !== textarea) return;
+        e.preventDefault();
+        void instance.performAction("toggleTaskList").then(() => {
+          textarea.focus();
+        });
+      };
+      window.addEventListener("keydown", onKeyDown);
+      return () => window.removeEventListener("keydown", onKeyDown);
+    }, []);
+
+    /**
      * Toggle the task checkbox at the caret with Ctrl+Enter.
      *
      * Ctrl+Enter is unused by browsers (unlike Ctrl+Shift+<letter> combos), and
@@ -632,11 +653,13 @@ export const NoteContent = memo(
           : 0;
         host.style.setProperty("--ot-keyboard", `${covered}px`);
 
-        // Follow focus: the keyboard is opened to type, and the two platforms
-        // disagree about whether that shrinks the layout viewport.
+        // Follow focus: the keyboard is opened to type. Keep the toolbar up
+        // while a dropdown/menu is open (focus moves to a Radix portal) so it
+        // doesn't collapse and mis-anchor the menu on phones.
         const typing =
           editorRef.current?.textarea === document.activeElement;
-        setKeyboardOpen(typing && overlay > 24);
+        const menuOpen = !!document.querySelector('[data-radix-popper-content-wrapper]');
+        setKeyboardOpen((typing || menuOpen) && overlay > 24);
       };
 
       // The keyboard is laid out after the focus change that asked for it, so
@@ -701,7 +724,7 @@ export const NoteContent = memo(
           autofocus: false,
           fontSize: `${fontSizeRef.current}px`,
           lineHeight: 1.7,
-          mobile: { fontSize: `${Math.max(12, fontSizeRef.current - 3)}px`, lineHeight: 1.3 },
+          mobile: { fontSize: `${Math.max(12, fontSizeRef.current - 3)}px`, lineHeight: 1.5 },
           theme: { name: "minimal-hierarchy", colors, previewColors },
           smartLists: true,
           textareaProps: { spellCheck: false },
@@ -873,14 +896,13 @@ export const NoteContent = memo(
         {/* #tag completion; anchored to this wrapper so the popover keeps
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
-        {/* Desktop: left-aligned to the writing column. Phone: contained in
-            the note surface (not floating/fixed), tucked bottom-right above
-            the bar's reserved space. Hidden while the keyboard is up. */}
+        {/* Desktop: left-aligned to the writing column, bottom corner.
+            Phone: hidden (kept out of the way for comfortable writing). */}
         <div
-          className="note-stats pointer-events-none absolute right-3 bottom-2 md:right-auto md:left-0 md:bottom-3 xl:bottom-4 z-20"
+          className="note-stats pointer-events-none absolute left-0 bottom-3 xl:bottom-4 z-20 hidden md:block"
           style={{ fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
-          <div className="flex items-center justify-end md:justify-start gap-2 text-[9px] md:text-[10px] tracking-[0.18em] text-foreground/35">
+          <div className="flex items-center gap-2 text-[10px] tracking-[0.18em] text-foreground/35">
             <span>{stats.words}w</span>
             <span aria-hidden className="text-foreground/20">·</span>
             <span>{stats.chars}c</span>

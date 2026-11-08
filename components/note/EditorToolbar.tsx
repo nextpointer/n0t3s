@@ -20,8 +20,6 @@ import { cn } from "@/lib/utils";
 export interface ToolbarEditor {
   textarea: HTMLTextAreaElement;
   performAction(actionId: string): Promise<boolean>;
-  /** Present on the real OverType instance; typed separately because spec
-      buttons only need the markdown-action surface. */
   insertAtCursor?(text: string): void;
 }
 
@@ -40,18 +38,11 @@ interface ToolbarButtonSpec {
   name: string;
   label: string;
   Icon: (props: { className?: string }) => React.ReactElement;
-  /** OverType action id from `defaultToolbarButtons` (drives shortcuts too).
-      Omit for `custom` buttons. */
   actionId?: string;
-  /** Named handler resolved by the component — tools that aren't
-      markdown-actions (strikethrough, stamps, rule, etc.). */
   custom?: "strike" | "insertDate" | "insertTime" | "insertHr";
-  /** Key in the `markdownActions.getActiveFormats()` result */
   format?: string;
 }
 
-/** Binds a bundled Solar duotone glyph to the Icon contract the specs
-    use. The ids live in the semantic map in lib/icons. */
 function boundIcon(icon: IconId) {
   return function BoundSolarIcon({ className }: { className?: string }) {
     return <SolarIcon icon={icon} className={className} />;
@@ -62,15 +53,13 @@ const GROUPS: ToolbarButtonSpec[][] = [
   [
     { name: "bold", label: "Bold (Ctrl+B)", Icon: boundIcon("bold"), actionId: "toggleBold", format: "bold" },
     { name: "italic", label: "Italic (Ctrl+I)", Icon: boundIcon("italic"), actionId: "toggleItalic", format: "italic" },
-    // No action id ships for strike, but the renderer parses ~~tildes~~ —
-    // applyCustomFormat is OverType's own extension point for it.
     { name: "strike", label: "Strikethrough", Icon: boundIcon("strike"), custom: "strike" },
     { name: "code", label: "Inline code", Icon: boundIcon("code"), actionId: "toggleCode" },
   ],
   [
-    { name: "h1", label: "Heading 1", Icon: () => <span className="text-[13px] leading-none font-semibold">H1</span>, actionId: "toggleH1", format: "header" },
-    { name: "h2", label: "Heading 2", Icon: () => <span className="text-[13px] leading-none font-semibold">H2</span>, actionId: "toggleH2", format: "header-2" },
-    { name: "h3", label: "Heading 3", Icon: () => <span className="text-[13px] leading-none font-semibold">H3</span>, actionId: "toggleH3", format: "header-3" },
+    { name: "h1", label: "Heading 1", Icon: () => <span className="text-[13px] font-semibold leading-none">H1</span>, actionId: "toggleH1", format: "header" },
+    { name: "h2", label: "Heading 2", Icon: () => <span className="text-[13px] font-semibold leading-none">H2</span>, actionId: "toggleH2", format: "header-2" },
+    { name: "h3", label: "Heading 3", Icon: () => <span className="text-[13px] font-semibold leading-none">H3</span>, actionId: "toggleH3", format: "header-3" },
   ],
   [
     { name: "bulletList", label: "Bullet list", Icon: boundIcon("bulletList"), actionId: "toggleBulletList", format: "bullet-list" },
@@ -90,11 +79,6 @@ interface EditorToolbarProps {
   editor: ToolbarEditor | null;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
-  /**
-   * Phones only: the keyboard is covering the screen. The toolbar is pinned
-   * above the keyboard, so it is hidden whenever the keyboard is down rather
-   * than sitting over the note.
-   */
   mobileVisible?: boolean;
 }
 
@@ -106,19 +90,13 @@ export const EditorToolbar = memo(function EditorToolbar({
 }: EditorToolbarProps) {
   const [activeFormats, setActiveFormats] = useState<string[]>([]);
   const activeRef = useRef<string[]>([]);
-  const barRef = useRef<HTMLDivElement>(null);
-  const touchRef = useRef<{ x: number; atRight: boolean; atLeft: boolean } | null>(null);
+  const [showFormats, setShowFormats] = useState(false);
 
   const refreshActiveFormats = useCallback(() => {
     if (!editor?.textarea) return;
     const next = markdownActions.getActiveFormats(editor.textarea);
     const prev = activeRef.current;
-    if (
-      next.length === prev.length &&
-      next.every((f, i) => f === prev[i])
-    ) {
-      return;
-    }
+    if (next.length === prev.length && next.every((f, i) => f === prev[i])) return;
     activeRef.current = next;
     setActiveFormats(next);
   }, [editor]);
@@ -141,27 +119,23 @@ export const EditorToolbar = memo(function EditorToolbar({
     };
   }, [editor, refreshActiveFormats]);
 
-  // Only meaningful in edit/raw mode, where the caret exists.
   useEffect(() => {
     if (viewMode !== "preview") refreshActiveFormats();
   }, [viewMode, refreshActiveFormats]);
 
+  // When keyboard/toolbar hides, reset to action view so it reopens clean.
+  useEffect(() => {
+    if (!mobileVisible) setShowFormats(false);
+  }, [mobileVisible]);
+
   const run = useCallback(
     (actionId: string) => {
       if (!editor) return;
-      // performAction() focuses the textarea for us, which keeps the caret.
       void editor.performAction(actionId).then(refreshActiveFormats);
     },
     [editor, refreshActiveFormats],
   );
 
-  // OverType ships no strikethrough action id, though its renderer parses
-  // ~~tildes~~. calling markdownActions.applyCustomFormat here silently
-  // killed the textarea's native undo stack for every later edit (its
-  // internals probe with a contentEditable toggle and fall through to
-  // value splices), so the wrap is done with one plain execCommand
-  // instead — it stays in the system undo history like a keystroke and
-  // OverType re-renders off the input event it fires.
   const strike = useCallback(() => {
     if (!editor?.textarea) return;
     const t = editor.textarea;
@@ -169,7 +143,6 @@ export const EditorToolbar = memo(function EditorToolbar({
     let start = t.selectionStart;
     let end = t.selectionEnd;
     if (start === end) {
-      // nothing selected: wrap the word under the caret
       const value = t.value;
       while (start > 0 && !/\s/.test(value[start - 1])) start--;
       while (end < value.length && !/\s/.test(value[end])) end++;
@@ -184,27 +157,13 @@ export const EditorToolbar = memo(function EditorToolbar({
     } catch {
       ok = false;
     }
-    if (!ok) {
-      // execCommand unavailable in this browser: direct splice (loses the
-      // undo entry, keeps the edit), still synced through the input event.
-      t.value = t.value.slice(0, start) + next + t.value.slice(end);
-    }
-    // Select the (un)wrapped inner text so a second click toggles it back.
-    const sel =
-      toggling || !ok
-        ? [start, start + next.length]
-        : [start + 2, start + 2 + inner.length];
+    if (!ok) t.value = t.value.slice(0, start) + next + t.value.slice(end);
+    const sel = toggling || !ok ? [start, start + next.length] : [start + 2, start + 2 + inner.length];
     t.setSelectionRange(sel[0], sel[1]);
     t.dispatchEvent(new Event("input", { bubbles: true }));
     refreshActiveFormats();
   }, [editor, refreshActiveFormats]);
 
-  // Text insertion shared by the stamp/rule buttons. Contract: while the
-  // caret is in the editor insert at the caret; when it is not, append
-  // after the text — a textarea silently keeps a stale selection from its
-  // last focused state, so the caret is explicitly parked at the end
-  // first. The instance's insertAtCursor execCommands first (native undo
-  // + input event) and splices-and-dispatches itself as fallback.
   const insertText = useCallback(
     (text: string) => {
       if (!editor?.textarea) return;
@@ -229,13 +188,8 @@ export const EditorToolbar = memo(function EditorToolbar({
 
   const customRun = useCallback(
     (kind: "strike" | "insertDate" | "insertTime" | "insertHr") => {
-      if (kind === "strike") {
-        strike();
-        return;
-      }
+      if (kind === "strike") return strike();
       if (kind === "insertHr") {
-        // Markdown rules render per line: pad thick with blank lines only
-        // when the caret doesn't already start an empty one.
         const t = editor?.textarea;
         const before = t ? t.value.slice(0, t.selectionStart) : "";
         insertText(before === "" || before.endsWith("\n\n") ? "---\n\n" : "\n\n---\n\n");
@@ -243,76 +197,21 @@ export const EditorToolbar = memo(function EditorToolbar({
       }
       const now = new Date();
       const p = (n: number) => String(n).padStart(2, "0");
-      if (kind === "insertDate") {
-        insertText(`${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`);
-      } else {
-        insertText(`${p(now.getHours())}:${p(now.getMinutes())}`);
-      }
+      if (kind === "insertDate") insertText(`${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`);
+      else insertText(`${p(now.getHours())}:${p(now.getMinutes())}`);
     },
     [strike, insertText, editor],
   );
 
-  const switchView = useCallback(
-    (mode: ViewMode) => {
-      // NoteContent owns the editor switch so the keyboard shortcut and the
-      // command palette go through exactly the same path.
-      onViewModeChange(mode);
-    },
-    [onViewModeChange],
-  );
-
-  // Elastic nudge on phones: a hard pull at a scroll edge reveals the
-  // action icons (right end) or snaps back to the format tools (left).
-  useEffect(() => {
-    const el = barRef.current;
-    if (!el) return;
-    const onStart = (e: TouchEvent) => {
-      const max = el.scrollWidth - el.clientWidth;
-      touchRef.current = {
-        x: e.touches[0].clientX,
-        atRight: max > 8 && el.scrollLeft >= max - 2,
-        atLeft: el.scrollLeft <= 2,
-      };
-    };
-    const onMove = (e: TouchEvent) => {
-      const t = touchRef.current;
-      if (!t) return;
-      const dx = e.touches[0].clientX - t.x;
-      // pulling left (dx negative) at the right edge → reveal actions
-      if (t.atRight && dx < -36) {
-        el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
-        touchRef.current = null;
-      } else if (t.atLeft && dx > 36) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
-        touchRef.current = null;
-      }
-    };
-    const onEnd = () => { touchRef.current = null; };
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchmove", onMove, { passive: true });
-    el.addEventListener("touchend", onEnd, { passive: true });
-    return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchmove", onMove);
-      el.removeEventListener("touchend", onEnd);
-    };
-  }, []);
+  const switchView = useCallback((mode: ViewMode) => onViewModeChange(mode), [onViewModeChange]);
 
   const CurrentIcon = VIEW_MODES[viewMode].Icon;
 
-  return (
-    <div
-      ref={barRef}
-      role="toolbar"
-      aria-label="Formatting toolbar"
-      data-mobile-visible={mobileVisible || undefined}
-      className="note-toolbar flex w-full items-center gap-1 overflow-x-auto [overscroll-behavior-x:contain] px-2 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-    >
+  const formatGroups = (
+    <>
       {GROUPS.map((group, gi) => (
         <div key={gi} className="flex shrink-0 items-center gap-1">
-          {gi > 0 && (
-            <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-border" />
-          )}
+          {gi > 0 && <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-border" />}
           {group.map((spec) => {
             const isActive = spec.format ? activeFormats.includes(spec.format) : false;
             return (
@@ -326,12 +225,8 @@ export const EditorToolbar = memo(function EditorToolbar({
                 aria-pressed={spec.format ? isActive : undefined}
                 data-active={isActive || undefined}
                 disabled={!editor}
-                // Keep the caret: without this the textarea blurs and the
-                // selection that markdown-actions reads is lost.
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() =>
-                  spec.custom ? customRun(spec.custom) : spec.actionId && run(spec.actionId)
-                }
+                onClick={() => (spec.custom ? customRun(spec.custom) : spec.actionId && run(spec.actionId))}
                 className={cn(
                   "size-8 rounded-md text-muted-foreground/55 transition-colors",
                   "hover:bg-accent hover:text-foreground/90",
@@ -345,9 +240,7 @@ export const EditorToolbar = memo(function EditorToolbar({
           })}
         </div>
       ))}
-
       <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-border" />
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -363,18 +256,11 @@ export const EditorToolbar = memo(function EditorToolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" side="top" sideOffset={8} collisionPadding={12} className="w-32 rounded-xl">
-          <DropdownMenuRadioGroup
-            value={viewMode}
-            onValueChange={(v) => switchView(v as ViewMode)}
-          >
+          <DropdownMenuRadioGroup value={viewMode} onValueChange={(v) => switchView(v as ViewMode)}>
             {(Object.keys(VIEW_MODES) as ViewMode[]).map((mode) => {
               const { label, Icon } = VIEW_MODES[mode];
               return (
-                <DropdownMenuRadioItem
-                  key={mode}
-                  value={mode}
-                  className="flex items-center justify-between gap-2 text-sm"
-                >
+                <DropdownMenuRadioItem key={mode} value={mode} className="flex items-center justify-between gap-2 text-sm">
                   <span className="flex items-center gap-2">
                     <Icon className="size-4" />
                     {label}
@@ -385,29 +271,83 @@ export const EditorToolbar = memo(function EditorToolbar({
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+    </>
+  );
 
-      {/* Phones only: the note-level actions the top header hosts, trailing
-          the format groups so the strip scrolls — with the platform's own
-          rubber-band at the edges — to reach them. Window save/listener
-          components are the exact instances the header renders, so state
-          (autosave toggles, AI loading) stays in one place. */}
-      <div className="md:hidden flex shrink-0 items-center gap-1" aria-label="Note actions">
-        <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-border" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          title="Save (Ctrl/Cmd+S)"
-          aria-label="Save"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => window.dispatchEvent(new CustomEvent("note:save"))}
-          className="size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+  const actionButtons = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        title="Save (Ctrl/Cmd+S)"
+        aria-label="Save"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => window.dispatchEvent(new CustomEvent("note:save"))}
+        className="size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+      >
+        <SolarIcon icon="save" className="size-4" />
+      </Button>
+      <HistoryControls />
+      <AIMenu />
+      <SettingsMenu />
+    </>
+  );
+
+  return (
+    <div
+      role="toolbar"
+      aria-label="Formatting toolbar"
+      data-mobile-visible={mobileVisible || undefined}
+      className="note-toolbar w-full px-2 py-1.5"
+    >
+      {/* Desktop: single row, format tools + view (actions live in headers/bars). */}
+      <div className="hidden w-full items-center gap-1 overflow-x-auto [overscroll-behavior-x:contain] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden" style={{ justifyContent: "safe center" }}>
+        {formatGroups}
+      </div>
+
+      {/* Phone (keyboard open): actions by default; "T" toggles to scrollable
+          format icons sliding in from the right over the actions; "×" slides
+          back. The toggle stays pinned at the right edge. */}
+      <div className="relative flex w-full items-center md:hidden">
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden transition-transform duration-200 ease-out",
+            showFormats ? "translate-x-0" : "translate-x-0",
+          )}
+          aria-hidden={showFormats}
         >
-          <SolarIcon icon="save" className="size-4" />
-        </Button>
-        <HistoryControls />
-        <AIMenu />
-        <SettingsMenu />
+          {!showFormats && <div className="flex w-full items-center justify-evenly gap-1">{actionButtons}</div>}
+        </div>
+
+        {/* Format layer slides in from the right, overlapping actions. */}
+        <div
+          className={cn(
+            "absolute inset-y-0 right-10 left-0 flex items-center gap-1 overflow-x-auto [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden bg-background transition-all duration-200 ease-out",
+            showFormats ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-6 opacity-0",
+          )}
+          aria-hidden={!showFormats}
+        >
+          {showFormats ? formatGroups : null}
+        </div>
+
+        <button
+          type="button"
+          aria-label={showFormats ? "Show actions" : "Show formatting"}
+          title={showFormats ? "Actions" : "Formatting"}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setShowFormats((v) => !v)}
+          className={cn(
+            "ml-1 flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground/70 transition-all duration-200 hover:bg-accent hover:text-foreground",
+            showFormats && "rotate-0 text-foreground",
+          )}
+        >
+          {showFormats ? (
+            <SolarIcon icon="close" className="size-4" />
+          ) : (
+            <span className="text-[13px] font-bold leading-none">T</span>
+          )}
+        </button>
       </div>
     </div>
   );
