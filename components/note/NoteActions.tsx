@@ -61,13 +61,13 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
       {/* Desktop: word/char counter, vertically middle-aligned with the bottom
           icons (shares their md:mt-10 offset). Hidden on phone. */}
       <div
-        className="note-stats pointer-events-none hidden md:mt-10 md:flex items-center gap-2.5 text-[10px] tracking-[0.18em] text-foreground/35 md:p-1"
+        className="note-stats pointer-events-none hidden md:mt-10 md:flex items-center gap-3 text-[10px] tracking-[0.16em] text-foreground/35 md:p-1"
         style={{ fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         aria-label={`${stats.words} words, ${stats.chars} characters`}
       >
-        <span>{stats.words}w</span>
+        <span>{stats.words.toLocaleString()} words</span>
         <span aria-hidden className="text-foreground/20">·</span>
-        <span>{stats.chars}c</span>
+        <span>{stats.chars.toLocaleString()} chars</span>
       </div>
       <div className="flex flex-row items-center justify-evenly md:justify-end gap-1 md:gap-3 w-full md:w-auto">
       {!zen && (
