@@ -70,7 +70,7 @@ export const UI = {
   // shared primitives
   close: "solar:close-circle-bold-duotone",
   checkCircle: "solar:check-circle-bold-duotone",
-  check: "solar:check-bold-duotone",
+  check: "solar:check-read-line-duotone",
   // note cards (home page)
   pin: "solar:pin-bold-duotone",
   chevronDown: "solar:alt-arrow-down-bold-duotone",
