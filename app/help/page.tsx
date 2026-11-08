@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
 import { ReadOnlyEditor } from "@/components/ReadOnlyEditor";
 import { Button } from "@/components/ui/button";
+import { SolarIcon } from "@/lib/icons";
 import { useRouter } from "next/navigation";
 
 const HELP_CONTENT = `
@@ -158,7 +158,7 @@ export default function HelpPage() {
             size="sm"
             className="h-7 px-2 rounded-sm text-xs font-mono text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
           >
-            <ArrowLeft className="w-3 h-3" />
+            <SolarIcon icon="back" className="w-3 h-3" />
             back
           </Button>
           <span className="ml-3 text-xs font-mono text-foreground/30">

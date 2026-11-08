@@ -873,16 +873,14 @@ export const NoteContent = memo(
         {/* #tag completion; anchored to this wrapper so the popover keeps
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
-        {/* Desktop: left-aligned to the writing column. Phone: tucked above
-            the full-width bottom bar, right-aligned so it stays clear of the
-            evenly spaced icons. Hidden while the keyboard is up. */}
+        {/* Desktop: left-aligned to the writing column. Phone: contained in
+            the note surface (not floating/fixed), tucked bottom-right above
+            the bar's reserved space. Hidden while the keyboard is up. */}
         <div
-          className="note-stats pointer-events-none fixed right-4 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] md:absolute md:right-auto md:left-0 md:bottom-3 xl:bottom-4 z-20"
+          className="note-stats pointer-events-none absolute right-3 bottom-2 md:right-auto md:left-0 md:bottom-3 xl:bottom-4 z-20"
           style={{ fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
-          <div
-            className="flex items-center justify-end md:justify-start gap-2 text-[9px] md:text-[10px] tracking-[0.18em] text-foreground/35"
-          >
+          <div className="flex items-center justify-end md:justify-start gap-2 text-[9px] md:text-[10px] tracking-[0.18em] text-foreground/35">
             <span>{stats.words}w</span>
             <span aria-hidden className="text-foreground/20">·</span>
             <span>{stats.chars}c</span>

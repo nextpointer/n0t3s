@@ -7,7 +7,6 @@ import { getNotes, createNote, deleteNote } from "@/lib/storage";
 import { getNoteTags } from "@/lib/tag-syntax";
 import { Note } from "@/lib/types";
 import { ModeToggle } from "@/components/Theme-Mode";
-import { Github, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -15,7 +14,7 @@ import NotesFilters from "@/components/note/NoteFilters";
 import NotesList from "@/components/note/NoteList";
 import { CommandMenu } from "@/components/CommandMenu";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { NewNote } from "@/components/icons/NewNote";
+import { SolarIcon } from "@/lib/icons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +82,24 @@ export default function Home() {
 
   const selectedCount = selectedIds.size;
 
+  const visibleIds = useMemo(() => {
+    const tagsOf = (note: Note) => getNoteTags(note);
+    const filtered = notes.filter((note) => {
+      const t = tagsOf(note);
+      if (tagFilter === "all") return true;
+      if (tagFilter === "untagged") return t.length === 0;
+      return t.includes(tagFilter);
+    });
+    const pinned = filtered.filter((n) => tagsOf(n).includes("pin"));
+    const rest = filtered
+      .filter((n) => !tagsOf(n).includes("pin"))
+      .sort((a, b) => (orderBy === "newest" ? b.createdAt - a.createdAt : a.createdAt - b.createdAt));
+    return [...pinned, ...rest].map((n) => n.id);
+  }, [notes, tagFilter, orderBy]);
+
+  const selectAllVisible = useCallback(() => setSelectedIds(new Set(visibleIds)), [visibleIds]);
+  const selectNone = useCallback(() => setSelectedIds(new Set()), []);
+
   return (
     <>
       <title>n0t3s</title>
@@ -104,7 +121,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="flex items-center m-0 p-0"
             >
-              <Github />
+              <SolarIcon icon="github" className="size-4" />
             </Link>
           </Button>
           <Button
@@ -112,7 +129,7 @@ export default function Home() {
             aria-label="New note"
             title="New note"
           >
-            <NewNote className="sm:mr-1 " />{" "}
+            <SolarIcon icon="add" className="size-4 sm:mr-1" />
             <span className="hidden sm:block">New Note</span>
           </Button>
         </div>
@@ -147,16 +164,22 @@ export default function Home() {
           />
         </div>
 
-        {/* Bulk actions — slides up when selection begins (no select-all). */}
+        {/* Bulk actions — slides up when selection begins */}
         {selectedCount > 0 && (
-          <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-border/60 bg-popover/95 px-3 py-2 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-3 duration-200 w-max max-w-[calc(100vw-2rem)]">
-            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+          <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-2xl border border-border/60 bg-popover/95 px-2.5 py-2 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-3 duration-200 w-max max-w-[calc(100vw-2rem)]">
+            <span className="px-1.5 text-xs font-medium text-muted-foreground whitespace-nowrap">
               {selectedCount} selected
             </span>
+            <Button variant="ghost" size="sm" className="h-7 rounded-xl px-2.5 text-xs" onClick={selectAllVisible}>
+              All
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 rounded-xl px-2.5 text-xs" onClick={selectNone}>
+              None
+            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm" className="h-7 rounded-xl px-3 text-xs">
-                  <Trash2 className="size-3.5" />
+                  <SolarIcon icon="delete" className="size-3.5 mr-1" />
                   Delete
                 </Button>
               </AlertDialogTrigger>

@@ -56,6 +56,13 @@ export const UI = {
   // theme
   sun: "solar:sun-2-bold-duotone",
   moon: "solar:moon-stars-bold-duotone",
+  // misc / chrome
+  add: "solar:add-circle-bold-duotone",
+  github: "solar:code-circle-bold-duotone",
+  arrowRight: "solar:arrow-right-bold-duotone",
+  fileText: "solar:file-text-bold-duotone",
+  fileCode: "solar:file-code-bold-duotone",
+  fileDownload: "solar:file-download-bold-duotone",
   // AI menu items
   summarize: "solar:document-text-bold-duotone",
   rewrite: "solar:pen-new-round-bold-duotone",
@@ -70,7 +77,7 @@ export const UI = {
   // shared primitives
   close: "solar:close-circle-bold-duotone",
   checkCircle: "solar:check-circle-bold-duotone",
-  check: "solar:check-read-line-duotone",
+  check: "solar:check-square-line-duotone",
   // note cards (home page)
   pin: "solar:pin-bold-duotone",
   chevronDown: "solar:alt-arrow-down-bold-duotone",

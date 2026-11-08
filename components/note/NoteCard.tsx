@@ -47,10 +47,9 @@ const NoteCard = React.memo(function NoteCard({
 
   return (
     <div className="group/row flex items-center w-full gap-2.5">
-      {/* Permanent left space, no layout/hover animation. Tick sits at very
-          low opacity; hovering the tick itself brings it to full opacity.
-          On touch it stays non-interactive until selection is active
-          (hold-to-select on the row). */}
+      {/* Fixed left space (no layout animation). Hidden at rest; row hover
+          reveals a low-opacity box-tick for this note; hovering the tick
+          itself makes it full opacity. On touch, hold the row to select. */}
       <button
         type="button"
         role="checkbox"
@@ -63,20 +62,20 @@ const NoteCard = React.memo(function NoteCard({
         onPointerDown={(e) => e.stopPropagation()}
         data-active={active || undefined}
         className={cn(
-          "group/tick shrink-0 flex h-5 w-5 items-center justify-center rounded-md transition-opacity duration-100",
-          // very low affordance at rest; hover the tick -> full
-          active ? "opacity-100" : "opacity-15 hover:opacity-100",
-          // touch: don't steal taps until selecting; fine pointers can hover it
+          "shrink-0 flex h-5 w-5 items-center justify-center rounded-[4px]",
+          selected
+            ? "opacity-100 text-primary"
+            : active
+              ? "opacity-60 hover:opacity-100 text-foreground/70"
+              : "opacity-0 group-hover/row:opacity-25 hover:opacity-100! text-foreground/70",
+          // touch: no hover reveal, so only interactive once selecting
           active
             ? "pointer-events-auto"
             : "pointer-events-none [@media(hover:hover)]:pointer-events-auto",
-          selected
-            ? "text-primary"
-            : "text-foreground",
           "focus-visible:opacity-100 focus-visible:pointer-events-auto focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
-        <SolarIcon icon="check" className="size-[15px]" />
+        <SolarIcon icon="check" className="size-[18px]" />
       </button>
 
       <div
@@ -91,7 +90,7 @@ const NoteCard = React.memo(function NoteCard({
         role="link"
         tabIndex={0}
         data-selected={selected || undefined}
-        className="group relative flex-1 min-w-0 cursor-pointer rounded-lg bg-transparent px-2.5 py-2.5 transition-colors duration-100 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
+        className="flex-1 min-w-0 cursor-pointer rounded-lg bg-transparent px-2.5 py-2.5 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
         onPointerDown={(e) => {
           if (e.pointerType !== "touch") return;
           pressOriginRef.current = { x: e.clientX, y: e.clientY };
