@@ -23,7 +23,7 @@ import {
   QuoteIcon,
   TaskListIcon,
 } from "@/components/icons/EditorIcons";
-import { CalendarClock, Save, Strikethrough } from "lucide-react";
+import { CalendarDays, Clock, Minus, Save, Strikethrough } from "lucide-react";
 import { HistoryControls } from "./HistoryControls";
 import { AIMenu } from "./AIMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -57,8 +57,8 @@ interface ToolbarButtonSpec {
       Omit for `custom` buttons. */
   actionId?: string;
   /** Named handler resolved by the component — tools that aren't
-      markdown-actions (timestamp, etc.). */
-  custom?: "strike" | "dateTime";
+      markdown-actions (strikethrough, stamps, rule, etc.). */
+  custom?: "strike" | "insertDate" | "insertTime" | "insertHr";
   /** Key in the `markdownActions.getActiveFormats()` result */
   format?: string;
 }
@@ -66,7 +66,9 @@ interface ToolbarButtonSpec {
 /** lucide icons don't quite match the hand-drawn signature; the wrappers
     adapt them to the same `Icon` contract the local EditorIcons use. */
 const StrikeIcon = (props: { className?: string }) => <Strikethrough {...props} />;
-const DateTimeIcon = (props: { className?: string }) => <CalendarClock {...props} />;
+const DateIcon = (props: { className?: string }) => <CalendarDays {...props} />;
+const TimeIcon = (props: { className?: string }) => <Clock {...props} />;
+const HrIcon = (props: { className?: string }) => <Minus {...props} />;
 
 const GROUPS: ToolbarButtonSpec[][] = [
   [
@@ -89,7 +91,11 @@ const GROUPS: ToolbarButtonSpec[][] = [
     { name: "quote", label: "Quote", Icon: QuoteIcon, actionId: "toggleQuote", format: "quote" },
   ],
   [{ name: "link", label: "Insert link (Ctrl+K)", Icon: LinkIcon, actionId: "insertLink" }],
-  [{ name: "dateTime", label: "Insert current date & time", Icon: DateTimeIcon, custom: "dateTime" }],
+  [
+    { name: "date", label: "Insert current date", Icon: DateIcon, custom: "insertDate" },
+    { name: "time", label: "Insert current time", Icon: TimeIcon, custom: "insertTime" },
+  ],
+  [{ name: "hr", label: "Insert horizontal rule", Icon: HrIcon, custom: "insertHr" }],
 ];
 
 interface EditorToolbarProps {
@@ -204,40 +210,57 @@ export const EditorToolbar = memo(function EditorToolbar({
     refreshActiveFormats();
   }, [editor, refreshActiveFormats]);
 
-  // Inserts the current local date & time. Contract per the report: if the
-  // caret is not sitting in the editor, the stamp appends after the text —
-  // a textarea silently keeps a stale selection from its last focused
-  // state, so park the caret at the end before inserting. The instance's
-  // insertAtCursor execCommands first (native undo + input event) and
-  // splices-and-dispatches itself as fallback.
-  const insertStamp = useCallback(() => {
-    if (!editor?.textarea) return;
-    const t = editor.textarea;
-    const now = new Date();
-    const p = (n: number) => String(n).padStart(2, "0");
-    const stamp = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}`;
-    if (document.activeElement !== t) {
-      t.focus({ preventScroll: true });
-      t.setSelectionRange(t.value.length, t.value.length);
-    }
-    if (editor.insertAtCursor) {
-      editor.insertAtCursor(stamp);
-    } else {
-      const start = t.selectionStart;
-      const end = t.selectionEnd;
-      t.value = t.value.slice(0, start) + stamp + t.value.slice(end);
-      t.setSelectionRange(start + stamp.length, start + stamp.length);
-      t.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-    refreshActiveFormats();
-  }, [editor, refreshActiveFormats]);
+  // Text insertion shared by the stamp/rule buttons. Contract: while the
+  // caret is in the editor insert at the caret; when it is not, append
+  // after the text — a textarea silently keeps a stale selection from its
+  // last focused state, so the caret is explicitly parked at the end
+  // first. The instance's insertAtCursor execCommands first (native undo
+  // + input event) and splices-and-dispatches itself as fallback.
+  const insertText = useCallback(
+    (text: string) => {
+      if (!editor?.textarea) return;
+      const t = editor.textarea;
+      if (document.activeElement !== t) {
+        t.focus({ preventScroll: true });
+        t.setSelectionRange(t.value.length, t.value.length);
+      }
+      if (editor.insertAtCursor) {
+        editor.insertAtCursor(text);
+      } else {
+        const start = t.selectionStart;
+        const end = t.selectionEnd;
+        t.value = t.value.slice(0, start) + text + t.value.slice(end);
+        t.setSelectionRange(start + text.length, start + text.length);
+        t.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      refreshActiveFormats();
+    },
+    [editor, refreshActiveFormats],
+  );
 
   const customRun = useCallback(
-    (kind: "strike" | "dateTime") => {
-      if (kind === "strike") strike();
-      else insertStamp();
+    (kind: "strike" | "insertDate" | "insertTime" | "insertHr") => {
+      if (kind === "strike") {
+        strike();
+        return;
+      }
+      if (kind === "insertHr") {
+        // Markdown rules render per line: pad thick with blank lines only
+        // when the caret doesn't already start an empty one.
+        const t = editor?.textarea;
+        const before = t ? t.value.slice(0, t.selectionStart) : "";
+        insertText(before === "" || before.endsWith("\n\n") ? "---\n\n" : "\n\n---\n\n");
+        return;
+      }
+      const now = new Date();
+      const p = (n: number) => String(n).padStart(2, "0");
+      if (kind === "insertDate") {
+        insertText(`${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`);
+      } else {
+        insertText(`${p(now.getHours())}:${p(now.getMinutes())}`);
+      }
     },
-    [strike, insertStamp],
+    [strike, insertText, editor],
   );
 
   const switchView = useCallback(
