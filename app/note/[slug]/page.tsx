@@ -182,7 +182,13 @@ export default function Page() {
       <NoteActions save={save} />
 
       {/* Modal dialogs */}
-      <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={id} />
+      <CommandMenu
+        open={!!searchOpen}
+        openMode={searchOpen || undefined}
+        setOpen={(v) => setSearchOpen(typeof v === "function" ? (v(!!searchOpen) ? "commands" : false) : (v ? "commands" : false))}
+        notes={notes}
+        noteId={id}
+      />
       <AskAIDialog />
       <DeleteDialog />
       <ExportDialog />

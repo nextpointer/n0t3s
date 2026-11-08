@@ -7,7 +7,7 @@ import { getNotes, createNote, deleteNote } from "@/lib/storage";
 import { getNoteTags } from "@/lib/tag-syntax";
 import { Note } from "@/lib/types";
 import { ModeToggle } from "@/components/Theme-Mode";
-import { Github, Trash2, X } from "lucide-react";
+import { Github, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -64,16 +64,13 @@ export default function Home() {
     void refreshNotes();
   }, [refreshNotes, storageReady]);
 
-  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
-
   const deleteSelected = useCallback(async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-    // Independent deletes: one bad record must not abort the rest.
     await Promise.all(ids.map((id) => deleteNote(id).catch(() => undefined)));
-    clearSelection();
+    setSelectedIds(new Set());
     await refreshNotes();
-  }, [selectedIds, clearSelection, refreshNotes]);
+  }, [selectedIds, refreshNotes]);
 
   const allTags = useMemo(() => {
     return Array.from(new Set(notes.flatMap((note) => getNoteTags(note))));
@@ -89,9 +86,9 @@ export default function Home() {
   return (
     <>
       <title>n0t3s</title>
-      <div className="md:w-3xl w-full h-screen flex flex-col justify-start items-start p-4 pt-8 md:border-l-1 md:border-r-1 md:border-dashed">
+      <div className="md:w-3xl w-full h-screen flex flex-col justify-start items-start p-4 pt-8">
         {/* Top bar */}
-        <div className="flex flex-row justify-end items-center gap-2 md:fixed md:top-0 left-0 w-full  md:w-3xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed sm:p-4">
+        <div className="flex flex-row justify-end items-center gap-2 md:fixed md:top-0 left-0 w-full  md:w-3xl md:left-1/2 md:-translate-x-1/2 z-50 sm:p-4">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
           <ModeToggle />
           <Button
@@ -148,26 +145,17 @@ export default function Home() {
           />
         </div>
 
-        {/* Bulk actions bar (Notion-style) — appears only while selecting */}
+        {/* Bulk actions — slides up when selection begins (no select-all). */}
         {selectedCount > 0 && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-xl border border-border bg-popover/95 backdrop-blur px-1.5 py-1.5 shadow-lg w-max max-w-[calc(100vw-2rem)]">
-            <span className="px-2 text-xs font-medium text-muted-foreground whitespace-nowrap">
-              {selectedCount} {selectedCount === 1 ? "note" : "notes"} selected
+          <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-border/60 bg-popover/95 px-3 py-2 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-3 duration-200 w-max max-w-[calc(100vw-2rem)]">
+            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+              {selectedCount} selected
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearSelection}
-              aria-label="Clear selection"
-              title="Clear selection (Esc)"
-            >
-              <X />
-            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                  <Trash2 />
-                  <span className="hidden sm:block">Delete</span>
+                <Button variant="destructive" size="sm" className="h-7 rounded-xl px-3 text-xs">
+                  <Trash2 className="size-3.5" />
+                  Delete
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>

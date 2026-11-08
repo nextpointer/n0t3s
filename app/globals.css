@@ -518,6 +518,15 @@
         border-radius: var(--radius-xl);
         padding: 8px 10px;
     }
+
+    /* In dark mode the toolbar is deliberately bare — no tint, no blur,
+       no pill chrome — so it sits flush with the writing surface. */
+    .dark .note-toolbar {
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+    }
 }
 
 /* One left line for the whole writing sheet: the header's back glyph, the
@@ -540,4 +549,64 @@
    doubled. The native one is the truthful marker: hide the shim. */
 .note-editor-container .overtype-wrapper .overtype-placeholder {
     display: none !important;
+}
+
+
+/* Premium preview todos: the whole row is the hit target, and the native
+   checkbox renders as a rounded, accented control instead of the UA grey
+   square. Unlayered + specific to out-rank OverType's injected stylesheet. */
+.note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview li.task-list {
+    cursor: pointer !important;
+    border-radius: 6px;
+    padding: 2px 6px 2px 0 !important;
+    margin-left: -2px !important;
+    transition: background-color 120ms ease;
+}
+
+.note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview li.task-list:hover {
+    background-color: color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview li.task-list input[type="checkbox"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 1.05em !important;
+    height: 1.05em !important;
+    border: 1.5px solid color-mix(in srgb, var(--foreground) 35%, transparent) !important;
+    border-radius: 5px !important;
+    background: transparent !important;
+    display: inline-grid !important;
+    place-content: center !important;
+    vertical-align: middle !important;
+    margin-right: 0.55em !important;
+    cursor: pointer !important;
+    transition: background-color 140ms ease, border-color 140ms ease, transform 100ms ease;
+    position: relative !important;
+    top: -0.05em;
+}
+
+.note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview li.task-list input[type="checkbox"]::after {
+    content: "";
+    width: 0.55em;
+    height: 0.3em;
+    border-left: 2px solid var(--background);
+    border-bottom: 2px solid var(--background);
+    transform: rotate(-45deg) scale(0);
+    transition: transform 120ms ease;
+    margin-top: -1px;
+}
+
+.note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview li.task-list input[type="checkbox"]:checked {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+}
+
+.note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview li.task-list input[type="checkbox"]:checked::after {
+    transform: rotate(-45deg) scale(1);
+}
+
+.note-editor-container .overtype-container[data-mode="preview"] .overtype-wrapper .overtype-preview li.task-list:has(input:checked) {
+    color: color-mix(in srgb, var(--foreground) 45%, transparent);
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in srgb, var(--foreground) 25%, transparent);
 }

@@ -6,7 +6,7 @@ import { deleteNote } from "@/lib/storage";
 // PERSISTED SETTINGS ATOMS
 // Plain atoms with defaults; loaded from IndexedDB on mount.
 export const autoSaveAtom = atom<boolean>(true);
-export const zenMode = atom<boolean>(true);
+export const zenMode = atom<boolean>(false);
 /**
  * Whether the editor formatting toolbar is visible.
  * On phones it is pinned above the on-screen keyboard.
@@ -106,7 +106,7 @@ export function persistEditorFontSize(value: number) {
 }
 
 //for search pallate state
-export const search = atom<boolean>(false);
+export const search = atom<false | "commands" | "notes">(false);
 
 // NOTE DATA ATOMS
 // Currently active note being viewed/edited

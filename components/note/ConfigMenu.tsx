@@ -1,7 +1,8 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useAtom } from "jotai";
+import { useTheme } from "next-themes";
 import { SolarIcon } from "@/lib/icons";
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { SheetLite } from "@/components/ui/sheet-lite";
 import { ElasticSlider } from "@/components/ui/elastic-slider";
 import { useIsPhone } from "@/hooks/use-is-phone";
+import { cn } from "@/lib/utils";
 import {
   autoSaveAtom,
   aiEnabledAtom,
@@ -27,12 +29,8 @@ import {
 } from "@/store/noteAtom";
 
 /**
- * Editor preferences — everything about how the writing surface looks and
- * behaves (font size, toolbar visibility, auto-save, preview colours,
- * turning AI off). Deliberately separate from the Settings menu, which
- * stays the destructive/document-level pair (export, delete): these two
- * serve different intents and used to fight for the same surface, so a
- * font-size correction involved scrolling past "Delete Note".
+ * Editor preferences: appearance, writing surface and behaviour. Separate
+ * from Settings, which is the destructive/document pair (export, delete).
  */
 export const ConfigMenu = memo(function ConfigMenu() {
   const [autoSave, setAutoSave] = useAtom(autoSaveAtom);
@@ -41,7 +39,11 @@ export const ConfigMenu = memo(function ConfigMenu() {
   const [fontSize, setFontSize] = useAtom(editorFontSizeAtom);
   const [toolbarEnabled, setToolbarEnabled] = useAtom(toolbarEnabledAtom);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const isPhone = useIsPhone();
+  const { resolvedTheme, setTheme } = useTheme();
+
+  useEffect(() => setMounted(true), []);
 
   const handleAutoSaveChange = useCallback((value: boolean) => {
     setAutoSave(value);
@@ -68,12 +70,40 @@ export const ConfigMenu = memo(function ConfigMenu() {
     persistToolbarEnabled(value);
   }, [setToolbarEnabled]);
 
-  // One control surface for the desktop dropdown and the phone sheet —
-  // one spacing rhythm, one source for every atom.
+  const dark = mounted && resolvedTheme === "dark";
+
   const rows = (
-    <div className="px-1.5 pt-3 pb-1">
+    <div className="px-1.5 pt-3 pb-1 min-w-[220px]">
       <div className="px-2.5 pb-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/40">
-        Config
+        Appearance
+      </div>
+      <div className="mx-1.5 mb-2 flex items-center gap-1 rounded-lg bg-muted/40 p-1">
+        <button
+          type="button"
+          onClick={() => setTheme("light")}
+          aria-pressed={mounted && !dark}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs transition-colors",
+            mounted && !dark ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <SolarIcon icon="sun" className="size-3.5" /> Light
+        </button>
+        <button
+          type="button"
+          onClick={() => setTheme("dark")}
+          aria-pressed={mounted && dark}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs transition-colors",
+            mounted && dark ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <SolarIcon icon="moon" className="size-3.5" /> Dark
+        </button>
+      </div>
+
+      <div className="px-2.5 pt-1 pb-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/40">
+        Editor
       </div>
       <div className="px-2.5 pt-1 pb-4">
         <ElasticSlider
@@ -87,46 +117,20 @@ export const ConfigMenu = memo(function ConfigMenu() {
         />
       </div>
       <div className="flex items-center justify-between gap-6 px-2.5 py-2.5">
-        <Label htmlFor="show-toolbar" className="text-sm">
-          Show toolbar
-        </Label>
-        <Switch
-          id="show-toolbar"
-          checked={toolbarEnabled}
-          onCheckedChange={handleToolbarToggle}
-          title="The formatting pill between the title and the text."
-        />
+        <Label htmlFor="show-toolbar" className="text-sm">Show toolbar</Label>
+        <Switch id="show-toolbar" checked={toolbarEnabled} onCheckedChange={handleToolbarToggle} />
       </div>
       <div className="flex items-center justify-between gap-6 px-2.5 py-2.5">
-        <Label htmlFor="config-auto-save" className="text-sm">
-          Auto Save
-        </Label>
-        <Switch
-          id="config-auto-save"
-          checked={autoSave}
-          onCheckedChange={handleAutoSaveChange}
-        />
+        <Label htmlFor="config-auto-save" className="text-sm">Auto Save</Label>
+        <Switch id="config-auto-save" checked={autoSave} onCheckedChange={handleAutoSaveChange} />
       </div>
       <div className="flex items-center justify-between gap-6 px-2.5 py-2.5">
-        <Label htmlFor="config-preview-colors" className="text-sm">
-          Preview colours
-        </Label>
-        <Switch
-          id="config-preview-colors"
-          checked={previewColors}
-          onCheckedChange={handlePreviewColors}
-          title="Coloured headings and emphasis in preview. Code blocks stay highlighted either way."
-        />
+        <Label htmlFor="config-preview-colors" className="text-sm">Preview colours</Label>
+        <Switch id="config-preview-colors" checked={previewColors} onCheckedChange={handlePreviewColors} />
       </div>
       <div className="flex items-center justify-between gap-6 px-2.5 py-2.5">
-        <Label htmlFor="config-ai-enabled" className="text-sm">
-          No AI
-        </Label>
-        <Switch
-          id="config-ai-enabled"
-          checked={!aiEnabled}
-          onCheckedChange={(on) => handleAiChange(!on)}
-        />
+        <Label htmlFor="config-ai-enabled" className="text-sm">No AI</Label>
+        <Switch id="config-ai-enabled" checked={!aiEnabled} onCheckedChange={(on) => handleAiChange(!on)} />
       </div>
     </div>
   );
@@ -138,16 +142,12 @@ export const ConfigMenu = memo(function ConfigMenu() {
           type="button"
           onClick={() => setSheetOpen(true)}
           aria-label="Config"
-          title="Config (font, toolbar, saves, colours)"
-          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
+          title="Config (appearance, font, toolbar, saves)"
+          className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90"
         >
-          <SolarIcon icon="config" className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="config" className="size-[15px] pointer-events-none" />
         </button>
-        <SheetLite
-          open={sheetOpen}
-          onClose={() => setSheetOpen(false)}
-          className="pb-1"
-        >
+        <SheetLite open={sheetOpen} onClose={() => setSheetOpen(false)} className="pb-1">
           {rows}
         </SheetLite>
       </>
@@ -160,16 +160,17 @@ export const ConfigMenu = memo(function ConfigMenu() {
         <button
           type="button"
           aria-label="Config"
-          title="Config (font, toolbar, saves, colours)"
-          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
+          title="Config (appearance, font, toolbar, saves)"
+          className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90"
         >
-          <SolarIcon icon="config" className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="config" className="size-[15px] pointer-events-none" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56 rounded-xl border-border/60 p-1.5 shadow-lg"
+        className="w-64 rounded-xl border-border/60 p-1.5 shadow-lg"
         align="end"
         side="top"
+        sideOffset={10}
         collisionPadding={16}
       >
         {rows}

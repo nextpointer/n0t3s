@@ -389,20 +389,40 @@ export const NoteContent = memo(
      * flips its own DOM state and the markdown is never updated. Rewrite the
      * source line here so the toggle counts: it re-renders, syncs, saves and
      * lands in undo history.
+     *
+     * The checkbox's `change` event owns direct checkbox clicks. A separate
+     * `click` handler on the preview root makes the whole task row togglable
+     * (premium feel) — it skips the checkbox itself to avoid a double flip
+     * and skips links so they still follow.
      */
     const handlePreviewTaskChange = useCallback((event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || target.type !== "checkbox") {
         return;
       }
-      const current = editorRef.current;
-      const textarea = current?.textarea as HTMLTextAreaElement | undefined;
+      const textarea = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
       if (!textarea) return;
-
       const index = Number(target.dataset.taskIndex);
       if (!Number.isInteger(index)) return;
-
       toggleTaskByIndex(textarea, index);
+    }, []);
+
+    const handlePreviewTaskClick = useCallback((event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      // Native checkbox click is handled by the `change` path above.
+      if (target instanceof HTMLInputElement && target.type === "checkbox") return;
+      // Let links behave normally.
+      if (target.closest("a")) return;
+      const li = target.closest("li.task-list");
+      if (!li) return;
+      const box = li.querySelector<HTMLInputElement>('input[type="checkbox"]');
+      if (!box) return;
+      const index = Number(box.dataset.taskIndex);
+      if (!Number.isInteger(index)) return;
+      event.preventDefault();
+      const textarea = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+      if (textarea) toggleTaskByIndex(textarea, index);
     }, []);
 
     /** The editor follows the shared atom, so every entry point stays in sync. */
@@ -705,6 +725,7 @@ export const NoteContent = memo(
         // every re-render.
         const previewEl = editorInstance.preview as HTMLElement | undefined;
         previewEl?.addEventListener("change", handlePreviewTaskChange);
+        previewEl?.addEventListener("click", handlePreviewTaskClick as EventListener);
 
         // Attach Shiki highlighter immediately after editor creation
         const currentShikiTheme = resolvedTheme === "dark" ? "github-dark" : "github-light";
@@ -845,12 +866,10 @@ export const NoteContent = memo(
         {/* #tag completion; anchored to this wrapper so the popover keeps
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
-        {/* Lifted past the bottom action bar on phones — the bar spans the
-            full width there, and the stats hide themselves while the
-            keyboard is up anyway. Desktop has side-by-side room, so it
-            keeps its low perch. */}
+        {/* Sits just above the phone bottom bar (with safe-area clearance)
+            and clear of the desktop action row. */}
         <div
-          className="note-stats fixed bottom-20 md:bottom-4 xl:bottom-6 pointer-events-none"
+          className="note-stats fixed left-4 bottom-[calc(3.75rem+env(safe-area-inset-bottom)+0.25rem)] md:bottom-4 xl:bottom-6 pointer-events-none"
           style={{ width: "100%", zIndex: 20, fontFamily: "'Jetbrains Mono', 'Space Mono', monospace" }}
         >
           <div

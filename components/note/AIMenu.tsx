@@ -1,3 +1,4 @@
+
 "use client";
 
 import { memo, useCallback, Fragment } from "react";
@@ -108,9 +109,9 @@ export const AIMenu = memo(function AIMenu({
         aria-label="AI actions"
         title="AI actions"
         disabled={loading}
-        className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5 disabled:opacity-40"
+        className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90 disabled:opacity-30"
       >
-        <SolarIcon icon="ai" className="size-4 pointer-events-none text-foreground/70" />
+        <SolarIcon icon="ai" className="size-[15px] pointer-events-none" />
       </button>
     ) : (
       <Button

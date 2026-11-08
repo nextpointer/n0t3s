@@ -48,10 +48,14 @@ export const UI = {
   help: "solar:question-circle-bold-duotone",
   config: "solar:tuning-2-bold-duotone",
   save: "solar:diskette-bold-duotone",
+  back: "solar:alt-arrow-left-bold-duotone",
   // top bar
   undo: "solar:undo-left-bold-duotone",
   redo: "solar:undo-right-bold-duotone",
   settings: "solar:settings-bold-duotone",
+  // theme
+  sun: "solar:sun-2-bold-duotone",
+  moon: "solar:moon-stars-bold-duotone",
   // AI menu items
   summarize: "solar:document-text-bold-duotone",
   rewrite: "solar:pen-new-round-bold-duotone",

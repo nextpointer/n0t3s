@@ -294,13 +294,13 @@ export const EditorToolbar = memo(function EditorToolbar({
                   spec.custom ? customRun(spec.custom) : spec.actionId && run(spec.actionId)
                 }
                 className={cn(
-                  "size-8 rounded-md text-muted-foreground transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
-                  "data-[active]:bg-accent data-[active]:text-accent-foreground",
-                  "disabled:opacity-40",
+                  "size-8 rounded-md text-muted-foreground/55 transition-colors",
+                  "hover:bg-accent hover:text-foreground/90",
+                  "data-[active]:bg-accent data-[active]:text-foreground",
+                  "disabled:opacity-35",
                 )}
               >
-                <spec.Icon className="size-4" />
+                <spec.Icon className="size-[15px]" />
               </Button>
             );
           })}
@@ -318,12 +318,12 @@ export const EditorToolbar = memo(function EditorToolbar({
             title={`View: ${VIEW_MODES[viewMode].label}`}
             aria-label={`View mode: ${VIEW_MODES[viewMode].label}`}
             onMouseDown={(e) => e.preventDefault()}
-            className="size-8 shrink-0 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className="size-8 shrink-0 rounded-md text-muted-foreground/55 transition-colors hover:bg-accent hover:text-foreground/90"
           >
-            <CurrentIcon className="size-4" />
+            <CurrentIcon className="size-[15px]" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32 rounded-xl">
+        <DropdownMenuContent align="end" side="top" sideOffset={8} collisionPadding={12} className="w-32 rounded-xl">
           <DropdownMenuRadioGroup
             value={viewMode}
             onValueChange={(v) => switchView(v as ViewMode)}

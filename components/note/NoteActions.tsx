@@ -13,9 +13,6 @@ import {
   zenMode,
   search,
   viewModeAtom,
-  navigationTargetAtom,
-  savePromptDialogOpenAtom,
-  discardEmptyNoteAtom,
   persistZenMode,
 } from "@/store/noteAtom";
 import { SolarIcon } from "@/lib/icons";
@@ -27,7 +24,6 @@ interface NoteActionsProps {
 }
 
 export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps) {
-  // zen mode state
   const [zen, setZenMode] = useAtom(zenMode);
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
   const router = useRouter();
@@ -43,62 +39,38 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
     setViewMode(previewing ? "edit" : "preview");
   }, [previewing, setViewMode]);
 
-  // getter
   const unsaved = useAtomValue(unsavedAtom);
   const loading = useAtomValue(saveLoadingAtom);
   const autoSave = useAtomValue(autoSaveAtom);
-
-  // setter
   const setSearchOpen = useSetAtom(search);
-  const setTarget = useSetAtom(navigationTargetAtom);
-  const setShowPrompt = useSetAtom(savePromptDialogOpenAtom);
-  const discardIfEmpty = useSetAtom(discardEmptyNoteAtom);
+
   const handleSave = useCallback(() => {
     save(false);
   }, [save]);
 
-  // The bottom bar's route to the note list. It mirrors the fixed logic
-  // the header's back arrow used to run — quiet discarded empties, a save
-  // prompt when a manual-save note has edits. The header is now only
-  // undo/redo/settings, so this is the one door out of a note; if either
-  // it or the header path ever needs changing, keep them in step.
-  const handleOpenNoteList = useCallback(async () => {
-    // A note the user never wrote anything in is dropped quietly.
-    if (await discardIfEmpty()) {
-      router.push("/");
-      return;
-    }
-    if (unsaved && !autoSave) {
-      setTarget("/");
-      setShowPrompt(true);
-    } else {
-      router.push("/");
-    }
-  }, [unsaved, autoSave, router, setTarget, setShowPrompt, discardIfEmpty]);
-
   return (
-    <div className="md:relative fixed right-3 bottom-3 md:bottom-0 md:right-8 left-0 flex flex-row h-16 pb-1 gap-2 md:gap-4 items-end md:items-center justify-end z-30">
+    <div className="md:relative fixed inset-x-0 bottom-0 md:inset-x-auto md:right-8 flex flex-row h-14 md:h-auto pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-1 gap-1 md:gap-3 items-center md:items-end justify-evenly md:justify-end bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none border-t border-border/40 md:border-0 z-30">
       {!zen && (
         <button
           type="button"
-          onClick={() => void handleOpenNoteList()}
-          aria-label="Back to note list"
-          title="All notes"
-          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
+          onClick={() => setSearchOpen("notes")}
+          aria-label="Open notes list"
+          title="Notes (Ctrl+O)"
+          className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90"
         >
-          <SolarIcon icon="notes" className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="notes" className="size-[15px] pointer-events-none" />
         </button>
       )}
 
       {!zen && (
         <button
           type="button"
-          onClick={() => setSearchOpen(true)}
+          onClick={() => setSearchOpen("commands")}
           aria-label="Command palette"
-          title="Search & commands (Ctrl+P)"
-          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
+          title="Commands (Ctrl+P)"
+          className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90"
         >
-          <SolarIcon icon="search" className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="search" className="size-[15px] pointer-events-none" />
         </button>
       )}
 
@@ -108,15 +80,12 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         aria-pressed={previewing}
         aria-label="Toggle read mode"
         title="Read mode (Ctrl+/)"
-        className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
+        className={cn(
+          "cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 transition-colors",
+          previewing ? "text-foreground/90" : "text-foreground/45 hover:text-foreground/90",
+        )}
       >
-        <SolarIcon
-          icon="read"
-          className={cn(
-            "size-4 pointer-events-none transition-colors",
-            previewing ? "text-foreground" : "text-foreground/30",
-          )}
-        />
+        <SolarIcon icon="read" className="size-[15px] pointer-events-none" />
       </button>
 
       {zen ? (
@@ -125,9 +94,9 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           onClick={handleToggleZen}
           aria-label="Exit zen mode"
           title="Exit zen mode (Ctrl+Shift+Z)"
-          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
+          className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90"
         >
-          <SolarIcon icon="zenExit" className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="zenExit" className="size-[15px] pointer-events-none" />
         </button>
       ) : (
         <button
@@ -135,16 +104,14 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           onClick={handleToggleZen}
           aria-label="Enter zen mode"
           title="Zen mode (Ctrl+Shift+Z)"
-          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
+          className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90"
         >
-          <SolarIcon icon="zen" className="size-4 pointer-events-none" />
+          <SolarIcon icon="zen" className="size-[15px] pointer-events-none" />
         </button>
       )}
 
       {/* leaving a note · finding · reading · focus · assist · prefs · save */}
-      {!zen && (
-        <AIMenu trigger="bar" />
-      )}
+      {!zen && <AIMenu trigger="bar" />}
 
       {!zen && (
         <button
@@ -152,9 +119,9 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           onClick={() => router.push("/help")}
           aria-label="Help and shortcuts"
           title="Help & shortcuts (?)"
-          className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
+          className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90"
         >
-          <SolarIcon icon="help" className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="help" className="size-[15px] pointer-events-none" />
         </button>
       )}
 
@@ -163,7 +130,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
       {!zen && !autoSave && (
         <Button
           variant={unsaved ? "default" : "ghost"}
-          className="text-xs sm:text-sm rounded-full py-0.1 md:mt-10"
+          className="text-xs sm:text-sm rounded-full h-8 px-3 md:mt-10"
           onClick={handleSave}
           disabled={!unsaved || loading}
         >

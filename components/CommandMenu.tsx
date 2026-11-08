@@ -39,6 +39,8 @@ interface Props {
    * because they act on an open note and would silently do nothing here.
    */
   noteId?: string | null;
+  /** Which palette to open in when `open` flips true (Ctrl+O/P override). */
+  openMode?: "commands" | "notes";
 }
 
 interface Item {
@@ -98,6 +100,7 @@ export const CommandMenu = React.memo(function CommandMenu({
   setOpen,
   notes,
   noteId = null,
+  openMode,
 }: Props) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -153,13 +156,14 @@ export const CommandMenu = React.memo(function CommandMenu({
   // Focus + body lock on open
   useEffect(() => {
     if (open) {
+      if (openMode) setMode(openMode);
       setQuery("");
       idxRef.current = 0;
       document.body.style.overflow = "hidden";
       inputRef.current?.focus();
       return () => { document.body.style.overflow = ""; };
     }
-  }, [open]);
+  }, [open, openMode]);
 
   // Lift the phone sheet above the virtual keyboard. Android's
   // `resizes-content` shrinks the layout viewport, so `bottom-0` already
