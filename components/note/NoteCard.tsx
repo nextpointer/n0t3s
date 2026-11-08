@@ -46,10 +46,10 @@ const NoteCard = React.memo(function NoteCard({
   const active = selecting || selected;
 
   return (
-    <div className="group/row flex items-center w-full gap-2.5">
-      {/* Fixed left space (no layout animation). Hidden at rest; row hover
-          reveals a low-opacity box-tick for this note; hovering the tick
-          itself makes it full opacity. On touch, hold the row to select. */}
+    <div className="group/row relative flex w-full items-center">
+      {/* Hangs outside-left of the note text (which aligns to logo/search).
+          Hidden at rest; row hover shows low opacity for this note only;
+          hovering the tick itself shows full opacity. Hold row on touch. */}
       <button
         type="button"
         role="checkbox"
@@ -60,15 +60,13 @@ const NoteCard = React.memo(function NoteCard({
           onSelect(note.id, e.shiftKey);
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        data-active={active || undefined}
         className={cn(
-          "shrink-0 flex h-5 w-5 items-center justify-center rounded-[4px]",
+          "absolute -left-7 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-[4px]",
           selected
             ? "opacity-100 text-primary"
             : active
-              ? "opacity-60 hover:opacity-100 text-foreground/70"
-              : "opacity-0 group-hover/row:opacity-25 hover:opacity-100! text-foreground/70",
-          // touch: no hover reveal, so only interactive once selecting
+              ? "opacity-60 text-foreground/70 hover:opacity-100!"
+              : "opacity-0 text-foreground/70 group-hover/row:opacity-25 hover:opacity-100!",
           active
             ? "pointer-events-auto"
             : "pointer-events-none [@media(hover:hover)]:pointer-events-auto",
@@ -90,7 +88,7 @@ const NoteCard = React.memo(function NoteCard({
         role="link"
         tabIndex={0}
         data-selected={selected || undefined}
-        className="flex-1 min-w-0 cursor-pointer rounded-lg bg-transparent px-2.5 py-2.5 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
+        className="min-w-0 flex-1 cursor-pointer rounded-lg bg-transparent px-2 py-2.5 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
         onPointerDown={(e) => {
           if (e.pointerType !== "touch") return;
           pressOriginRef.current = { x: e.clientX, y: e.clientY };
@@ -110,12 +108,18 @@ const NoteCard = React.memo(function NoteCard({
         onPointerCancel={clearPress}
       >
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="min-w-0 truncate text-[13px] sm:text-[14px] font-medium tracking-tight text-foreground/90">
+          <h3 className="min-w-0 flex-1 truncate text-[13px] font-medium tracking-tight text-foreground/90 sm:text-[14px]">
             {note.title || "Untitled"}
           </h3>
-          <span className="shrink-0 text-[11px] text-muted-foreground/45 tabular-nums">
-            {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-          </span>
+          <div className="flex shrink-0 items-baseline gap-2 text-[11px] tabular-nums text-muted-foreground/45">
+            <span>{(note.content?.length ?? 0).toLocaleString()}c</span>
+            <span aria-hidden className="text-muted-foreground/25">·</span>
+            <span>
+              {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              {" "}
+              {new Date(note.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+            </span>
+          </div>
         </div>
       </div>
     </div>

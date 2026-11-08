@@ -158,9 +158,10 @@ const NotesList = React.memo(function NotesList({
     );
   }
 
-  // A single flat list — no section boxes/borders. Pinned notes stay first.
+  // Flat list. Note text aligns to the page's content edge (logo/search);
+  // the selection tick hangs in the left margin via each row's layout.
   return (
-    <div className="w-full max-w-full flex flex-col gap-0.5">
+    <div className="w-full max-w-full flex flex-col gap-0.5 pl-7">
       {sortedNotes.map((note) => (
         <NoteCard
           key={note.id}

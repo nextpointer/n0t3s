@@ -152,8 +152,9 @@ export default function Home() {
         {/* Search command */}
         <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
 
-        {/* Content */}
-        <div className={cn("w-full overflow-y-scroll overflow-x-hidden py-2", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
+        {/* Content — overflow-x visible so the hover tick can hang in the
+            left margin, aligned outside the note text. */}
+        <div className={cn("w-full overflow-y-auto py-2", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
           <NotesList
             notes={notes}
             orderBy={orderBy}
