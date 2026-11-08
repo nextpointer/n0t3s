@@ -54,10 +54,10 @@ const NoteCard = React.memo(function NoteCard({
   const active = selecting || selected;
 
   return (
-    <div className="group/row flex items-center gap-2 sm:gap-2.5 w-full">
-      {/* Selection gutter — separated from the card. Revealed on hover
-          (fine pointers) or while selecting; on touch it only appears once
-          a long-press has entered selection mode. */}
+    <div className="group/row flex items-center w-full">
+      {/* Selection gutter — collapses so text stays flush; reveals on hover
+          (fine pointers) or while selecting. On touch it only appears once a
+          long-press enters selection mode. */}
       <button
         type="button"
         role="checkbox"
@@ -71,23 +71,23 @@ const NoteCard = React.memo(function NoteCard({
         data-state={selected ? "checked" : "unchecked"}
         data-active={active || undefined}
         className={cn(
-          "shrink-0 h-[18px] w-[18px] rounded-[5px] border flex items-center justify-center",
-          "transition-all duration-150",
-          "border-border/60 bg-background/60 text-transparent",
+          "shrink-0 h-[18px] rounded-[5px] border flex items-center justify-center overflow-hidden",
+          "transition-all duration-150 ease-out",
+          "border-border/50 bg-background/60 text-transparent",
           "hover:border-foreground/40",
           "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
-          // hidden by default; hover-revealed on devices that hover; always
-          // interactive+visible while selection is active
-          "opacity-0 pointer-events-none",
-          "[@media(hover:hover)]:group-hover/row:opacity-100 [@media(hover:hover)]:group-hover/row:pointer-events-auto",
-          "data-[active]:opacity-100 data-[active]:pointer-events-auto",
-          "focus-visible:opacity-100 focus-visible:pointer-events-auto focus-visible:ring-2 focus-visible:ring-ring",
+          // collapsed + invisible by default; expands on fine-pointer hover
+          "w-0 opacity-0 pointer-events-none border-transparent mr-0",
+          "[@media(hover:hover)]:group-hover/row:w-[18px] [@media(hover:hover)]:group-hover/row:opacity-100 [@media(hover:hover)]:group-hover/row:pointer-events-auto [@media(hover:hover)]:group-hover/row:mr-2 [@media(hover:hover)]:group-hover/row:border-border/50",
+          "data-[active]:w-[18px] data-[active]:opacity-100 data-[active]:pointer-events-auto data-[active]:mr-2 data-[active]:border-border/50",
+          "data-[state=checked]:border-primary",
+          "focus-visible:w-[18px] focus-visible:opacity-100 focus-visible:pointer-events-auto focus-visible:mr-2 focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
         <SolarIcon
           icon="check"
           className={cn(
-            "h-3 w-3 transition-transform duration-150",
+            "h-3 w-3 shrink-0 transition-transform duration-150",
             selected ? "scale-100" : "scale-0",
           )}
         />

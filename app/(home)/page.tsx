@@ -119,7 +119,7 @@ export default function Home() {
 
         {/* Filters — hidden on a fresh/empty library */}
         {!loading && notes.length > 0 && (
-          <div className="flex flex-row w-full gap-2 mt-12 justify-start items-center">
+          <div className="flex flex-row w-full gap-2 mt-4 md:mt-12 justify-start items-center">
             <NotesFilters
               loading={loading}
               allTags={allTags}
