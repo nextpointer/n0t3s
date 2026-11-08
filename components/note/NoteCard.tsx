@@ -89,7 +89,7 @@ const NoteCard = React.memo(function NoteCard({
         role="link"
         tabIndex={0}
         data-selected={selected || undefined}
-        className="min-w-0 flex-1 cursor-pointer touch-pan-y select-none rounded-lg bg-transparent py-3 pl-2.5 pr-0 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
+        className="min-w-0 flex-1 cursor-pointer touch-pan-y select-none rounded-lg bg-transparent py-3 pl-2.5 pr-3 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06]"
         style={{ WebkitTouchCallout: "none" }}
         onContextMenu={(e) => {
           // Prevent iOS/Android long-press context menu so hold-to-select works.
