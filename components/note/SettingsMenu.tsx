@@ -3,8 +3,7 @@
 import { memo, useCallback, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
-import { Settings, Trash2 } from "lucide-react";
-import { Export } from "@/components/icons/Export";
+import { SolarIcon } from "@/lib/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -140,7 +139,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
             aria-label="Settings"
             title="Settings"
           >
-            <Settings className="w-4 h-4" />
+            <SolarIcon icon="settings" className="w-4 h-4" />
           </Button>
         </SheetTrigger>
         <SheetContent
@@ -166,7 +165,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
               className="w-full"
               onClick={handleExport}
             >
-              <Export className="w-4 h-4" />
+              <SolarIcon icon="export" className="w-4 h-4" />
               Export
             </Button>
             <Button
@@ -175,7 +174,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
               className="w-full"
               onClick={handleDelete}
             >
-              <Trash2 className="w-4 h-4" />
+              <SolarIcon icon="delete" className="w-4 h-4" />
               Delete
             </Button>
           </div>
@@ -198,7 +197,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
           aria-label="Settings"
           title="Settings"
         >
-          <Settings className="w-4 h-4" />
+          <SolarIcon icon="settings" className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -212,7 +211,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
           onClick={handleExport}
           className="flex justify-center items-center gap-2 rounded-lg py-2"
         >
-          <Export className="w-4 h-4" />
+          <SolarIcon icon="export" className="w-4 h-4" />
           Export Note
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -220,7 +219,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
           onClick={handleDelete}
           className="text-destructive focus:text-destructive flex justify-center items-center gap-2 rounded-lg py-2"
         >
-          <Trash2 className="w-4 h-4" />
+          <SolarIcon icon="delete" className="w-4 h-4" />
           Delete Note
         </DropdownMenuItem>
       </DropdownMenuContent>

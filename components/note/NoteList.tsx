@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Note } from "@/lib/types";
 import NoteCard from "./NoteCard";
-import { ChevronDown } from "lucide-react";
+import { SolarIcon } from "@/lib/icons";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
 import { createNote } from "@/lib/storage";
@@ -56,7 +56,7 @@ function CollapsibleSection({
             {notes.length}
           </span>
         </div>
-        <ChevronDown
+        <SolarIcon icon="chevronDown"
           className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground/50 transition-transform duration-300 ease-out ${
             isExpanded ? "rotate-180" : ""
           }`}

@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Undo2, Redo2 } from "lucide-react";
+import { SolarIcon } from "@/lib/icons";
 import { getNoteEditor } from "@/lib/editor-registry";
 
 /**
@@ -46,7 +46,7 @@ export const HistoryControls = memo(function HistoryControls() {
         aria-label="Undo"
         title="Undo (Ctrl/Cmd+Z)"
       >
-        <Undo2 className="w-4 h-4" />
+        <SolarIcon icon="undo" className="w-4 h-4" />
       </Button>
       <Button
         variant="ghost"
@@ -55,7 +55,7 @@ export const HistoryControls = memo(function HistoryControls() {
         aria-label="Redo"
         title="Redo (Ctrl/Cmd+Shift+Z)"
       >
-        <Redo2 className="w-4 h-4" />
+        <SolarIcon icon="redo" className="w-4 h-4" />
       </Button>
     </>
   );

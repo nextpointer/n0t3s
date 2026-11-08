@@ -6,7 +6,6 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
-import { List } from "lucide-react";
 import {
   unsavedAtom,
   saveLoadingAtom,
@@ -23,11 +22,8 @@ import {
   persistZenMode,
   persistToolbarEnabled,
 } from "@/store/noteAtom";
-import { Cross } from "../icons/Cross";
-import { Spark } from "../icons/Spark";
-import { Zen } from "../icons/Zen";
-import { Search } from "../icons/Search";
-import { EyeIcon, ToolbarIcon } from "../icons/EditorIcons";
+import { SolarIcon } from "@/lib/icons";
+import { ToolbarIcon } from "../icons/EditorIcons";
 
 interface NoteActionsProps {
   save: (isAutoSave?: boolean) => void;
@@ -105,7 +101,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           title="All notes"
           className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
-          <List className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="notes" className="size-4 pointer-events-none text-foreground/70" />
         </button>
       )}
 
@@ -117,7 +113,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           title="Search & commands (Ctrl+P)"
           className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
-          <Search className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="search" className="size-4 pointer-events-none text-foreground/70" />
         </button>
       )}
 
@@ -129,7 +125,8 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         title="Read mode (Ctrl+/)"
         className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
       >
-        <EyeIcon
+        <SolarIcon
+          icon="read"
           className={cn(
             "size-4 pointer-events-none transition-colors",
             previewing ? "text-foreground" : "text-foreground/30",
@@ -163,7 +160,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           title="Exit zen mode (Ctrl+Shift+Z)"
           className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
-          <Cross className="size-4 pointer-events-none text-foreground/70" />
+          <SolarIcon icon="zenExit" className="size-4 pointer-events-none text-foreground/70" />
         </button>
       ) : (
         <button
@@ -173,7 +170,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           title="Zen mode (Ctrl+Shift+Z)"
           className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
-          <Zen className="size-4 pointer-events-none" />
+          <SolarIcon icon="zen" className="size-4 pointer-events-none" />
         </button>
       )}
 
@@ -185,7 +182,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
           title="Ask AI"
           className="cursor-pointer rounded-full p-3 md:mt-10 md:p-0.5"
         >
-          <Spark className="size-4 mr-1 text-foreground/50" />
+          <SolarIcon icon="ask" className="size-4 mr-1 text-foreground/50" />
         </button>
       )}
 

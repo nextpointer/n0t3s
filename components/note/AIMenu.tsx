@@ -4,15 +4,7 @@ import { memo, useCallback } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/loader";
-import {
-  WandSparkles,
-  FileText,
-  PenLine,
-  SpellCheck2,
-  Maximize2,
-  BookOpenCheck,
-  ListTodo,
-} from "lucide-react";
+import { SolarIcon, type IconId } from "@/lib/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,37 +19,41 @@ import {
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
 import toast from "react-hot-toast";
-import { Prompt } from "../icons/Prompt";
 
-const AI_ACTIONS = [
+const AI_ACTIONS: {
+  id: string;
+  label: string;
+  shortcut: string;
+  icon: IconId;
+}[] = [
   {
     id: "summarize",
     label: "Summarize",
     shortcut: "ctrl+shift+s",
-    icon: FileText,
+    icon: "summarize",
   },
-  { id: "rewrite", label: "Rewrite", shortcut: "ctrl+shift+r", icon: PenLine },
+  { id: "rewrite", label: "Rewrite", shortcut: "ctrl+shift+r", icon: "rewrite" },
   {
     id: "grammar",
     label: "Fix Grammar",
     shortcut: "ctrl+shift+g",
-    icon: SpellCheck2,
+    icon: "grammar",
   },
-  { id: "expand", label: "Expand", shortcut: "ctrl+shift+e", icon: Maximize2 },
+  { id: "expand", label: "Expand", shortcut: "ctrl+shift+e", icon: "expand" },
   {
     id: "simplify",
     label: "Simplify",
     shortcut: "ctrl+shift+i",
-    icon: BookOpenCheck,
+    icon: "simplify",
   },
-  { id: "todo", label: "Todo", shortcut: "ctrl+shift+q", icon: ListTodo },
+  { id: "todo", label: "Todo", shortcut: "ctrl+shift+q", icon: "todo" },
   {
     id: "prompt",
     label: "/ [ Prompt ]",
     shortcut: "ctrl+shift+p",
-    icon: Prompt,
+    icon: "prompt",
   },
-] as const;
+];
 
 export const AIMenu = memo(function AIMenu() {
   const loading = useAtomValue(aiLoadingAtom);
@@ -101,7 +97,7 @@ export const AIMenu = memo(function AIMenu() {
           {loading ? (
             <Loader className="w-4 h-4" />
           ) : (
-            <WandSparkles className="w-4 h-4 text-yellow-500" />
+            <SolarIcon icon="ai" className="w-4 h-4 text-yellow-500" />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -111,13 +107,13 @@ export const AIMenu = memo(function AIMenu() {
         side="bottom"
         collisionPadding={16}
       >
-        {AI_ACTIONS.map(({ id, label, shortcut, icon: Icon }) => (
+        {AI_ACTIONS.map(({ id, label, shortcut, icon }) => (
           <DropdownMenuItem
             key={id}
             onClick={() => handleAction(id)}
             disabled={loading}
           >
-            <Icon className="w-4 h-4 mr-2" />
+            <SolarIcon icon={icon} className="w-4 h-4 mr-2" />
             {label}
             <div className="hidden md:inline-block ml-auto px-2 py-1 bg-muted/60 rounded-full text-xs font-mono text-muted-foreground/80 border border-border/50 transition-all shrink-0">
               {shortcut}

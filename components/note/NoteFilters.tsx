@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "../icons/Search";
+import { SolarIcon } from "@/lib/icons";
 
 type Props = {
   loading: boolean;
@@ -49,7 +49,7 @@ const NotesFilters = React.memo(function NotesFilters({
         variant={"outline"}
         className="flex-1"
       >
-        <Search />
+        <SolarIcon icon="search" />
         <span className="hidden sm:flex items-center gap-2">
           Search
           <kbd className="px-2 py-0.5 bg-muted/60 rounded-md text-[10px] font-mono text-muted-foreground border border-border/50">

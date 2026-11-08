@@ -10,20 +10,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  BoldIcon,
-  BulletListIcon,
-  CodeIcon,
-  EyeIcon,
-  ItalicIcon,
-  LinkIcon,
-  OrderedListIcon,
-  PencilIcon,
-  PlainTextIcon,
-  QuoteIcon,
-  TaskListIcon,
-} from "@/components/icons/EditorIcons";
-import { CalendarDays, Clock, Minus, Save, Strikethrough } from "lucide-react";
+import { SolarIcon, type IconId } from "@/lib/icons";
 import { HistoryControls } from "./HistoryControls";
 import { AIMenu } from "./AIMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -44,9 +31,9 @@ const VIEW_MODES: Record<
   ViewMode,
   { label: string; Icon: (props: { className?: string }) => React.ReactElement }
 > = {
-  edit: { label: "Edit", Icon: PencilIcon },
-  plain: { label: "Raw", Icon: PlainTextIcon },
-  preview: { label: "Preview", Icon: EyeIcon },
+  edit: { label: "Edit", Icon: boundIcon("edit") },
+  plain: { label: "Raw", Icon: boundIcon("plain") },
+  preview: { label: "Preview", Icon: boundIcon("read") },
 };
 
 interface ToolbarButtonSpec {
@@ -63,21 +50,22 @@ interface ToolbarButtonSpec {
   format?: string;
 }
 
-/** lucide icons don't quite match the hand-drawn signature; the wrappers
-    adapt them to the same `Icon` contract the local EditorIcons use. */
-const StrikeIcon = (props: { className?: string }) => <Strikethrough {...props} />;
-const DateIcon = (props: { className?: string }) => <CalendarDays {...props} />;
-const TimeIcon = (props: { className?: string }) => <Clock {...props} />;
-const HrIcon = (props: { className?: string }) => <Minus {...props} />;
+/** Binds a bundled Solar duotone glyph to the Icon contract the specs
+    use. The ids live in the semantic map in lib/icons. */
+function boundIcon(icon: IconId) {
+  return function BoundSolarIcon({ className }: { className?: string }) {
+    return <SolarIcon icon={icon} className={className} />;
+  };
+}
 
 const GROUPS: ToolbarButtonSpec[][] = [
   [
-    { name: "bold", label: "Bold (Ctrl+B)", Icon: BoldIcon, actionId: "toggleBold", format: "bold" },
-    { name: "italic", label: "Italic (Ctrl+I)", Icon: ItalicIcon, actionId: "toggleItalic", format: "italic" },
+    { name: "bold", label: "Bold (Ctrl+B)", Icon: boundIcon("bold"), actionId: "toggleBold", format: "bold" },
+    { name: "italic", label: "Italic (Ctrl+I)", Icon: boundIcon("italic"), actionId: "toggleItalic", format: "italic" },
     // No action id ships for strike, but the renderer parses ~~tildes~~ —
     // applyCustomFormat is OverType's own extension point for it.
-    { name: "strike", label: "Strikethrough", Icon: StrikeIcon, custom: "strike" },
-    { name: "code", label: "Inline code", Icon: CodeIcon, actionId: "toggleCode" },
+    { name: "strike", label: "Strikethrough", Icon: boundIcon("strike"), custom: "strike" },
+    { name: "code", label: "Inline code", Icon: boundIcon("code"), actionId: "toggleCode" },
   ],
   [
     { name: "h1", label: "Heading 1", Icon: () => <span className="text-[13px] leading-none font-semibold">H1</span>, actionId: "toggleH1", format: "header" },
@@ -85,17 +73,17 @@ const GROUPS: ToolbarButtonSpec[][] = [
     { name: "h3", label: "Heading 3", Icon: () => <span className="text-[13px] leading-none font-semibold">H3</span>, actionId: "toggleH3", format: "header-3" },
   ],
   [
-    { name: "bulletList", label: "Bullet list", Icon: BulletListIcon, actionId: "toggleBulletList", format: "bullet-list" },
-    { name: "orderedList", label: "Numbered list", Icon: OrderedListIcon, actionId: "toggleNumberedList", format: "numbered-list" },
-    { name: "taskList", label: "Task list", Icon: TaskListIcon, actionId: "toggleTaskList", format: "task-list" },
-    { name: "quote", label: "Quote", Icon: QuoteIcon, actionId: "toggleQuote", format: "quote" },
+    { name: "bulletList", label: "Bullet list", Icon: boundIcon("bulletList"), actionId: "toggleBulletList", format: "bullet-list" },
+    { name: "orderedList", label: "Numbered list", Icon: boundIcon("numberedList"), actionId: "toggleNumberedList", format: "numbered-list" },
+    { name: "taskList", label: "Task list", Icon: boundIcon("taskList"), actionId: "toggleTaskList", format: "task-list" },
+    { name: "quote", label: "Quote", Icon: boundIcon("quote"), actionId: "toggleQuote", format: "quote" },
   ],
-  [{ name: "link", label: "Insert link (Ctrl+K)", Icon: LinkIcon, actionId: "insertLink" }],
+  [{ name: "link", label: "Insert link (Ctrl+K)", Icon: boundIcon("link"), actionId: "insertLink" }],
   [
-    { name: "date", label: "Insert current date", Icon: DateIcon, custom: "insertDate" },
-    { name: "time", label: "Insert current time", Icon: TimeIcon, custom: "insertTime" },
+    { name: "date", label: "Insert current date", Icon: boundIcon("date"), custom: "insertDate" },
+    { name: "time", label: "Insert current time", Icon: boundIcon("time"), custom: "insertTime" },
   ],
-  [{ name: "hr", label: "Insert horizontal rule", Icon: HrIcon, custom: "insertHr" }],
+  [{ name: "hr", label: "Insert horizontal rule", Icon: boundIcon("rule"), custom: "insertHr" }],
 ];
 
 interface EditorToolbarProps {
@@ -376,7 +364,7 @@ export const EditorToolbar = memo(function EditorToolbar({
           onClick={() => window.dispatchEvent(new CustomEvent("note:save"))}
           className="size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
         >
-          <Save className="size-4" />
+          <SolarIcon icon="save" className="size-4" />
         </Button>
         <HistoryControls />
         <AIMenu />

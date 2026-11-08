@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { Note } from "@/lib/types";
 import { getNoteTags } from "@/lib/tag-syntax";
-import { Pin, Check } from "lucide-react";
+import { SolarIcon } from "@/lib/icons";
 
 type Props = {
   note: Note;
@@ -94,9 +94,9 @@ const NoteCard = React.memo(function NoteCard({
           className="shrink-0 h-4 w-4 mt-[1.5px] rounded-[5px] border border-border/70 bg-background/60 flex items-center justify-center transition-all duration-150 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=checked]:opacity-100 data-[selecting=true]:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring hover:border-foreground/50 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
         >
           {selected && (
-            <Check
+            <SolarIcon
+              icon="check"
               className="h-3 w-3 text-primary-foreground"
-              strokeWidth={3.5}
             />
           )}
         </button>
@@ -139,7 +139,7 @@ const NoteCard = React.memo(function NoteCard({
           <div className="flex flex-wrap gap-1 items-start justify-end max-w-[120px] sm:max-w-[140px] flex-shrink-0">
             {isPinned && (
               <span className="text-[9px] sm:text-[10px] bg-foreground text-background px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-semibold tracking-wider uppercase whitespace-nowrap">
-                <Pin className="h-3 w-3" />
+                <SolarIcon icon="pin" className="h-3 w-3" />
               </span>
             )}
             {otherTags.slice(0, maxTagsToShow).map((tag) => (

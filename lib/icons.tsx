@@ -65,7 +65,11 @@ export const UI = {
   delete: "solar:trash-bin-trash-bold-duotone",
   // shared primitives
   close: "solar:close-circle-bold-duotone",
-  check: "solar:check-circle-bold-duotone",
+  checkCircle: "solar:check-circle-bold-duotone",
+  check: "solar:check-bold-duotone",
+  // note cards (home page)
+  pin: "solar:pin-bold-duotone",
+  chevronDown: "solar:alt-arrow-down-bold-duotone",
 } as const;
 
 export type IconId = keyof typeof UI;
