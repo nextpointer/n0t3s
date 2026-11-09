@@ -46,11 +46,8 @@ const NoteCard = React.memo(function NoteCard({
   const active = selecting || selected;
 
   return (
-    <div className="group/row relative flex w-full items-center [content-visibility:auto] [contain-intrinsic-size:auto_52px]">
-      {/* Hangs outside-left of the note text (which aligns to logo/search),
-          sitting in the scroller's gutter. Hidden at rest; row hover shows low
-          opacity for this note only; hovering the tick itself shows full
-          opacity. Hold row on touch to select. */}
+    <div className="group/row flex w-full items-center [content-visibility:auto] [contain-intrinsic-size:auto_52px] sm:px-1">
+      {/* Desktop: inline checkbox for reliable multi-select (phone uses hold-to-select). */}
       <button
         type="button"
         role="checkbox"
@@ -62,16 +59,13 @@ const NoteCard = React.memo(function NoteCard({
         }}
         onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          "absolute -left-6 top-1/2 -translate-y-1/2 hidden h-5 w-5 items-center justify-center rounded-[4px] sm:flex",
+          "mr-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-md sm:flex",
           selected
-            ? "opacity-100 text-primary"
+            ? "text-primary opacity-100"
             : active
-              ? "opacity-60 text-foreground/70 hover:opacity-100!"
-              : "opacity-0 sm:opacity-20 text-foreground/70 group-hover/row:opacity-40 hover:opacity-100!",
-          active
-            ? "pointer-events-auto"
-            : "pointer-events-none [@media(hover:hover)]:pointer-events-auto",
-          "focus-visible:opacity-100 focus-visible:pointer-events-auto focus-visible:ring-2 focus-visible:ring-ring",
+              ? "text-foreground/60 opacity-100"
+              : "text-foreground/35 opacity-70 hover:bg-foreground/[0.05] hover:text-foreground/70 hover:opacity-100",
+          "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
         <SolarIcon icon="check" className="size-[18px]" />
@@ -89,7 +83,7 @@ const NoteCard = React.memo(function NoteCard({
         role="link"
         tabIndex={0}
         data-selected={selected || undefined}
-        className="min-w-0 w-full cursor-pointer touch-pan-y select-none bg-transparent px-4 py-3 hover:bg-foreground/[0.04] data-[selected=true]:bg-foreground/[0.06] sm:w-auto sm:flex-1 sm:rounded-lg sm:pl-2.5 sm:pr-3"
+        className="flex min-w-0 w-full cursor-pointer touch-pan-y select-none items-center justify-between gap-3 bg-transparent px-4 py-3.5 transition-colors hover:bg-foreground/[0.035] data-[selected=true]:bg-foreground/[0.055] sm:rounded-xl sm:px-3 sm:py-2.5"
         style={{ WebkitTouchCallout: "none" }}
         onContextMenu={(e) => {
           // Prevent iOS/Android long-press context menu so hold-to-select works.
@@ -117,19 +111,17 @@ const NoteCard = React.memo(function NoteCard({
         onPointerCancel={clearPress}
         onPointerLeave={clearPress}
       >
-        <div className="flex w-full items-center justify-between gap-3 sm:gap-4">
-          <h3 className="min-w-0 flex-1 truncate text-[13px] font-medium tracking-tight text-foreground/90 sm:pr-2 sm:text-[14px]">
-            {note.title || "Untitled"}
-          </h3>
-          <div className="ml-auto flex shrink-0 items-center justify-end text-right text-[11px] tabular-nums text-muted-foreground/45 sm:gap-3">
-            <span className="hidden whitespace-nowrap sm:inline">{(note.content?.length ?? 0).toLocaleString()} chars</span>
-            <span aria-hidden className="hidden text-muted-foreground/25 sm:inline">·</span>
-            <span className="whitespace-nowrap">
-              {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              {" "}
-              {new Date(note.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
-            </span>
-          </div>
+        <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium tracking-tight text-foreground/90 sm:text-[13.5px]">
+          {note.title || "Untitled"}
+        </h3>
+        <div className="ml-3 flex shrink-0 items-center justify-end gap-2 text-right text-[11px] tabular-nums text-muted-foreground/50 sm:gap-3">
+          <span className="hidden whitespace-nowrap sm:inline">{(note.content?.length ?? 0).toLocaleString()} chars</span>
+          <span aria-hidden className="hidden text-muted-foreground/25 sm:inline">·</span>
+          <span className="whitespace-nowrap">
+            {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            {" "}
+            {new Date(note.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+          </span>
         </div>
       </div>
     </div>

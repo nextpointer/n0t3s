@@ -108,70 +108,77 @@ export default function Home() {
   return (
     <>
       <title>n0t3s</title>
-      <div className="md:w-3xl w-full h-screen flex flex-col justify-start items-start p-4 pt-8 md:mx-auto">
-        {/* Top bar */}
-        <div className="flex flex-row justify-end items-center gap-2 md:fixed md:top-0 left-0 w-full  md:w-3xl md:left-1/2 md:-translate-x-1/2 z-50 sm:p-4">
-          <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
-          <ModeToggle />
-          <Button
-            variant={"outline"}
-            className="p-3"
-            asChild
-            aria-label="Project on GitHub"
-            title="Project on GitHub"
-          >
-            <Link
-              href="https://github.com/nextpointer/n0t3s?tab=readme-ov-file#-n0t3s"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center m-0 p-0"
-            >
-              <SolarIcon icon="github" className="size-4" />
-            </Link>
-          </Button>
-          <Button
-            onClick={handleNewNote}
-            aria-label="New note"
-            title="New note"
-          >
-            <SolarIcon icon="add" className="size-4 sm:mr-1" />
-            <span className="hidden sm:block">New Note</span>
-          </Button>
-        </div>
+      <div className="flex h-[100dvh] w-full flex-col overflow-hidden">
+        <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-4 pb-2 pt-5 sm:px-6 sm:pt-8">
+          {/* Header */}
+          <div className="flex shrink-0 items-center justify-between gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">N0T3S</h1>
+            <div className="flex items-center gap-2">
+              <ModeToggle />
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-xl"
+                asChild
+                aria-label="Project on GitHub"
+                title="Project on GitHub"
+              >
+                <Link
+                  href="https://github.com/nextpointer/n0t3s?tab=readme-ov-file#-n0t3s"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <SolarIcon icon="github" className="size-4" />
+                </Link>
+              </Button>
+              <Button onClick={handleNewNote} className="h-9 rounded-xl px-3 sm:px-4" aria-label="New note" title="New note">
+                <SolarIcon icon="add" className="size-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">New Note</span>
+              </Button>
+            </div>
+          </div>
 
-        {/* Filters — hidden on a fresh/empty library */}
-        {!loading && notes.length > 0 && (
-          <div className="flex flex-row w-full gap-2 mt-4 md:mt-12 justify-start items-center">
-            <NotesFilters
-              loading={loading}
-              allTags={allTags}
+          {/* Search + filters */}
+          {!loading && notes.length > 0 && (
+            <div className="mt-5 flex w-full shrink-0 items-center gap-2 sm:mt-6">
+              <NotesFilters
+                loading={loading}
+                allTags={allTags}
+                orderBy={orderBy}
+                setOrderBy={setOrderBy}
+                tagFilter={tagFilter}
+                setTagFilter={setTagFilter}
+                setSearchOpen={setSearchOpen}
+              />
+            </div>
+          )}
+          {(loading || notes.length === 0) && (
+            <div className="mt-5 sm:mt-6" />
+          )}
+
+          <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
+
+          {/* Notes list */}
+          <div
+            ref={listScrollRef}
+            className={cn(
+              "min-h-0 flex-1 overflow-y-auto -mx-4 px-0 sm:mx-0 sm:px-0",
+              !loading && notes.length > 0 ? "mt-4" : "mt-2",
+            )}
+          >
+            <NotesList
+              notes={notes}
               orderBy={orderBy}
-              setOrderBy={setOrderBy}
               tagFilter={tagFilter}
-              setTagFilter={setTagFilter}
-              setSearchOpen={setSearchOpen}
+              loading={loading}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              scrollRef={listScrollRef}
             />
           </div>
-        )}
-
-        {/* Search command */}
-        <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
-
-        {/* Content: gutter for outside-left tick; -mx-4/pr-4 aligns the right
-            edge exactly to the New Note button / filter selects. */}
-        <div ref={listScrollRef} className={cn("-mx-4 w-[calc(100%+2rem)] overflow-y-auto py-2 px-0 sm:mx-0 sm:w-full sm:pl-14 sm:pr-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
-          <NotesList
-            notes={notes}
-            orderBy={orderBy}
-            tagFilter={tagFilter}
-            loading={loading}
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            scrollRef={listScrollRef}
-          />
         </div>
 
-        {/* Bulk actions — bottom popup on phone, floating pill on desktop */}
+        {/* Bulk actions */}
         {selectedCount > 0 && (
           <div
             className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex w-auto max-w-md items-center justify-between gap-2 rounded-2xl border border-border/60 bg-popover px-3 py-2.5 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-200 sm:inset-x-auto sm:left-1/2 sm:w-max sm:max-w-[calc(100vw-2rem)] sm:-translate-x-1/2 sm:justify-start sm:px-3"
