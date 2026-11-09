@@ -111,7 +111,7 @@ const NoteCard = React.memo(function NoteCard({
       <div
         {...interactiveProps}
         className={cn(
-          "group/row relative flex cursor-pointer touch-pan-y select-none flex-col rounded-xl border border-border/50 bg-card p-3 transition-colors hover:border-border hover:bg-accent/40 data-[selected=true]:border-primary/30 data-[selected=true]:bg-primary/[0.04] sm:p-3.5",
+          "group/row relative flex cursor-pointer touch-pan-y select-none flex-col rounded-xl border border-border/50 bg-card p-3 transition-colors hover:border-border hover:bg-accent/40 data-[selected=true]:border-primary/30 data-[selected=true]:bg-primary/[0.04] sm:p-3.5 dark:border-white/[0.07] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
           view === "masonry" ? "mb-2 break-inside-avoid sm:mb-3" : "h-full",
         )}
       >
