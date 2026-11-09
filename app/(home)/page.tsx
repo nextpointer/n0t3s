@@ -316,7 +316,6 @@ export default function Home() {
                   <AlertDialogFooter>
                     <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                      data-variant="destructive"
                       className={cn(buttonVariants({ variant: "destructive" }), "rounded-xl")}
                       onClick={() => void deleteSelected()}
                     >

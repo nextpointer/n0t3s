@@ -143,16 +143,11 @@ interface AlertDialogActionProps
 function AlertDialogAction({
   className,
   ...props
-}: AlertDialogActionProps & { "data-variant"?: string }) {
-  const { ["data-variant"]: dataVariant, ...rest } = props as AlertDialogActionProps & {
-    "data-variant"?: string;
-  };
+}: AlertDialogActionProps) {
   return (
     <AlertDialogPrimitive.Action
-      data-slot="button"
-      data-variant={dataVariant ?? "default"}
       className={cn(buttonVariants(), className)}
-      {...rest}
+      {...props}
     />
   );
 }

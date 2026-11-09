@@ -86,14 +86,6 @@
        so those tokens are shadowed inside the editor. Alias them here, on the
        root, to a name the library never overrides. */
     --note-accent: var(--primary);
-
-    /* Figma button system: hsl(h, 100%, 65%) fills + inner/outer shadow + stroke. */
-    --btn-s: 100%;
-    --btn-l: 65%;
-    --btn-h-brand: 270;
-    --btn-h-destructive: 0;
-    --btn-h-secondary: 215;
-    --btn-h-neutral: 230;
 }
 
 .dark {
@@ -672,26 +664,3 @@
 }
 
 /* View transition animations removed: navigation is immediate to avoid jank. */
-
-/* Figma button system for primary (default) buttons only: hsl(h,100%,65%). */
-[data-slot="button"][data-variant="default"].btn-primary-figma {
-    --btn-h: var(--btn-h-brand);
-    position: relative;
-    background: hsl(var(--btn-h) var(--btn-s) var(--btn-l)) !important;
-    color: #fff;
-    border: 1px solid hsl(var(--btn-h) 100% 78% / 0.95);
-    box-shadow:
-        0 0 0 2px hsl(var(--btn-h) 100% 65% / 0.22),
-        0 2px 8px hsl(var(--btn-h) 100% 45% / 0.18),
-        inset 0 10px 18px rgba(255, 255, 255, 0.22);
-}
-[data-slot="button"][data-variant="default"].btn-primary-figma:hover:not(:disabled) {
-    filter: brightness(1.04) saturate(1.02);
-}
-[data-slot="button"][data-variant="default"].btn-primary-figma:active:not(:disabled) {
-    filter: brightness(0.98);
-    box-shadow:
-        0 0 0 2px hsl(var(--btn-h) 100% 65% / 0.18),
-        0 1px 4px hsl(var(--btn-h) 100% 45% / 0.14),
-        inset 0 8px 14px rgba(255, 255, 255, 0.16);
-}
