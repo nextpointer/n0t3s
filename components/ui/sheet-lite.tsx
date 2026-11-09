@@ -107,7 +107,7 @@ export function SheetLite({ open, onClose, children, style, className }: SheetLi
         data-shown={shown || undefined}
         className={cn(
           "fixed inset-x-0 bottom-0 z-50 flex flex-col gap-0 overflow-hidden",
-          "rounded-t-2xl border-t border-border/60 bg-background shadow-lg",
+          "rounded-t-2xl border-t border-border/60 bg-popover text-popover-foreground shadow-lg",
           "transition-transform",
           "[transition-timing-function:cubic-bezier(0.32,0.72,0,1)] duration-[240ms]",
           "data-[shown=false]:duration-200 motion-reduce:transition-none",
