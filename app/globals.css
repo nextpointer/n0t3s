@@ -231,12 +231,45 @@
     * {
         @apply border-border outline-ring/50;
     }
+    html,
+    body {
+        /* Native-feel mobile: fast taps, no highlight flash, stable text sizing. */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        touch-action: manipulation;
+        overscroll-behavior: none;
+    }
     body {
         @apply bg-background/10 text-foreground;
+    }
+
+    /* App chrome feels native; keep note content selectable. */
+    button,
+    [role="button"],
+    nav,
+    header {
+        -webkit-touch-callout: none;
+        user-select: none;
+    }
+    input,
+    textarea,
+    [contenteditable="true"],
+    .note-editor-container,
+    .note-editor-container * {
+        user-select: text;
+        -webkit-touch-callout: default;
     }
     * {
         scrollbar-width: thin;
         scrollbar-color: hsl(0 0% 45% / 0.55) transparent;
+    }
+
+    /* Momentum scrolling for overflow containers on iOS. */
+    [class*="overflow-y-auto"],
+    [class*="overflow-auto"],
+    [class*="overflow-x-auto"] {
+        -webkit-overflow-scrolling: touch;
     }
 
     *::-webkit-scrollbar {

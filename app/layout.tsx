@@ -10,6 +10,13 @@ import { PwaInit } from "@/components/PwaInit";
 export const metadata: Metadata = {
   title: "N0T3S",
   description: "A simple, fast and minimal note-taking app",
+  applicationName: "N0T3S",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "N0T3S",
+  },
+  formatDetection: { telephone: false },
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
@@ -37,6 +44,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false, // Prevents iOS from zooming in on input focus
   interactiveWidget: "resizes-content",
+  viewportFit: "cover",
 };
 
 const sg = Space_Grotesk({
