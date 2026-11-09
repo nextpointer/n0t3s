@@ -67,7 +67,7 @@ const NoteCard = React.memo(function NoteCard({
             ? "opacity-100 text-primary"
             : active
               ? "opacity-60 text-foreground/70 hover:opacity-100!"
-              : "opacity-0 text-foreground/70 group-hover/row:opacity-25 hover:opacity-100!",
+              : "opacity-0 sm:opacity-20 text-foreground/70 group-hover/row:opacity-40 hover:opacity-100!",
           active
             ? "pointer-events-auto"
             : "pointer-events-none [@media(hover:hover)]:pointer-events-auto",

@@ -68,6 +68,7 @@ export function applyReplacementToEditor(sel: EditorSelection, replacement: stri
     if (!ok) return null;
     try { (editor as unknown as { updatePreview?: () => void } | null)?.updatePreview?.(); } catch {}
     window.dispatchEvent(new CustomEvent("note:history"));
+    window.dispatchEvent(new CustomEvent("note:ai-applied"));
     return ta.value;
   } catch {
     return null;

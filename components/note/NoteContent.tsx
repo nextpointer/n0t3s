@@ -394,11 +394,17 @@ export const NoteContent = memo(
     // Bumped when AI/external content is applied to fade the content in.
     const [aiFadeKey, setAiFadeKey] = useState(0);
     useEffect(() => {
+      const bump = () => setAiFadeKey((k) => k + 1);
+      window.addEventListener("note:ai-applied", bump);
+      return () => window.removeEventListener("note:ai-applied", bump);
+    }, []);
+    useEffect(() => {
       if (aiFadeKey === 0) return;
       const el = wrapperRef.current;
       if (!el) return;
       el.classList.remove("animate-ai-fade");
-      void el.offsetWidth;
+      // Force reflow so the animation restarts reliably.
+      void el.getBoundingClientRect();
       el.classList.add("animate-ai-fade");
       const onEnd = () => el.classList.remove("animate-ai-fade");
       el.addEventListener("animationend", onEnd, { once: true });
@@ -510,12 +516,19 @@ export const NoteContent = memo(
           if (active?.closest?.("[data-ai-ctx-menu]")) return;
           if (!ta) { setCtxMenu({ open: false }); return; }
           if (document.activeElement !== ta && !wrapperRef.current?.contains(document.activeElement)) return;
-          const sel = captureEditorSelection();
-          if (sel && sel.text.trim() && document.activeElement === ta) {
-            setCtxMenu({ open: true, x: 0, y: 0, anchor: "bottom", sel, prompting: false });
-          } else if (!sel) {
-            setCtxMenu((m) => (m.open && m.anchor === "bottom" && !m.prompting ? { open: false } : m));
+          // Use the live selection (not fallback memory) so the menu closes on deselect.
+          if (document.activeElement === ta && ta.selectionStart !== ta.selectionEnd) {
+            const start = ta.selectionStart;
+            const end = ta.selectionEnd;
+            const base = ta.value;
+            const text = base.slice(start, end);
+            if (text.trim()) {
+              rememberEditorSelection();
+              setCtxMenu({ open: true, x: 0, y: 0, anchor: "bottom", sel: { text, start, end, base }, prompting: false });
+              return;
+            }
           }
+          setCtxMenu((m) => (m.open && m.anchor === "bottom" && !m.prompting ? { open: false } : m));
         }, 320);
       };
       document.addEventListener("selectionchange", onSelectionChange);
@@ -1056,7 +1069,7 @@ export const NoteContent = memo(
       applyExternal();
       contentRef.current = externalContent;
       // Let OverType/native stack settle, then refresh undo/redo affordance.
-      requestAnimationFrame(() => setAiFadeKey((k) => k + 1));
+      requestAnimationFrame(() => window.dispatchEvent(new CustomEvent("note:ai-applied")));
       requestAnimationFrame(() => {
         isExternalUpdateRef.current = false;
         window.dispatchEvent(new CustomEvent("note:history"));
