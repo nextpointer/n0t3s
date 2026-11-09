@@ -56,7 +56,7 @@ export const NoteHeader = memo(function NoteHeader({ temp }: { temp?: boolean })
         </button>
         {temp ? (
           <span
-            className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+            className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.06] px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
             title="Temporary note — auto-deletes in 24 hours"
           >
             <SolarIcon icon="temp" className="size-3" />
