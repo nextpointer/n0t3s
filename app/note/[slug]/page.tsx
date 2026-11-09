@@ -9,7 +9,7 @@ import { NoteHeader } from "@/components/note/NoteHeader";
 import { NoteTitle } from "@/components/note/NoteTitle";
 import { NoteContent } from "@/components/note/NoteContent";
 import { NoteActions } from "@/components/note/NoteActions";
-import { AskAIDialog } from "@/components/dialogs/AskAIDialog";
+import { EditWithAIDialog } from "@/components/dialogs/EditWithAIDialog";
 import { DeleteDialog } from "@/components/dialogs/DeleteDialog";
 import { SavePromptDialog } from "@/components/dialogs/SavePromptDialog";
 import {
@@ -189,7 +189,7 @@ export default function Page() {
         notes={notes}
         noteId={id}
       />
-      <AskAIDialog />
+      <EditWithAIDialog />
       <DeleteDialog />
       <ExportDialog />
       <SavePromptDialog save={save} />

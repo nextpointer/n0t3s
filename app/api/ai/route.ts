@@ -37,10 +37,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const content = (body?.content ?? "").toString();
     const action = (body?.action ?? "").toString() as AIAction;
+    const instruction = (body?.instruction ?? "").toString();
 
-    if (!content.trim() || !action) {
+    if (!action) {
+      return NextResponse.json({ error: "Missing action" }, { status: 400 });
+    }
+    if (!content.trim()) {
+      return NextResponse.json({ error: "Not able to edit" }, { status: 400 });
+    }
+    if (action === "edit" && !instruction.trim()) {
       return NextResponse.json(
-        { error: "Missing content or action" },
+        { error: "Missing instruction" },
         { status: 400 },
       );
     }
@@ -61,12 +68,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Run AI action
-    const result = await performAIAction(content, action);
+    const result = await performAIAction(content, action, instruction);
     return NextResponse.json({ result }, { headers });
   } catch (err) {
     console.error("AI API Error:", err);
+    const message =
+      err && typeof err === "object" && "message" in err
+        ? String((err as { message?: unknown }).message || "")
+        : "";
     return NextResponse.json(
-      { error: "AI service is currently unavailable. Please try again later." },
+      {
+        error:
+          message && /not able to edit|model|api key|took too long/i.test(message)
+            ? message
+            : "AI service is currently unavailable. Please try again later.",
+      },
       { status: 500 },
     );
   }

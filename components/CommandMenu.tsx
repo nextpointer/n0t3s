@@ -24,6 +24,7 @@ import {
   aiEnabledAtom,
   deleteDialogOpenAtom,
   exportDialogOpenAtom,
+  editAIDialogOpenAtom,
   zenMode,
   persistZenMode,
 } from "@/store/noteAtom";
@@ -80,7 +81,7 @@ const COMMANDS: Item[] = [
   { id: "ai:expand", label: "Expand", shortcut: "⌘⇧E", kind: "ai", scope: "note", keywords: "lengthen more" },
   { id: "ai:simplify", label: "Simplify", shortcut: "⌘⇧I", kind: "ai", scope: "note", keywords: "plain easier" },
   { id: "ai:todo", label: "Create todo list", shortcut: "⌘⇧Q", kind: "ai", scope: "note", keywords: "checklist tasks" },
-  { id: "ai:prompt", label: "Custom prompt", shortcut: "⌘⇧P", kind: "ai", scope: "note", keywords: "ask question" },
+  { id: "ai:edit", label: "Edit with AI", shortcut: "", kind: "ai", scope: "note", keywords: "change instruction prompt diff" },
 ];
 
 function sel(listEl: HTMLDivElement | null, idx: number) {
@@ -112,6 +113,7 @@ export const CommandMenu = React.memo(function CommandMenu({
   const aiEnabled = useAtomValue(aiEnabledAtom);
   const setDeleteOpen = useSetAtom(deleteDialogOpenAtom);
   const setExportOpen = useSetAtom(exportDialogOpenAtom);
+  const setEditAIOpen = useSetAtom(editAIDialogOpenAtom);
   const setZenMode = useSetAtom(zenMode);
 
   /**
@@ -309,6 +311,7 @@ export const CommandMenu = React.memo(function CommandMenu({
         case "save": window.dispatchEvent(new CustomEvent("note:save")); break;
         case "delete": setDeleteOpen(true); break;
         case "export": setExportOpen(true); break;
+        case "ai:edit": setEditAIOpen(true); break;
         case "help": router.push("/help"); break;
         case "theme": { const d = document.documentElement.classList.contains("dark"); setTheme(d ? "light" : "dark"); break; }
         case "zen": setZenMode((p) => { const n = !p; persistZenMode(n); return n; }); break;
@@ -316,7 +319,7 @@ export const CommandMenu = React.memo(function CommandMenu({
         default: if (item.id.startsWith("ai:")) window.dispatchEvent(new CustomEvent("note:ai", { detail: { action: item.id.replace("ai:", "") } }));
       }
     },
-    [router, setOpen, setDeleteOpen, setExportOpen, setZenMode, setTheme],
+    [router, setOpen, setDeleteOpen, setExportOpen, setEditAIOpen, setZenMode, setTheme],
   );
 
   // Keyboard — reads lenRef.current, never recreated

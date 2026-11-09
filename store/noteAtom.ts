@@ -162,9 +162,11 @@ export const aiLoadingAtom = atom<boolean>(false);
 export const deleteDialogOpenAtom = atom<boolean>(false);
 
 /**
- * Controls Ask AI dialog visibility
+ * Controls Edit with AI dialog visibility
  */
-export const askDialogOpenAtom = atom<boolean>(false);
+export const editAIDialogOpenAtom = atom<boolean>(false);
+/** @deprecated use editAIDialogOpenAtom */
+export const askDialogOpenAtom = editAIDialogOpenAtom;
 
 /**
  * Controls save prompt dialog visibility

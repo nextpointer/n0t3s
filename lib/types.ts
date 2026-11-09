@@ -13,6 +13,5 @@ export type AIAction =
   | "grammar"
   | "expand"
   | "simplify"
-  | "ask"
   | "todo"
-  | "prompt";
+  | "edit";

@@ -23,7 +23,7 @@ export function UseAIShortcuts() {
   const handleAIAction = useCallback(
     async (action: string) => {
       if (!content?.trim()) {
-        toast.error("Note content is empty");
+        toast.error("Not able to edit");
         return;
       }
       /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -51,7 +51,6 @@ export function UseAIShortcuts() {
       "Control+Shift+e": "expand",
       "Control+Shift+i": "simplify",
       "Control+Shift+q": "todo",
-      "Control+Shift+p": "prompt",
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,7 +86,19 @@ export function UseAIShortcuts() {
       }
     };
 
+    const handleNoteAI = (e: Event) => {
+      if (!aiEnabled) return;
+      const detail = (e as CustomEvent<{ action?: string }>).detail;
+      const action = detail?.action;
+      if (!action || action === "edit") return;
+      handleAIActionRef.current(action);
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("note:ai", handleNoteAI as EventListener);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("note:ai", handleNoteAI as EventListener);
+    };
   }, [loading, aiEnabled, setZenMode]);
 }

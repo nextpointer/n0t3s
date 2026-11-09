@@ -6,95 +6,46 @@ import { generateText } from "ai";
 
 // System prompt
 
-const SYSTEM_PROMPT = `You are a markdown text processing assistant embedded in a notes app.
+const SYSTEM_PROMPT = `You are a fast, precise writing assistant inside a notes app (Notion-like quality).
 
-OUTPUT RULES (non-negotiable):
-- Output ONLY the processed markdown content — nothing else
-- Never wrap output in code fences (\`\`\` or \`\`\`markdown)
-- Never add preamble: no "Here's", "Sure!", "Summary:", "Result:", "Output:"
-- Never add postamble: no "Let me know", "Hope this helps", "I've rewritten..."
-- Never add headers unless the original content had headers
-- Preserve the author's voice and intent unless the action explicitly changes it
-- If input is empty, gibberish, or unprocessable → return it unchanged, exactly
-
-MARKDOWN RULES:
-- Use standard markdown: **bold**, *italic*, \`code\`, - lists, 1. ordered, > blockquote
-- Checkboxes: - [ ] unchecked, - [x] checked
-- Preserve existing markdown formatting unless the action requires changing it`;
+OUTPUT (strict):
+- Return ONLY the final markdown content. No preamble, no postamble, no explanations.
+- Never wrap the whole response in code fences.
+- Do not add headings/labels unless they existed or are essential to the requested structure.
+- Preserve meaning, key details, names, numbers, links, and existing markdown unless the task requires changes.
+- Match the author's language and tone when appropriate; be clear and high-signal.
+- If the input is empty or unusable, return it unchanged.`;
 
 // Per-action instructions
 const ACTION_INSTRUCTIONS: Record<AIAction, string> = {
-  summarize: `Summarize the following note into concise bullet points.
-Rules:
-- Use - bullet points, not numbers
-- Each bullet = one distinct idea, max 15 words
-- Keep technical terms and proper nouns exactly as written
-- Order bullets by importance, most important first
-- Do not add bullets for meta-commentary ("The note discusses...")
-- Aim for 3–7 bullets depending on content length`,
+  summarize: `Summarize into crisp, high-signal bullet points.
+- 3–6 bullets (fewer if short), one idea each, most important first.
+- Keep facts, names, numbers, and terms accurate. No filler like "This note discusses".`,
 
-  rewrite: `Rewrite the following note for maximum clarity and readability.
-Rules:
-- Preserve every idea and fact — do not add or remove information
-- Break long sentences into shorter ones (aim for ≤20 words per sentence)
-- Fix passive voice where possible
-- Keep paragraph structure unless it actively hurts clarity
-- Preserve all markdown formatting (bold, italic, lists, code blocks)
-- Do not change technical terms, names, or domain-specific language`,
+  rewrite: `Rewrite for clarity and flow, Notion-style: clean, direct, easy to scan.
+- Keep every fact and the original meaning; do not invent or drop information.
+- Improve structure, sentence rhythm, and word choice. Preserve useful markdown.`,
 
-  grammar: `Fix grammar and spelling errors in the following note.
-Rules:
-- Fix ONLY: spelling mistakes, grammatical errors, punctuation errors, subject-verb agreement
-- Do NOT change: word choice, sentence structure, tone, style, paragraph order
-- Do NOT add or remove content
-- Do NOT reformat markdown — preserve all existing structure exactly
-- If the text is already correct, return it unchanged`,
+  grammar: `Fix spelling, grammar, and punctuation only.
+- Keep meaning, tone, wording, structure, and formatting intact.
+- If already correct, return unchanged.`,
 
-  expand: `Expand the following note with additional relevant detail.
-Rules:
-- Add context, examples, and elaboration that naturally fits the existing content
-- Do not contradict or replace existing content — only build on it
-- Match the author's tone and style
-- Add roughly 50–100% more content than the original
-- Use the same markdown formatting style as the original
-- Do not add a conclusion or summary section unless the original had one`,
+  expand: `Expand with helpful, relevant detail while staying accurate.
+- Build on what's there (context, examples, steps); don't contradict or pad.
+- Add ~40–80% more substance. Match the note's tone and markdown style.`,
 
-  simplify: `Simplify the following note to a 5th-grade reading level.
-Rules:
-- Replace complex words with simple everyday alternatives
-- Break long sentences into short ones (target: ≤15 words each)
-- Keep the same meaning — do not remove facts or ideas
-- Use active voice throughout
-- Keep technical terms only if they are essential and cannot be simplified
-- Preserve list and heading structure from the original`,
+  simplify: `Simplify so it's easy to understand at a glance.
+- Short sentences, plain words, same meaning. Keep essential terms.
+- Preserve headings/lists/checklists.`,
 
-  ask: `Answer the question or instruction contained in the following text.
-Rules:
-- Extract the core question or task and answer it directly
-- If it is a math problem, solve it step by step and show the answer clearly
-- If it asks for a list, return a markdown bullet list
-- If it asks to compare things, use a clear structure (bullets or a table)
-- If it is genuinely unanswerable or nonsensical, reply exactly: WTF NO ANSWER >:(
-- Do not repeat the question back
-- Keep the answer as short as accurate allows`,
+  todo: `Convert into a clean markdown task list.
+- Actionable items: "- [ ] ..."; completed/past items: "- [x] ...".
+- Verb-first, concise tasks. Group related items with a blank line; use a short **bold** group label only when helpful.
+- Put non-actionable context in a single blockquote above tasks only if needed.`,
 
-  todo: `Convert the following note into a markdown task list.
-Rules:
-- Every actionable item becomes: - [ ] task description
-- Already-done or past-tense items become: - [x] task description
-- Group related tasks together with a blank line between groups
-- If there are natural categories, add a **Category** heading above each group
-- Non-actionable content (context, notes, background) goes in a > blockquote above the tasks
-- Keep task descriptions concise — verb-first, max 10 words each`,
-
-  prompt: `You are a markdown instruction parser. The input contains inline instructions in the format /[instruction] followed by content to apply them to.
-Rules:
-- Parse every /[...] instruction and apply it to the content that follows or precedes it
-- Multiple instructions can appear in one note — apply each to its relevant section
-- Output only the processed result — remove the /[...] markers from the output
-- If an instruction is ambiguous, make the most reasonable interpretation
-- Preserve all markdown formatting in the output
-- If no /[...] instructions are found, return the content unchanged`,
+  edit: `Edit the note by following the user's instruction.
+- Apply the instruction precisely; keep everything else intact unless the instruction implies changing it.
+- Preserve markdown, meaning, and important details. Be direct and high-signal.`,
 };
 
 // Per-action temperature
@@ -104,22 +55,20 @@ const ACTION_TEMPERATURE: Record<AIAction, number> = {
   todo: 0.1,
   summarize: 0.2,
   simplify: 0.2,
-  prompt: 0.2,
-  ask: 0.3,
+  edit: 0.25,
   rewrite: 0.4,
   expand: 0.6,
 };
 
-// Per-action max tokens
+// Per-action max tokens (tight for speed; expand/edit can be larger)
 const ACTION_MAX_TOKENS: Record<AIAction, number> = {
-  summarize: 512,
-  rewrite: 2048,
-  grammar: 2048,
-  expand: 4096,
-  simplify: 2048,
-  ask: 1024,
-  todo: 1024,
-  prompt: 2048,
+  summarize: 384,
+  rewrite: 1536,
+  grammar: 1536,
+  expand: 2048,
+  simplify: 1024,
+  todo: 768,
+  edit: 2048,
 };
 
 //  Response cache (1 hour TTL, max 500 entries)
@@ -128,8 +77,9 @@ const responseCache = new LRUCache<string, string>({
   ttl: 60 * 60 * 1000,
 });
 
-const MODEL_NAME =
-  process.env.GENAI_MODEL ?? "meta-llama/llama-4-scout-17b-16e-instruct";
+// Fast default for snappy rewrites; override with GENAI_MODEL (e.g. a larger
+// quality model) when needed.
+const MODEL_NAME = process.env.GENAI_MODEL ?? "llama-3.1-8b-instant";
 
 // ─── Output cleaner ───────────────────────────────────────────────────────────
 function cleanOutput(text: string): string {
@@ -161,43 +111,58 @@ function cleanOutput(text: string): string {
 export async function performAIAction(
   content: string,
   action: AIAction,
+  instruction?: string,
 ): Promise<string> {
-  if (!content?.trim()) throw new Error("Content is required");
+  if (!content?.trim()) throw new Error("Not able to edit");
   if (!(action in ACTION_INSTRUCTIONS))
     throw new Error(`Invalid action: ${action}`);
+  const inst = (instruction || "").trim();
+  if (action === "edit" && !inst) throw new Error("Instruction is required");
 
-  // Cache key includes model + action + content
+  // Cache key includes model + action + content (+ instruction for edit)
   const cacheKey = createHash("sha256")
-    .update(`${MODEL_NAME}::${action}::${content}`)
+    .update(`${MODEL_NAME}::${action}::${inst}::${content}`)
     .digest("hex");
 
   const cached = responseCache.get(cacheKey);
   if (cached) return cached;
 
+  const userContent =
+    action === "edit"
+      ? `${ACTION_INSTRUCTIONS[action]}\n\nInstruction:\n${inst}\n\n---\nNote:\n${content}`
+      : `${ACTION_INSTRUCTIONS[action]}\n\n---\n\n${content}`;
+
   try {
     const { text } = await generateText({
       model: groq(MODEL_NAME),
       system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `${ACTION_INSTRUCTIONS[action]}\n\n---\n\n${content}`,
-        },
-      ],
+      messages: [{ role: "user", content: userContent }],
       temperature: ACTION_TEMPERATURE[action],
       maxOutputTokens: ACTION_MAX_TOKENS[action],
+      abortSignal: AbortSignal.timeout(60_000),
     });
 
     const output = cleanOutput(text ?? "");
-
-    // If model returned empty or only whitespace, fall back to original
     const finalOutput = output.length > 0 ? output : content.trim();
 
     responseCache.set(cacheKey, finalOutput);
     return finalOutput;
   } catch (error) {
-    console.error(`AI Error [${action}]:`, error);
-    // Never throw to the UI — return original content on failure
-    return content.trim();
+    console.error(`AI Error [${action}] model=${MODEL_NAME}:`, error);
+    const msg =
+      error && typeof error === "object" && "message" in error
+        ? String((error as { message?: unknown }).message || "")
+        : "";
+    // Surface a useful hint without leaking secrets.
+    if (/model|not found|unsupported|does not exist/i.test(msg)) {
+      throw new Error(`Model unavailable (${MODEL_NAME}). Check GENAI_MODEL / API access.`);
+    }
+    if (/api.?key|unauthorized|401|403/i.test(msg)) {
+      throw new Error("AI API key missing or invalid.");
+    }
+    if (/timeout|abort/i.test(msg)) {
+      throw new Error("AI took too long. Try again.");
+    }
+    throw new Error("AI request failed. Try again.");
   }
 }
