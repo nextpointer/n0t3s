@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { allTagsAtom, storageReadyAtom } from "@/store/noteAtom";
 import { getNotes, createNote, deleteNote } from "@/lib/storage";
@@ -46,6 +46,7 @@ export default function Home() {
   // Bulk selection (Notion-style): an empty set means normal browsing; any
   // entry turns the list into selection mode.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const listScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Single source of truth for re-reading the store, so the tag aggregation
   // after a delete matches the initial load exactly.
@@ -158,7 +159,7 @@ export default function Home() {
 
         {/* Content: gutter for outside-left tick; -mx-4/pr-4 aligns the right
             edge exactly to the New Note button / filter selects. */}
-        <div className={cn("-mx-4 w-[calc(100%+2rem)] overflow-y-auto py-2 px-0 sm:mx-0 sm:w-full sm:pl-14 sm:pr-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
+        <div ref={listScrollRef} className={cn("-mx-4 w-[calc(100%+2rem)] overflow-y-auto py-2 px-0 sm:mx-0 sm:w-full sm:pl-14 sm:pr-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
           <NotesList
             notes={notes}
             orderBy={orderBy}
@@ -166,6 +167,7 @@ export default function Home() {
             loading={loading}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
+            scrollRef={listScrollRef}
           />
         </div>
 

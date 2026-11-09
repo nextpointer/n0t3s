@@ -1,6 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import type { VirtualItem } from "@tanstack/react-virtual";
 import { Note } from "@/lib/types";
 import NoteCard from "./NoteCard";
 import { Skeleton } from "../ui/skeleton";
@@ -16,6 +18,7 @@ type Props = {
   loading: boolean;
   selectedIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
+  scrollRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 const NotesList = React.memo(function NotesList({
@@ -25,6 +28,7 @@ const NotesList = React.memo(function NotesList({
   loading,
   selectedIds,
   onSelectionChange,
+  scrollRef,
 }: Props) {
   const router = useRouter();
 
@@ -165,22 +169,68 @@ const NotesList = React.memo(function NotesList({
     );
   }
 
-  // Flat list. Note text aligns to the page's content edge (logo/search);
-  // the selection tick hangs outside-left in the gutter (scroller padding).
+  // Virtualized list for smooth scrolling on large libraries.
   return (
-    <div className="flex w-full max-w-full flex-col gap-0.5">
-      {sortedNotes.map((note) => (
-        <NoteCard
-          key={note.id}
-          note={note}
-          onOpen={navigateToNote}
-          selecting={selecting}
-          selected={selectedIds.has(note.id)}
-          onSelect={handleCardSelect}
-        />
-      ))}
-    </div>
+    <VirtualizedNotesList
+      notes={sortedNotes}
+      selecting={selecting}
+      selectedIds={selectedIds}
+      onOpen={navigateToNote}
+      onSelect={handleCardSelect}
+      scrollRef={scrollRef}
+    />
   );
 });
+
+function VirtualizedNotesList({
+  notes,
+  selecting,
+  selectedIds,
+  onOpen,
+  onSelect,
+  scrollRef,
+}: {
+  notes: Note[];
+  selecting: boolean;
+  selectedIds: Set<string>;
+  onOpen: (id: string) => void;
+  onSelect: (id: string, shiftKey: boolean) => void;
+  scrollRef?: React.RefObject<HTMLDivElement | null>;
+}) {
+  const rowVirtualizer = useVirtualizer({
+    count: notes.length,
+    getScrollElement: () => scrollRef?.current ?? null,
+    estimateSize: () => 52,
+    overscan: 8,
+  });
+
+  const items = rowVirtualizer.getVirtualItems();
+
+  return (
+    <div className="relative w-full max-w-full" style={{ height: rowVirtualizer.getTotalSize() }}>
+      {items.map((virtualRow: VirtualItem) => {
+        const note = notes[virtualRow.index];
+        if (!note) return null;
+        return (
+          <div
+            key={note.id}
+            data-index={virtualRow.index}
+            ref={rowVirtualizer.measureElement}
+            className="absolute left-0 top-0 w-full pb-0.5"
+            style={{ transform: `translateY(${virtualRow.start}px)` }}
+          >
+            <NoteCard
+              note={note}
+              onOpen={onOpen}
+              selecting={selecting}
+              selected={selectedIds.has(note.id)}
+              onSelect={onSelect}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default NotesList;
