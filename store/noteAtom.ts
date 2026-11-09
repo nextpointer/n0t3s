@@ -168,6 +168,10 @@ export const editAIDialogOpenAtom = atom<boolean>(false);
 /** @deprecated use editAIDialogOpenAtom */
 export const askDialogOpenAtom = editAIDialogOpenAtom;
 
+/** Selection captured when opening Edit with AI (apply edit to this range only). */
+export type EditAISelection = { text: string; start: number; end: number; base: string } | null;
+export const editAISelectionAtom = atom<EditAISelection>(null);
+
 /**
  * Controls save prompt dialog visibility
  * Shown when user tries to navigate with unsaved changes

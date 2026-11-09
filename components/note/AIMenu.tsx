@@ -1,4 +1,3 @@
-
 "use client";
 
 import { memo, useCallback } from "react";
@@ -6,6 +5,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/loader";
 import { SolarIcon, type IconId } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,10 +17,13 @@ import {
   aiLoadingAtom,
   aiEnabledAtom,
   editAIDialogOpenAtom,
+  editAISelectionAtom,
   contentAtom,
   checkUnsavedAtom,
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
+import { getNoteEditor } from "@/lib/editor-registry";
+import { captureEditorSelection, applyToSelection } from "@/lib/ai-selection";
 import toast from "react-hot-toast";
 
 const AI_ACTIONS: {
@@ -40,35 +43,64 @@ const AI_ACTIONS: {
 
 export const AIMenu = memo(function AIMenu({
   trigger = "menu",
+  className,
+  iconClassName,
 }: {
   /** "menu" = the bar-styled ghost button (header, keyboard strip); "bar"
       = the round icon button the note-actions bar composes from. */
   trigger?: "menu" | "bar";
+  className?: string;
+  iconClassName?: string;
 }) {
   const loading = useAtomValue(aiLoadingAtom);
   const aiEnabled = useAtomValue(aiEnabledAtom);
   const content = useAtomValue(contentAtom);
   const setContent = useSetAtom(contentAtom);
   const setEditAIOpen = useSetAtom(editAIDialogOpenAtom);
+  const setEditAISelection = useSetAtom(editAISelectionAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
   const { executeAction } = UseAIActions();
 
   const handleAction = useCallback(
     async (action: string) => {
-      if (!content.trim()) {
+      const sel = captureEditorSelection();
+      const target = sel ? sel.text : content;
+      if (!target.trim()) {
         toast.error("Not able to edit");
         return;
       }
+      // Restore visible selection while the action runs.
+      const ta = getNoteEditor()?.textarea;
+      if (sel && ta) {
+        try {
+          ta.focus({ preventScroll: true });
+          ta.setSelectionRange(sel.start, sel.end);
+        } catch {}
+      }
 
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      const result = await executeAction(action as any, content);
+      const result = await executeAction(action as any, target);
       if (result) {
-        setContent(result);
+        setContent(sel ? applyToSelection(sel, result) : result);
         checkUnsaved();
       }
     },
     [content, executeAction, setContent, checkUnsaved],
   );
+
+  const openEditAI = useCallback(() => {
+    const sel = captureEditorSelection();
+    setEditAISelection(sel);
+    // Keep selection visible by restoring focus/selection to the editor.
+    const ta = getNoteEditor()?.textarea;
+    if (sel && ta) {
+      try {
+        ta.focus({ preventScroll: true });
+        ta.setSelectionRange(sel.start, sel.end);
+      } catch {}
+    }
+    setEditAIOpen(true);
+  }, [setEditAIOpen, setEditAISelection]);
 
   if (!aiEnabled) return null;
 
@@ -79,9 +111,12 @@ export const AIMenu = memo(function AIMenu({
         aria-label="AI actions"
         title="AI actions"
         disabled={loading}
-        className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90 disabled:opacity-30"
+        className={cn(
+          "cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90 disabled:opacity-30",
+          className,
+        )}
       >
-        <SolarIcon icon="ai" className="size-[15px] pointer-events-none" />
+        <SolarIcon icon="ai" className={cn("size-[15px] pointer-events-none", iconClassName)} />
       </button>
     ) : (
       <Button
@@ -114,7 +149,8 @@ export const AIMenu = memo(function AIMenu({
           <div key={id}>
             {id === "edit" && <DropdownMenuSeparator className="my-1" />}
             <DropdownMenuItem
-              onClick={() => (id === "edit" ? setEditAIOpen(true) : handleAction(id))}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => (id === "edit" ? openEditAI() : handleAction(id))}
               disabled={loading}
             >
               <SolarIcon icon={icon} className="mr-2 h-4 w-4" />

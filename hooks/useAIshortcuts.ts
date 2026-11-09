@@ -9,6 +9,7 @@ import {
   aiEnabledAtom,
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
+import { captureEditorSelection, applyToSelection } from "@/lib/ai-selection";
 import toast from "react-hot-toast";
 
 export function UseAIShortcuts() {
@@ -22,14 +23,16 @@ export function UseAIShortcuts() {
 
   const handleAIAction = useCallback(
     async (action: string) => {
-      if (!content?.trim()) {
+      const sel = captureEditorSelection();
+      const target = sel ? sel.text : content;
+      if (!target?.trim()) {
         toast.error("Not able to edit");
         return;
       }
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      const result = await executeAction(action as any, content);
+      const result = await executeAction(action as any, target);
       if (result) {
-        setContent(result);
+        setContent(sel ? applyToSelection(sel, result) : result);
         checkUnsaved();
       }
     },

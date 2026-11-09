@@ -19,6 +19,7 @@ import { useTheme } from "next-themes";
 import { EditorToolbar, type ToolbarEditor } from "./EditorToolbar";
 import { TagAutocomplete } from "./TagAutocomplete";
 import { registerNoteEditor } from "@/lib/editor-registry";
+import { rememberEditorSelection } from "@/lib/ai-selection";
 
 interface NoteContentProps {
   initialContent: string;
@@ -336,6 +337,25 @@ export const NoteContent = memo(
 
     // True while the software keyboard covers part of the layout viewport.
     const [keyboardOpen, setKeyboardOpen] = useState(false);
+    // Bumped when AI/external content is applied to fade the content in.
+    const [aiFadeKey, setAiFadeKey] = useState(0);
+    useEffect(() => {
+      if (aiFadeKey === 0) return;
+      const el = wrapperRef.current;
+      if (!el) return;
+      el.classList.remove("animate-ai-fade");
+      void el.offsetWidth;
+      el.classList.add("animate-ai-fade");
+      const onEnd = () => el.classList.remove("animate-ai-fade");
+      el.addEventListener("animationend", onEnd, { once: true });
+      return () => el.removeEventListener("animationend", onEnd);
+    }, [aiFadeKey]);
+    // Remember selection so AI actions can target it after focus moves to menus/dialogs.
+    useEffect(() => {
+      const onSelectionChange = () => rememberEditorSelection();
+      document.addEventListener("selectionchange", onSelectionChange);
+      return () => document.removeEventListener("selectionchange", onSelectionChange);
+    }, []);
 
     const syncToContent = useSetAtom(syncEditorToContentAtom);
     const externalContent = useAtomValue(contentAtom);
@@ -842,6 +862,7 @@ export const NoteContent = memo(
         instance.setValue(externalContent);
       }
       contentRef.current = externalContent;
+      setAiFadeKey((k) => k + 1);
       requestAnimationFrame(() => {
         isExternalUpdateRef.current = false;
       });

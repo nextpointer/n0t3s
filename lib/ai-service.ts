@@ -9,7 +9,9 @@ import { generateText } from "ai";
 const SYSTEM_PROMPT = `You are a fast, precise writing assistant inside a notes app (Notion-like quality).
 
 OUTPUT (strict):
-- Return ONLY the final markdown content. No preamble, no postamble, no explanations.
+- Return ONLY the final content. Output the content itself and nothing else.
+- No preamble of any kind: never write "Here is...", "Here it is", "This is the result", "Result:", "Edited:", "Revised version:", or similar.
+- No postamble or explanations.
 - Never wrap the whole response in code fences.
 - Do not add headings/labels unless they existed or are essential to the requested structure.
 - Preserve meaning, key details, names, numbers, links, and existing markdown unless the task requires changes.
@@ -82,29 +84,45 @@ const responseCache = new LRUCache<string, string>({
 const MODEL_NAME = process.env.GENAI_MODEL ?? "llama-3.1-8b-instant";
 
 // ─── Output cleaner ───────────────────────────────────────────────────────────
+function stripPreamble(text: string): string {
+  let out = text.trim();
+  // Strip common leading labels/preambles, possibly across a first blank line.
+  const patterns = [
+    /^(?:here(?:'s| is| you go)(?:\s+the|\s+your|\s+an?)?[^:\n]*|this is(?:\s+the)?[^:\n]*|sure[!,]?|certainly[!,]?|of course[!,]?|absolutely[!,]?)[\s:!\-–—]*\n?/i,
+    /^(?:(?:the\s+)?(?:edited|revised|updated|rewritten|summarized|expanded|simplified|result(?:ing)?|final|new|output|response|version|note|text|content)(?:\s+(?:version|result|output|text|note|content))?)\s*[:\-–—]\s*\n?/i,
+  ];
+  for (let i = 0; i < 3; i++) {
+    const before = out;
+    for (const re of patterns) out = out.replace(re, "").trimStart();
+    if (out === before) break;
+  }
+  return out;
+}
+
 function cleanOutput(text: string): string {
   if (!text) return "";
 
-  return (
-    text
-      .trim()
-      // Remove markdown code fences (```markdown ... ``` or ``` ... ```)
-      .replace(/^```(?:markdown|md)?\s*\n/i, "")
-      .replace(/\n```\s*$/i, "")
-      // Remove common preamble patterns
-      .replace(
-        /^(?:Here(?:'s| is)|Sure[!,]?|Certainly[!,]?|Of course[!,]?|(?:The\s+)?(?:Summary|Answer|Output|Result|Response))\s*[:!]?\s*/i,
-        "",
-      )
-      // Remove trailing meta-commentary
-      .replace(
-        /\n+(?:Let me know|Hope this|Feel free|I(?:'ve| have) (?:rewritten|summarized|expanded|simplified|converted|fixed))[^\n]*/gi,
-        "",
-      )
-      // Remove wrapping quotes (only if they wrap the ENTIRE output)
-      .replace(/^"([\s\S]+)"$/, "$1")
-      .trim()
-  );
+  let out = text
+    .trim()
+    // Remove markdown code fences wrapping the whole response.
+    .replace(/^```(?:markdown|md|text)?\s*\n/i, "")
+    .replace(/\n```\s*$/i, "")
+    .trim();
+
+  out = stripPreamble(out);
+
+  out = out
+    // Remove trailing meta-commentary
+    .replace(
+      /\n+(?:Let me know|Hope this|Feel free|If you(?:'d| would) like|I(?:'ve| have) (?:rewritten|summarized|expanded|simplified|converted|fixed|edited|updated))[^\n]*/gi,
+      "",
+    )
+    // Remove wrapping quotes (only if they wrap the ENTIRE output)
+    .replace(/^"([\s\S]+)"$/, "$1")
+    .replace(/^'([\s\S]+)'$/, "$1")
+    .trim();
+
+  return stripPreamble(out);
 }
 
 //  Main export
