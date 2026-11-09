@@ -82,5 +82,16 @@ export function useNoteOperations() {
     };
   }, [title, content, autoSave, unsaved, note, save]);
 
+  // Warn before browser-level navigation when there are unsaved changes.
+  useEffect(() => {
+    if (!unsaved) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [unsaved]);
+
   return { save };
 }

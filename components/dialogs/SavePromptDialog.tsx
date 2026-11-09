@@ -18,7 +18,7 @@ import {
 import { transitionPush } from "@/lib/view-transition";
 
 interface SavePromptDialogProps {
-  save: (isAutoSave?: boolean) => void;
+  save: (isAutoSave?: boolean) => void | Promise<void>;
 }
 
 export const SavePromptDialog = memo(function SavePromptDialog({ save }: SavePromptDialogProps) {
@@ -27,13 +27,15 @@ export const SavePromptDialog = memo(function SavePromptDialog({ save }: SavePro
   const router = useRouter();
 
   // handler for save the unsaved changes
-  const handleSave = useCallback(() => {
-    save(false);
-    if (target) {
-      transitionPush(router, target);
+  const handleSave = useCallback(async () => {
+    try {
+      await save(false);
+    } finally {
+      if (target) {
+        transitionPush(router, target);
+      }
+      setOpen(false);
     }
-
-    setOpen(false);
   }, [save, target, router, setOpen]);
 
   // handler for discard
