@@ -19,6 +19,7 @@ import {
 import { SolarIcon } from "@/lib/icons";
 import { AIMenu } from "./AIMenu";
 import { ConfigMenu } from "./ConfigMenu";
+import { transitionPush } from "@/lib/view-transition";
 
 interface NoteActionsProps {
   save: (isAutoSave?: boolean) => void;
@@ -136,7 +137,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
       {!zen && (
         <button
           type="button"
-          onClick={() => router.push("/help")}
+          onClick={() => transitionPush(router, "/help")}
           aria-label="Help and shortcuts"
           title="Help & shortcuts (?)"
           className="cursor-pointer rounded-full p-2.5 md:mt-10 md:p-1 text-foreground/45 transition-colors hover:text-foreground/90"

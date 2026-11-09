@@ -15,6 +15,7 @@ import {
   savePromptDialogOpenAtom,
   navigationTargetAtom,
 } from "@/store/noteAtom";
+import { transitionPush } from "@/lib/view-transition";
 
 interface SavePromptDialogProps {
   save: (isAutoSave?: boolean) => void;
@@ -29,16 +30,18 @@ export const SavePromptDialog = memo(function SavePromptDialog({ save }: SavePro
   const handleSave = useCallback(() => {
     save(false);
     if (target) {
-      router.push(target);
+      transitionPush(router, target);
     }
+
     setOpen(false);
   }, [save, target, router, setOpen]);
 
   // handler for discard
   const handleDiscard = useCallback(() => {
     if (target) {
-      router.push(target);
+      transitionPush(router, target);
     }
+
     setOpen(false);
   }, [target, router, setOpen]);
 

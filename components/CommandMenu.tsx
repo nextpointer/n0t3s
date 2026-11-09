@@ -25,9 +25,12 @@ import {
   deleteDialogOpenAtom,
   exportDialogOpenAtom,
   editAIDialogOpenAtom,
+  editAISelectionAtom,
   zenMode,
   persistZenMode,
 } from "@/store/noteAtom";
+import { getNoteEditor } from "@/lib/editor-registry";
+import { transitionPush } from "@/lib/view-transition";
 
 interface Props {
   open: boolean;
@@ -114,6 +117,7 @@ export const CommandMenu = React.memo(function CommandMenu({
   const setDeleteOpen = useSetAtom(deleteDialogOpenAtom);
   const setExportOpen = useSetAtom(exportDialogOpenAtom);
   const setEditAIOpen = useSetAtom(editAIDialogOpenAtom);
+  const setEditAISelection = useSetAtom(editAISelectionAtom);
   const setZenMode = useSetAtom(zenMode);
 
   /**
@@ -290,8 +294,8 @@ export const CommandMenu = React.memo(function CommandMenu({
   const run = useCallback(
     (item: Item) => {
       setOpen(false);
-      if (item.kind === "note" && item.noteId) { router.push(`/note/${item.noteId}`); return; }
-      if (item.kind === "tag" && item.tag) { router.push(`/?tag=${item.tag}`); return; }
+      if (item.kind === "note" && item.noteId) { transitionPush(router, `/note/${item.noteId}`); return; }
+      if (item.kind === "tag" && item.tag) { transitionPush(router, `/?tag=${item.tag}`); return; }
       if (item.id.startsWith("ins:")) {
         // NoteContent owns the insertion so the caret and preview mode
         // handling stay beside the editor it mutates.
@@ -304,22 +308,35 @@ export const CommandMenu = React.memo(function CommandMenu({
         case "new": {
           import("@/lib/storage").then(async ({ createNote }) => {
             const note = await createNote();
-            router.push(`/note/${note.id}`);
+            transitionPush(router, `/note/${note.id}`);
           });
           break;
         }
         case "save": window.dispatchEvent(new CustomEvent("note:save")); break;
         case "delete": setDeleteOpen(true); break;
         case "export": setExportOpen(true); break;
-        case "ai:edit": setEditAIOpen(true); break;
-        case "help": router.push("/help"); break;
+        case "ai:edit": {
+          const ta = getNoteEditor()?.textarea;
+          if (ta && ta.selectionStart !== ta.selectionEnd) {
+            const start = ta.selectionStart;
+            const end = ta.selectionEnd;
+            const base = ta.value;
+            const text = base.slice(start, end);
+            setEditAISelection(text.trim() ? { text, start, end, base } : null);
+          } else {
+            setEditAISelection(null);
+          }
+          setEditAIOpen(true);
+          break;
+        }
+        case "help": transitionPush(router, "/help"); break;
         case "theme": { const d = document.documentElement.classList.contains("dark"); setTheme(d ? "light" : "dark"); break; }
         case "zen": setZenMode((p) => { const n = !p; persistZenMode(n); return n; }); break;
         case "readmode": window.dispatchEvent(new CustomEvent("note:readmode")); break;
         default: if (item.id.startsWith("ai:")) window.dispatchEvent(new CustomEvent("note:ai", { detail: { action: item.id.replace("ai:", "") } }));
       }
     },
-    [router, setOpen, setDeleteOpen, setExportOpen, setEditAIOpen, setZenMode, setTheme],
+    [router, setOpen, setDeleteOpen, setExportOpen, setEditAIOpen, setEditAISelection, setZenMode, setTheme],
   );
 
   // Keyboard — reads lenRef.current, never recreated

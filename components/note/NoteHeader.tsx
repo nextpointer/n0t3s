@@ -13,6 +13,7 @@ import {
   navigationTargetAtom,
   discardEmptyNoteAtom,
 } from "@/store/noteAtom";
+import { transitionBack } from "@/lib/view-transition";
 
 /**
  * Top bar: a back arrow on the left, undo/redo and Settings on the right.
@@ -30,14 +31,14 @@ export const NoteHeader = memo(function NoteHeader() {
 
   const handleBack = useCallback(async () => {
     if (await discardIfEmpty()) {
-      router.push("/");
+      transitionBack(router, "/");
       return;
     }
     if (unsaved && !autoSave) {
       setTarget("/");
       setShowPrompt(true);
     } else {
-      router.push("/");
+      transitionBack(router, "/");
     }
   }, [unsaved, autoSave, router, setTarget, setShowPrompt, discardIfEmpty]);
 

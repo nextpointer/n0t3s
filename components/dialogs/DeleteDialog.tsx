@@ -13,6 +13,7 @@ import {
 import { deleteDialogOpenAtom, currentNoteAtom } from "@/store/noteAtom";
 import { deleteNote } from "@/lib/storage";
 import toast from "react-hot-toast";
+import { transitionPush } from "@/lib/view-transition";
 
 export const DeleteDialog = memo(function DeleteDialog() {
   const [open, setOpen] = useAtom(deleteDialogOpenAtom);
@@ -25,7 +26,7 @@ export const DeleteDialog = memo(function DeleteDialog() {
     try {
       await deleteNote(note.id);
       setOpen(false);
-      router.push("/");
+      transitionPush(router, "/");
       toast.success("Note deleted successfully", { id: "deleted" });
     } catch {
       toast.error("Failed to delete note", { id: "error" });

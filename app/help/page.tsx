@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { ReadOnlyEditor } from "@/components/ReadOnlyEditor";
 import { Button } from "@/components/ui/button";
 import { SolarIcon } from "@/lib/icons";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { transitionBack } from "@/lib/view-transition";
 
 const HELP_CONTENT = `
 # N0T3S Manual
@@ -86,61 +85,26 @@ Settings (top bar) → Export/Delete. The top bar carries back, undo/redo and Se
 
 export default function HelpPage() {
   const router = useRouter();
-  const [view, setView] = useState<"preview" | "markdown">("preview");
   const content = HELP_CONTENT.trim();
 
   return (
     <div className="flex h-full w-full flex-col selection:bg-primary/30">
       <div className="mx-auto flex w-full flex-1 flex-col md:w-5xl md:border-l-1 md:border-r-1 md:border-dashed">
-        <header className="flex h-10 shrink-0 items-center justify-between border-b border-dashed px-4">
-          <div className="flex items-center">
-            <Button
-              onClick={() => router.back()}
-              variant="ghost"
-              size="sm"
-              className="inline-flex h-7 items-center gap-1.5 rounded-sm px-2 font-mono text-xs text-muted-foreground hover:text-foreground"
-            >
-              <SolarIcon icon="back" className="h-3 w-3" />
-              back
-            </Button>
-            <span className="ml-3 font-mono text-xs text-foreground/30">manual.md</span>
-          </div>
-          <div className="flex items-center gap-1 rounded-lg bg-muted/40 p-0.5">
-            <button
-              type="button"
-              onClick={() => setView("preview")}
-              className={cn(
-                "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors",
-                view === "preview" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-              )}
-              aria-pressed={view === "preview"}
-              title="Preview"
-            >
-              <SolarIcon icon="read" className="size-3.5" /> Preview
-            </button>
-            <button
-              type="button"
-              onClick={() => setView("markdown")}
-              className={cn(
-                "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors",
-                view === "markdown" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-              )}
-              aria-pressed={view === "markdown"}
-              title="Markdown"
-            >
-              <SolarIcon icon="plain" className="size-3.5" /> Markdown
-            </button>
-          </div>
+        <header className="flex h-10 shrink-0 items-center border-b border-dashed px-4">
+          <Button
+            onClick={() => transitionBack(router)}
+            variant="ghost"
+            size="sm"
+            className="inline-flex h-7 items-center gap-1.5 rounded-sm px-2 font-mono text-xs text-muted-foreground hover:text-foreground"
+          >
+            <SolarIcon icon="back" className="h-3 w-3" />
+            back
+          </Button>
+          <span className="ml-3 font-mono text-xs text-foreground/30">manual.md</span>
         </header>
 
         <main className="flex-1 px-6 py-8 md:px-8">
-          {view === "preview" ? (
-            <ReadOnlyEditor content={content} />
-          ) : (
-            <pre className="whitespace-pre-wrap break-words font-mono text-[13px] leading-7 text-foreground/85">
-              {content}
-            </pre>
-          )}
+          <ReadOnlyEditor content={content} />
         </main>
       </div>
     </div>

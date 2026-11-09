@@ -15,6 +15,7 @@ import NotesList from "@/components/note/NoteList";
 import { CommandMenu } from "@/components/CommandMenu";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { SolarIcon } from "@/lib/icons";
+import { transitionPush } from "@/lib/view-transition";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,7 +78,7 @@ export default function Home() {
 
   const handleNewNote = useCallback(async () => {
     const note = await createNote();
-    router.push(`/note/${note.id}`);
+    transitionPush(router, `/note/${note.id}`);
   }, [router]);
 
   const selectedCount = selectedIds.size;

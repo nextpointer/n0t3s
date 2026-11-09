@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useCallback, useEffect, useRef } from "react";
+import { memo, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
@@ -167,23 +167,28 @@ function FullScreenDialog({
 }
 
 function DiffView({ ops }: { ops: DiffOp[] }) {
-  if (ops.length === 0) return <div className="px-1 text-[13px] text-muted-foreground/45">No changes.</div>;
+  if (ops.length === 0) {
+    return <div className="px-3 py-2 text-[12px] text-muted-foreground/50">No changes</div>;
+  }
   return (
-    <div className="overflow-x-auto font-mono text-[12px] leading-6">
-      {ops.map((op, i) => (
-        <div
-          key={i}
-          className={cn(
-            "grid grid-cols-[16px_1fr] gap-2 px-1 py-px whitespace-pre-wrap break-words",
-            op.type === "add" && "text-emerald-600 dark:text-emerald-400",
-            op.type === "del" && "text-rose-500/90 dark:text-rose-400/90",
-            op.type === "ctx" && "text-foreground/40",
-          )}
-        >
-          <span className="select-none">{op.type === "add" ? "+" : op.type === "del" ? "-" : " "}</span>
-          <span className={op.type === "del" ? "line-through decoration-rose-500/30" : ""}>{op.text || " "}</span>
-        </div>
-      ))}
+    <div className="font-mono text-[12px] leading-5">
+      {ops.map((op, i) => {
+        const prefix = op.type === "add" ? "+" : op.type === "del" ? "-" : " ";
+        return (
+          <div
+            key={i}
+            className={cn(
+              "whitespace-pre-wrap break-words px-3 py-px",
+              op.type === "add" && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+              op.type === "del" && "bg-red-500/10 text-red-700 dark:text-red-400",
+              op.type === "ctx" && "text-foreground/60",
+            )}
+          >
+            <span className="mr-2 inline-block w-3 select-none opacity-60">{prefix}</span>
+            {op.text || "\u00a0"}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -194,8 +199,9 @@ export const EditWithAIDialog = memo(function EditWithAIDialog() {
   const setContent = useSetAtom(contentAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
   const [instruction, setInstruction] = useState("");
-  // `result` is the editable proposed text once generated.
+  const [original, setOriginal] = useState("");
   const [result, setResult] = useState<string | null>(null);
+  const [resultKey, setResultKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const isPhone = useIsPhone();
@@ -206,30 +212,38 @@ export const EditWithAIDialog = memo(function EditWithAIDialog() {
     setOpen(false);
     setInstruction("");
     setResult(null);
+    setOriginal("");
     setError(null);
   }, [setOpen]);
 
   useEffect(() => {
     if (open) {
+      setOriginal(content);
+      setResult(null);
+      setError(null);
       const t = setTimeout(() => inputRef.current?.focus(), 80);
       return () => clearTimeout(t);
     }
-  }, [open]);
+  }, [open, content]);
 
   const run = useCallback(async () => {
     const inst = instruction.trim();
     if (!inst) return;
-    if (!content.trim()) {
+    if (!original.trim()) {
       setError("Not able to edit");
       return;
     }
     setLoading(true);
     setError(null);
-    const out = await executeAction("edit", content, inst);
-    if (out != null) setResult(out);
-    else setError("Not able to edit");
+    const out = await executeAction("edit", original, inst);
+    if (out != null) {
+      setResult(out);
+      setResultKey((k) => k + 1);
+    } else {
+      setError("Not able to edit");
+    }
     setLoading(false);
-  }, [instruction, content, executeAction]);
+  }, [instruction, original, executeAction]);
 
   const apply = useCallback(() => {
     if (result == null) return;
@@ -238,42 +252,48 @@ export const EditWithAIDialog = memo(function EditWithAIDialog() {
     close();
   }, [result, setContent, checkUnsaved, close]);
 
-  const ops = result != null ? diffLines(content, result) : null;
   const modKey = typeof navigator !== "undefined" && /Mac/.test(navigator.platform) ? "⌘" : "Ctrl";
+  const hasResult = result != null;
+  const ops = useMemo(() => (hasResult ? diffLines(original, result ?? "") : []), [hasResult, original, result]);
 
-  // Scrollable top: diff + editable result. Sticky bottom: prompt + actions.
   const body = (
     <div className="flex min-h-0 flex-1 flex-col">
       <div
-        className="min-h-0 flex-1 overflow-y-auto px-5 pb-3 [scrollbar-gutter:stable]"
+        className={cn(
+          "min-h-0 flex-1 px-5 pb-3 [scrollbar-gutter:stable]",
+          hasResult ? "flex flex-col overflow-hidden" : "overflow-y-auto",
+        )}
         style={{ scrollbarWidth: "thin" }}
       >
-        {loading && ops == null ? (
+        {loading && !hasResult ? (
           <div className="flex items-center gap-2 pt-6 text-[13px] text-muted-foreground/50">
             <Loader className="size-3.5" /> Working…
           </div>
-        ) : error && ops == null ? (
+        ) : error && !hasResult ? (
           <div className="pt-6 text-[13px] text-muted-foreground/55">{error}</div>
-        ) : !content.trim() && ops == null ? (
+        ) : !original.trim() && !hasResult ? (
           <div className="pt-6 text-[13px] text-muted-foreground/50">Not able to edit</div>
-        ) : ops != null ? (
-          <div className="space-y-5 pt-1">
-            <DiffView ops={ops} />
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[11px] font-medium tracking-wide text-muted-foreground/45">Result</span>
-                <span className="text-[10px] text-muted-foreground/30">editable</span>
-              </div>
-              <textarea
-                value={result ?? ""}
-                onChange={(e) => setResult(e.target.value)}
-                spellCheck={false}
-                placeholder="Result…"
-                className="min-h-[160px] w-full resize-y rounded-2xl bg-foreground/[0.03] px-4 py-3.5 font-mono text-[12.5px] leading-relaxed text-foreground/85 outline-none ring-1 ring-transparent transition-all placeholder:text-muted-foreground/30 focus:bg-foreground/[0.045] focus:ring-foreground/[0.06]"
-              />
+        ) : hasResult ? (
+          <div key={resultKey} className="animate-ai-fade flex h-full min-h-0 flex-1 flex-col gap-2 pt-1">
+            <div className="min-h-0 max-h-[40%] shrink-0 overflow-y-auto rounded-2xl bg-foreground/[0.025] [scrollbar-width:thin]">
+              <DiffView ops={ops} />
+            </div>
+            <textarea
+              value={result ?? ""}
+              onChange={(e) => setResult(e.target.value)}
+              spellCheck={false}
+              placeholder="Result…"
+              className="h-full min-h-[12rem] w-full flex-1 resize-none rounded-2xl bg-foreground/[0.03] px-4 py-3.5 text-[13.5px] leading-relaxed text-foreground/90 outline-none ring-1 ring-transparent transition-all placeholder:text-muted-foreground/30 focus:bg-foreground/[0.045] focus:ring-foreground/[0.06]"
+            />
+          </div>
+        ) : (
+          <div className="pt-2">
+            <div className="mb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground/40">Note</div>
+            <div className="max-h-48 overflow-y-auto rounded-2xl bg-foreground/[0.025] px-3.5 py-3 text-[12.5px] leading-relaxed text-foreground/55 whitespace-pre-wrap [scrollbar-width:thin]">
+              {original.length > 800 ? `${original.slice(0, 800)}…` : original}
             </div>
           </div>
-        ) : null}
+        )}
       </div>
 
       <div className="shrink-0 bg-gradient-to-t from-background via-background to-background/85 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
@@ -300,12 +320,12 @@ export const EditWithAIDialog = memo(function EditWithAIDialog() {
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              {ops != null && (
+              {hasResult && (
                 <Button type="button" variant="ghost" size="sm" className="h-8 rounded-full px-3.5 text-xs text-muted-foreground hover:text-foreground" onClick={close} disabled={loading}>
                   Discard
                 </Button>
               )}
-              {ops != null && (
+              {hasResult && (
                 <Button type="button" size="sm" className="h-8 rounded-full px-4 text-xs shadow-none" onClick={apply} disabled={loading}>
                   Apply
                 </Button>
@@ -313,14 +333,14 @@ export const EditWithAIDialog = memo(function EditWithAIDialog() {
               <Button
                 type="button"
                 size="sm"
-                variant={ops != null ? "secondary" : "default"}
+                variant={hasResult ? "secondary" : "default"}
                 onClick={run}
-                disabled={loading || !instruction.trim() || !content.trim()}
+                disabled={loading || !instruction.trim() || !original.trim()}
                 className="h-8 rounded-full px-4 text-xs shadow-none"
               >
                 {loading ? (
                   <span className="inline-flex items-center gap-2"><Loader className="size-3.5" /> Working</span>
-                ) : ops != null ? "Retry" : "Generate"}
+                ) : hasResult ? "Retry" : "Generate"}
               </Button>
             </div>
           </div>

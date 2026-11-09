@@ -7,6 +7,7 @@ import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
 import { createNote } from "@/lib/storage";
 import { getNoteTags } from "@/lib/tag-syntax";
+import { transitionPush } from "@/lib/view-transition";
 
 type Props = {
   notes: Note[];
@@ -98,12 +99,12 @@ const NotesList = React.memo(function NotesList({
   }, [selecting, onSelectionChange]);
 
   const navigateToNote = useCallback((id: string) => {
-    router.push(`/note/${id}`);
+    transitionPush(router, `/note/${id}`);
   }, [router]);
 
   const handleNewNote = useCallback(async () => {
     const note = await createNote();
-    router.push(`/note/${note.id}`);
+    transitionPush(router, `/note/${note.id}`);
   }, [router]);
 
   if (loading) {
@@ -147,7 +148,7 @@ const NotesList = React.memo(function NotesList({
         </h2>
 
         <div className="flex flex-row items-center justify-center w-full gap-3 mt-2 sm:w-auto sm:flex-row">
-          <Button variant="outline" onClick={() => router.push("/help")} className="w-auto shadow-none">
+          <Button variant="outline" onClick={() => transitionPush(router, "/help")} className="w-auto shadow-none">
             Help : ?
           </Button>
           <Button onClick={handleNewNote} className="w-auto transition-shadow sm:w-auto shadow-primary/20 hover:shadow-primary/40">

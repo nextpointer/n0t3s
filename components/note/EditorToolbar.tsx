@@ -12,8 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SolarIcon, type IconId } from "@/lib/icons";
-import { autoSaveAtom, zenMode, persistZenMode, search } from "@/store/noteAtom";
+import { autoSaveAtom, aiEnabledAtom, zenMode, persistZenMode, search } from "@/store/noteAtom";
 import { cn } from "@/lib/utils";
+import { AIMenu } from "./AIMenu";
 
 /** Minimal shape of the OverType instance this toolbar drives. */
 export interface ToolbarEditor {
@@ -91,6 +92,7 @@ export const EditorToolbar = memo(function EditorToolbar({
   const activeRef = useRef<string[]>([]);
   const [showFormats, setShowFormats] = useState(false);
   const autoSave = useAtomValue(autoSaveAtom);
+  const aiEnabled = useAtomValue(aiEnabledAtom);
   const [zen, setZenMode] = useAtom(zenMode);
   const setSearchOpen = useSetAtom(search);
 
@@ -278,8 +280,10 @@ export const EditorToolbar = memo(function EditorToolbar({
     </>
   );
 
-  // Phone actions: no repeats of top/bottom chrome (no undo/redo). Save only
-  // when autosave is off; plus command palette, zen, preview/read.
+  // Phone actions (middle-aligned, compact like format actions): save if manual,
+  // command palette, zen, preview/read, and AI when enabled.
+  const actionBtn =
+    "flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground/65 transition-colors hover:bg-accent hover:text-foreground";
   const actionButtons = (
     <>
       {!autoSave && (
@@ -289,9 +293,9 @@ export const EditorToolbar = memo(function EditorToolbar({
           aria-label="Save"
           onMouseDown={keepFocus}
           onClick={() => window.dispatchEvent(new CustomEvent("note:save"))}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+          className={actionBtn}
         >
-          <SolarIcon icon="save" className="size-[17px]" />
+          <SolarIcon icon="save" className="size-[16px]" />
         </button>
       )}
       <button
@@ -300,9 +304,9 @@ export const EditorToolbar = memo(function EditorToolbar({
         aria-label="Command palette"
         onMouseDown={keepFocus}
         onClick={() => setSearchOpen("commands")}
-        className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+        className={actionBtn}
       >
-        <SolarIcon icon="search" className="size-[17px]" />
+        <SolarIcon icon="search" className="size-[16px]" />
       </button>
       <button
         type="button"
@@ -315,12 +319,9 @@ export const EditorToolbar = memo(function EditorToolbar({
           setZenMode(next);
           persistZenMode(next);
         }}
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-accent hover:text-foreground",
-          zen ? "text-foreground" : "text-muted-foreground/70",
-        )}
+        className={cn(actionBtn, zen && "text-foreground")}
       >
-        <SolarIcon icon={zen ? "zenExit" : "zen"} className="size-[17px]" />
+        <SolarIcon icon={zen ? "zenExit" : "zen"} className="size-[16px]" />
       </button>
       <button
         type="button"
@@ -329,13 +330,17 @@ export const EditorToolbar = memo(function EditorToolbar({
         aria-pressed={viewMode === "preview"}
         onMouseDown={keepFocus}
         onClick={() => switchView(viewMode === "preview" ? "edit" : "preview")}
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-accent hover:text-foreground",
-          viewMode === "preview" ? "text-foreground" : "text-muted-foreground/70",
-        )}
+        className={cn(actionBtn, viewMode === "preview" && "text-foreground")}
       >
-        <SolarIcon icon={viewMode === "preview" ? "edit" : "read"} className="size-[17px]" />
+        <SolarIcon icon={viewMode === "preview" ? "edit" : "read"} className="size-[16px]" />
       </button>
+      {aiEnabled && (
+        <AIMenu
+          trigger="bar"
+          className={cn(actionBtn, "p-0 md:mt-0 md:p-0")}
+          iconClassName="size-[16px]"
+        />
+      )}
     </>
   );
 
@@ -370,7 +375,7 @@ export const EditorToolbar = memo(function EditorToolbar({
           )}
           aria-hidden={showFormats}
         >
-          {!showFormats && <div className="flex w-full items-center justify-evenly gap-1">{actionButtons}</div>}
+          {!showFormats && <div className="flex w-full items-center justify-center gap-2">{actionButtons}</div>}
         </div>
 
         {/* Format layer slides in from the right, overlapping actions. */}

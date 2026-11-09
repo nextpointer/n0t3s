@@ -117,11 +117,11 @@ const NoteCard = React.memo(function NoteCard({
         onPointerCancel={clearPress}
         onPointerLeave={clearPress}
       >
-        <div className="flex w-full items-center gap-4">
-          <h3 className="min-w-0 flex-1 truncate pr-2 text-[13px] font-medium tracking-tight text-foreground/90 sm:text-[14px]">
+        <div className="flex w-full flex-col items-center justify-center gap-0.5 text-center">
+          <h3 className="w-full truncate text-[13px] font-medium tracking-tight text-foreground/90 sm:text-[14px]">
             {note.title || "Untitled"}
           </h3>
-          <div className="ml-auto flex shrink-0 items-center justify-end gap-3 text-right text-[11px] tabular-nums text-muted-foreground/45">
+          <div className="flex shrink-0 items-center justify-center gap-2 text-[11px] tabular-nums text-muted-foreground/45">
             <span className="whitespace-nowrap">{(note.content?.length ?? 0).toLocaleString()} chars</span>
             <span aria-hidden className="text-muted-foreground/25">·</span>
             <span className="whitespace-nowrap">
