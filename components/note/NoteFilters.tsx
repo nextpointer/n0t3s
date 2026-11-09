@@ -134,7 +134,7 @@ const NotesFilters = React.memo(function NotesFilters({
         </SelectContent>
       </Select>
 
-      <div className="flex h-9 shrink-0 items-center rounded-xl border border-input bg-transparent p-0.5 sm:h-10" role="group" aria-label="View mode">
+      <div className="flex h-9 shrink-0 items-center rounded-md border border-input bg-transparent p-0.5 sm:h-10" role="group" aria-label="View mode">
         {VIEW_OPTIONS.map((opt) => (
           <button
             key={opt.id}
@@ -144,7 +144,7 @@ const NotesFilters = React.memo(function NotesFilters({
             aria-pressed={view === opt.id}
             title={opt.label}
             className={cn(
-              "flex h-full w-8 items-center justify-center rounded-[10px] transition-colors sm:w-9",
+              "flex h-full w-8 items-center justify-center rounded-[5px] transition-colors sm:w-9",
               view === opt.id
                 ? "bg-foreground/[0.08] text-foreground"
                 : "text-muted-foreground/60 hover:text-foreground",

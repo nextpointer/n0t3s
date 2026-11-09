@@ -174,7 +174,7 @@ const NotesList = React.memo(function NotesList({
 
   if (view === "grid") {
     return (
-      <div className="grid grid-cols-1 gap-3 px-4 pb-3 sm:grid-cols-2 sm:px-1 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 px-4 pb-3 sm:gap-3 sm:px-1 lg:grid-cols-3">
         {sortedNotes.map((note) => (
           <NoteCard
             key={note.id}
@@ -192,7 +192,7 @@ const NotesList = React.memo(function NotesList({
 
   if (view === "masonry") {
     return (
-      <div className="px-4 pb-3 sm:columns-2 sm:px-1 lg:columns-3">
+      <div className="columns-2 gap-2 px-4 pb-3 sm:gap-3 sm:px-1 lg:columns-3">
         {sortedNotes.map((note) => (
           <NoteCard
             key={note.id}
