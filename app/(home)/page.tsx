@@ -140,7 +140,7 @@ export default function Home() {
 
           {/* Search + filters */}
           {!loading && notes.length > 0 && (
-            <div className="mt-5 flex w-full shrink-0 items-center gap-2 sm:mt-6">
+            <div className="mt-8 flex w-full shrink-0 items-center gap-2 sm:mt-12">
               <NotesFilters
                 loading={loading}
                 allTags={allTags}
@@ -153,7 +153,7 @@ export default function Home() {
             </div>
           )}
           {(loading || notes.length === 0) && (
-            <div className="mt-5 sm:mt-6" />
+            <div className="mt-8 sm:mt-12" />
           )}
 
           <CommandMenu open={searchOpen} setOpen={setSearchOpen} notes={notes} noteId={null} />
