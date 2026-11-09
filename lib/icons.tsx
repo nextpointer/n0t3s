@@ -2,15 +2,15 @@
 
 import { Icon, addCollection, type IconifyJSON } from "@iconify/react";
 import bundle from "./iconify-bundle.json";
+import lineMdBundle from "./iconify-bundle-line-md.json";
 
-// The whole app draws from one offline Solar duotone subset (see
-// iconify-bundle.json). Registering it once at module scope means no
-// runtime fetches to api.iconify.design ever happen — the icon data ships
-// in the bundle, which is what keeps icons rendering with no network and
-// inside the offline PWA shell.
+// The whole app draws from offline Iconify bundles (Solar + selected extras).
+// Registering once at module scope means no runtime fetches to
+// api.iconify.design ever happen — icon data ships in the bundle.
 let registered = false;
 if (!registered) {
   addCollection(bundle as unknown as IconifyJSON);
+  addCollection(lineMdBundle as unknown as IconifyJSON);
   registered = true;
 }
 
@@ -58,7 +58,7 @@ export const UI = {
   moon: "solar:moon-stars-bold-duotone",
   // misc / chrome
   add: "solar:add-circle-bold-duotone",
-  github: "solar:code-circle-bold-duotone",
+  github: "line-md:star-pulsating-filled-loop",
   arrowRight: "solar:arrow-right-bold-duotone",
   fileText: "solar:file-text-bold-duotone",
   fileCode: "solar:file-code-bold-duotone",
