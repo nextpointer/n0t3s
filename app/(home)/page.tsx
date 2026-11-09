@@ -9,6 +9,7 @@ import { Note } from "@/lib/types";
 import { ModeToggle } from "@/components/Theme-Mode";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 import NotesFilters from "@/components/note/NoteFilters";
 import NotesList from "@/components/note/NoteList";
@@ -67,7 +68,9 @@ export default function Home() {
   const deleteSelected = useCallback(async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-    await Promise.all(ids.map((id) => deleteNote(id).catch(() => undefined)));
+    const results = await Promise.all(ids.map((id) => deleteNote(id).then(() => true).catch(() => false)));
+    const failed = results.filter((ok) => !ok).length;
+    if (failed > 0) toast.error(`Couldn't delete ${failed} note${failed > 1 ? "s" : ""}`);
     setSelectedIds(new Set());
     await refreshNotes();
   }, [selectedIds, refreshNotes]);
@@ -155,7 +158,7 @@ export default function Home() {
 
         {/* Content: gutter for outside-left tick; -mx-4/pr-4 aligns the right
             edge exactly to the New Note button / filter selects. */}
-        <div className={cn("w-full overflow-y-auto py-2 pl-14 pr-4 -ml-4 -mr-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
+        <div className={cn("-mx-4 w-[calc(100%+2rem)] overflow-y-auto py-2 px-0 sm:mx-0 sm:w-full sm:pl-14 sm:pr-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
           <NotesList
             notes={notes}
             orderBy={orderBy}

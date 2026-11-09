@@ -60,6 +60,15 @@ export const NoteTitle = memo(function NoteTitle() {
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder="Title..."
+        name="note-title"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="sentences"
+        spellCheck={false}
+        enterKeyHint="next"
+        data-1p-ignore
+        data-lpignore="true"
+        data-form-type="other"
       />
     </div>
   );
