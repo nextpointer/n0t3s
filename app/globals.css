@@ -673,77 +673,25 @@
 
 /* View transition animations removed: navigation is immediate to avoid jank. */
 
-/* Figma button system: hsl(h,100%,65%) fills, stroke, inner + outer shadow. */
-.btn-base {
+/* Figma button system for primary (default) buttons only: hsl(h,100%,65%). */
+[data-slot="button"][data-variant="default"].btn-primary-figma {
     --btn-h: var(--btn-h-brand);
     position: relative;
+    background: hsl(var(--btn-h) var(--btn-s) var(--btn-l)) !important;
+    color: #fff;
     border: 1px solid hsl(var(--btn-h) 100% 78% / 0.95);
     box-shadow:
         0 0 0 2px hsl(var(--btn-h) 100% 65% / 0.22),
         0 2px 8px hsl(var(--btn-h) 100% 45% / 0.18),
         inset 0 10px 18px rgba(255, 255, 255, 0.22);
 }
-[data-slot="button"][data-variant="default"], .btn-filled { --btn-h: var(--btn-h-brand); }
-[data-slot="button"][data-variant="destructive"] { --btn-h: var(--btn-h-destructive); }
-[data-slot="button"][data-variant="secondary"] { --btn-h: var(--btn-h-secondary); }
-[data-slot="button"][data-variant="outline"], .btn-outline { --btn-h: var(--btn-h-neutral); }
-[data-slot="button"][data-variant="ghost"], .btn-ghost { --btn-h: var(--btn-h-neutral); }
-
-[data-slot="button"].btn-filled {
-    background: hsl(var(--btn-h) var(--btn-s) var(--btn-l));
-    color: #fff;
-}
-[data-slot="button"].btn-filled:hover:not(:disabled) {
+[data-slot="button"][data-variant="default"].btn-primary-figma:hover:not(:disabled) {
     filter: brightness(1.04) saturate(1.02);
 }
-[data-slot="button"].btn-filled:active:not(:disabled) {
+[data-slot="button"][data-variant="default"].btn-primary-figma:active:not(:disabled) {
     filter: brightness(0.98);
     box-shadow:
         0 0 0 2px hsl(var(--btn-h) 100% 65% / 0.18),
         0 1px 4px hsl(var(--btn-h) 100% 45% / 0.14),
         inset 0 8px 14px rgba(255, 255, 255, 0.16);
-}
-
-[data-slot="button"].btn-outline {
-    background: hsl(var(--btn-h) 100% 65% / 0.08);
-    border-color: hsl(var(--btn-h) 100% 65% / 0.45);
-    box-shadow:
-        0 0 0 2px hsl(var(--btn-h) 100% 65% / 0.12),
-        0 1px 6px hsl(var(--btn-h) 100% 45% / 0.08),
-        inset 0 8px 14px rgba(255, 255, 255, 0.12);
-}
-[data-slot="button"].btn-outline:hover:not(:disabled) {
-    background: hsl(var(--btn-h) 100% 65% / 0.14);
-}
-.dark [data-slot="button"].btn-outline {
-    background: hsl(var(--btn-h) 100% 65% / 0.12);
-    box-shadow:
-        0 0 0 2px hsl(var(--btn-h) 100% 65% / 0.14),
-        0 1px 6px hsl(var(--btn-h) 100% 45% / 0.12),
-        inset 0 8px 14px rgba(255, 255, 255, 0.06);
-}
-
-[data-slot="button"].btn-ghost {
-    background: transparent;
-    border-color: hsl(var(--btn-h) 100% 65% / 0.18);
-    box-shadow:
-        0 0 0 1px hsl(var(--btn-h) 100% 65% / 0.06),
-        inset 0 6px 10px rgba(255, 255, 255, 0.05);
-}
-[data-slot="button"].btn-ghost:hover:not(:disabled) {
-    background: hsl(var(--btn-h) 100% 65% / 0.08);
-}
-.dark [data-slot="button"].btn-ghost {
-    border-color: hsl(var(--btn-h) 100% 65% / 0.22);
-    box-shadow:
-        0 0 0 1px hsl(var(--btn-h) 100% 65% / 0.08),
-        inset 0 6px 10px rgba(255, 255, 255, 0.03);
-}
-
-/* Link variant keeps text-link behavior; minimal stroke per system. */
-[data-slot="button"].btn-link {
-    background: transparent;
-    border-color: transparent;
-    box-shadow: none;
-    border-radius: 0.5rem;
 }
