@@ -32,6 +32,50 @@ interface NoteContentProps {
   initialContent: string;
 }
 
+function SelectionPromptForm({
+  isPhone,
+  onBack,
+  onRun,
+}: {
+  isPhone: boolean;
+  onBack: () => void;
+  onRun: (instruction: string) => void;
+}) {
+  const [prompt, setPrompt] = useState("");
+  const submit = () => {
+    const inst = prompt.trim();
+    if (inst) onRun(inst);
+  };
+  return (
+    <form
+      className="flex min-w-0 flex-col gap-1.5 p-0.5"
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+    >
+      <textarea
+        autoFocus
+        rows={2}
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        onKeyDown={(e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+            e.preventDefault();
+            submit();
+          }
+        }}
+        placeholder={isPhone ? "Edit selection…" : "Edit selection… (Ctrl+Enter to run)"}
+        className="max-h-40 min-h-[2.75rem] w-full min-w-0 resize-none overflow-y-auto rounded-xl bg-foreground/[0.04] px-2.5 py-2 text-[13px] leading-relaxed outline-none placeholder:text-muted-foreground/35 [field-sizing:content]"
+      />
+      <div className="flex items-center justify-end gap-1.5">
+        <button type="button" className="shrink-0 rounded-xl px-2.5 py-1.5 text-[12px] text-muted-foreground/70 transition-colors hover:bg-foreground/[0.05]" onClick={onBack}>Back</button>
+        <button type="submit" className="shrink-0 rounded-xl bg-foreground/[0.08] px-2.5 py-1.5 text-[12px] text-foreground/85 transition-colors hover:bg-foreground/[0.12]">Run</button>
+      </div>
+    </form>
+  );
+}
+
 // Global cache for extracted inner HTML (fast path for re-renders)
 const highlightCache = new Map<string, string>();
 const pendingHighlights = new Set<string>();
@@ -370,7 +414,7 @@ export const NoteContent = memo(
 
     const [ctxMenu, setCtxMenu] = useState<
       | { open: false }
-      | { open: true; x: number; y: number; anchor: "pointer" | "bottom"; sel: EditorSelection; prompting: boolean; prompt: string }
+      | { open: true; x: number; y: number; anchor: "pointer" | "bottom"; sel: EditorSelection; prompting: boolean }
     >({ open: false });
 
     const closeCtxMenu = useCallback(() => setCtxMenu({ open: false }), []);
@@ -444,7 +488,7 @@ export const NoteContent = memo(
         const sel = captureEditorSelection();
         if (!sel || !sel.text.trim()) return; // no selection => browser menu
         e.preventDefault();
-        setCtxMenu({ open: true, x: e.clientX, y: e.clientY, anchor: "pointer", sel, prompting: false, prompt: "" });
+        setCtxMenu({ open: true, x: e.clientX, y: e.clientY, anchor: "pointer", sel, prompting: false });
       };
       host.addEventListener("contextmenu", onContextMenu);
       return () => host.removeEventListener("contextmenu", onContextMenu);
@@ -468,7 +512,7 @@ export const NoteContent = memo(
           if (document.activeElement !== ta && !wrapperRef.current?.contains(document.activeElement)) return;
           const sel = captureEditorSelection();
           if (sel && sel.text.trim() && document.activeElement === ta) {
-            setCtxMenu({ open: true, x: 0, y: 0, anchor: "bottom", sel, prompting: false, prompt: "" });
+            setCtxMenu({ open: true, x: 0, y: 0, anchor: "bottom", sel, prompting: false });
           } else if (!sel) {
             setCtxMenu((m) => (m.open && m.anchor === "bottom" && !m.prompting ? { open: false } : m));
           }
@@ -1121,35 +1165,11 @@ export const NoteContent = memo(
                   })()}
                 </div>
               ) : (
-                <form
-                  className="flex min-w-0 flex-col gap-1.5 p-0.5"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const inst = ctxMenu.prompt.trim();
-                    if (!inst) return;
-                    void runSelectionAI("edit", ctxMenu.sel, inst);
-                  }}
-                >
-                  <textarea
-                    autoFocus
-                    rows={2}
-                    value={ctxMenu.prompt}
-                    onChange={(e) => setCtxMenu((m) => (m.open ? { ...m, prompt: e.target.value } : m))}
-                    onKeyDown={(e) => {
-                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                        e.preventDefault();
-                        const inst = ctxMenu.prompt.trim();
-                        if (inst) void runSelectionAI("edit", ctxMenu.sel, inst);
-                      }
-                    }}
-                    placeholder={isPhone ? "Edit selection…" : "Edit selection… (Ctrl+Enter to run)"}
-                    className="max-h-40 min-h-[2.75rem] w-full min-w-0 resize-none overflow-y-auto rounded-xl bg-foreground/[0.04] px-2.5 py-2 text-[13px] leading-relaxed outline-none placeholder:text-muted-foreground/35 [field-sizing:content]"
-                  />
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button type="button" className="shrink-0 rounded-xl px-2.5 py-1.5 text-[12px] text-muted-foreground/70 transition-colors hover:bg-foreground/[0.05]" onClick={() => setCtxMenu((m) => (m.open ? { ...m, prompting: false, prompt: "" } : m))}>Back</button>
-                    <button type="submit" className="shrink-0 rounded-xl bg-foreground/[0.08] px-2.5 py-1.5 text-[12px] text-foreground/85 transition-colors hover:bg-foreground/[0.12]">Run</button>
-                  </div>
-                </form>
+                <SelectionPromptForm
+                  isPhone={isPhone}
+                  onBack={() => setCtxMenu((m) => (m.open ? { ...m, prompting: false } : m))}
+                  onRun={(inst) => void runSelectionAI("edit", ctxMenu.sel, inst)}
+                />
               )}
             </div>
           </div>
