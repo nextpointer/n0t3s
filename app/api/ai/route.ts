@@ -38,6 +38,14 @@ export async function POST(req: NextRequest) {
     const content = (body?.content ?? "").toString();
     const action = (body?.action ?? "").toString() as AIAction;
     const instruction = (body?.instruction ?? "").toString();
+    const noteContext = (body?.noteContext ?? "").toString();
+
+    const MAX_CONTENT = 200_000;
+    const MAX_INSTRUCTION = 4_000;
+    const MAX_NOTE_CONTEXT = 300_000;
+    if (content.length > MAX_CONTENT || noteContext.length > MAX_NOTE_CONTEXT || instruction.length > MAX_INSTRUCTION) {
+      return NextResponse.json({ error: "Request too large" }, { status: 413 });
+    }
 
     if (!action) {
       return NextResponse.json({ error: "Missing action" }, { status: 400 });
@@ -68,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Run AI action
-    const result = await performAIAction(content, action, instruction);
+    const result = await performAIAction(content, action, instruction, { noteContext });
     return NextResponse.json({ result }, { headers });
   } catch (err) {
     console.error("AI API Error:", err);
