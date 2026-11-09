@@ -153,7 +153,7 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <SolarIcon icon="github" className="size-4" />
+                  <SolarIcon icon="github" className="size-4 text-yellow-400" />
                 </Link>
               </Button>
               {isPhone ? (
