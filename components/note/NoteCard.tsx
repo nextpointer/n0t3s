@@ -64,7 +64,7 @@ const NoteCard = React.memo(function NoteCard({
             ? "text-primary opacity-100"
             : active
               ? "text-foreground/60 opacity-100"
-              : "text-foreground/45 opacity-25 group-hover/row:opacity-100 hover:bg-foreground/[0.05] hover:text-foreground/70 hover:opacity-100",
+              : "text-foreground/45 opacity-0 group-hover/row:opacity-100 hover:bg-foreground/[0.05] hover:text-foreground/70 hover:opacity-100",
           "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
