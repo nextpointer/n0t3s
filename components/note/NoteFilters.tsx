@@ -77,84 +77,91 @@ const NotesFilters = React.memo(function NotesFilters({
 }: Props) {
   if (loading)
     return (
-      <>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-8 md:h-10 flex-1 rounded-xl bg-muted animate-pulse"
-          />
-        ))}
-      </>
+      <div className="flex w-full flex-col gap-2 sm:flex-row">
+        <div className="flex w-full gap-2 sm:flex-1">
+          <div className="h-9 flex-1 rounded-xl bg-muted animate-pulse sm:h-10" />
+          <div className="h-9 w-[6.75rem] rounded-md bg-muted animate-pulse sm:h-10 sm:w-[7.5rem]" />
+        </div>
+        <div className="flex w-full gap-2 sm:flex-[1.2]">
+          <div className="h-9 flex-1 rounded-xl bg-muted animate-pulse sm:h-10" />
+          <div className="h-9 flex-1 rounded-xl bg-muted animate-pulse sm:h-10" />
+        </div>
+      </div>
     );
   return (
-    <>
-      <Button
-        onClick={() => setSearchOpen(true)}
-        variant={"outline"}
-        className="h-9 min-w-0 flex-1 px-2.5 sm:h-10 sm:px-3"
-        aria-label="Search notes"
-        title="Search notes"
-      >
-        <SolarIcon icon="search" className="size-4 shrink-0" />
-        <span className="hidden items-center gap-2 md:flex">
-          Search
-          <kbd className="rounded-md border border-border/50 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-            Ctrl+P
-          </kbd>
-        </span>
-      </Button>
+    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex w-full items-center gap-2 sm:min-w-0 sm:flex-1">
+        <Button
+          onClick={() => setSearchOpen(true)}
+          variant={"outline"}
+          className="h-9 min-w-0 flex-1 px-2.5 sm:h-10 sm:px-3"
+          aria-label="Search notes"
+          title="Search notes"
+        >
+          <SolarIcon icon="search" className="size-4 shrink-0" />
+          <span className="ml-1.5 hidden items-center gap-2 md:flex">
+            Search
+            <kbd className="rounded-md border border-border/50 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+              Ctrl+P
+            </kbd>
+          </span>
+          <span className="ml-1.5 truncate sm:hidden">Search</span>
+        </Button>
 
-      <Select value={tagFilter} onValueChange={setTagFilter}>
-        <SelectTrigger className="h-9 min-w-0 flex-1 sm:h-10">
-          <SelectValue placeholder="Tag" />
-        </SelectTrigger>
-        <SelectContent className="shadow-none">
-          <SelectItem value="all">All tags</SelectItem>
-          <SelectItem value="untagged">Untagged</SelectItem>
-          {allTags.map((tag) => (
-            <SelectItem key={tag} value={tag}>
-              {tag}
-            </SelectItem>
+        <div className="flex h-9 shrink-0 items-center rounded-md border border-input bg-transparent p-0.5 sm:h-10" role="group" aria-label="View mode">
+          {VIEW_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setView(opt.id)}
+              aria-label={opt.label}
+              aria-pressed={view === opt.id}
+              title={opt.label}
+              className={cn(
+                "flex h-full w-8 items-center justify-center rounded-[5px] transition-colors sm:w-9",
+                view === opt.id
+                  ? "bg-foreground/[0.08] text-foreground"
+                  : "text-muted-foreground/60 hover:text-foreground",
+              )}
+            >
+              <ViewIcon view={opt.id} className="size-4" />
+            </button>
           ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={orderBy}
-        onValueChange={(v) => setOrderBy(v as "newest" | "oldest")}
-      >
-        <SelectTrigger className="h-9 min-w-0 flex-1 sm:h-10">
-          <SelectValue placeholder="Sort" />
-        </SelectTrigger>
-        <SelectContent className="shadow-none">
-          <SelectGroup>
-            <SelectItem value="newest">Newer first</SelectItem>
-            <SelectItem value="oldest">Oldest first</SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
-      <div className="flex h-9 shrink-0 items-center rounded-md border border-input bg-transparent p-0.5 sm:h-10" role="group" aria-label="View mode">
-        {VIEW_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            onClick={() => setView(opt.id)}
-            aria-label={opt.label}
-            aria-pressed={view === opt.id}
-            title={opt.label}
-            className={cn(
-              "flex h-full w-8 items-center justify-center rounded-[5px] transition-colors sm:w-9",
-              view === opt.id
-                ? "bg-foreground/[0.08] text-foreground"
-                : "text-muted-foreground/60 hover:text-foreground",
-            )}
-          >
-            <ViewIcon view={opt.id} className="size-4" />
-          </button>
-        ))}
+        </div>
       </div>
-    </>
+
+      <div className="flex w-full items-center gap-2 sm:min-w-0 sm:flex-[1.2]">
+        <Select value={tagFilter} onValueChange={setTagFilter}>
+          <SelectTrigger className="h-9 min-w-0 flex-1 sm:h-10">
+            <SelectValue placeholder="All tags" />
+          </SelectTrigger>
+          <SelectContent className="shadow-none">
+            <SelectItem value="all">All tags</SelectItem>
+            <SelectItem value="untagged">Untagged</SelectItem>
+            {allTags.map((tag) => (
+              <SelectItem key={tag} value={tag}>
+                {tag}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={orderBy}
+          onValueChange={(v) => setOrderBy(v as "newest" | "oldest")}
+        >
+          <SelectTrigger className="h-9 min-w-0 flex-1 sm:h-10">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent className="shadow-none">
+            <SelectGroup>
+              <SelectItem value="newest">Newer first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   );
 });
 
