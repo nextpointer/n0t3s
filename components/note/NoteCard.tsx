@@ -59,12 +59,12 @@ const NoteCard = React.memo(function NoteCard({
         }}
         onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          "mr-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-md sm:flex",
+          "mr-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-md transition-opacity sm:flex",
           selected
             ? "text-primary opacity-100"
             : active
               ? "text-foreground/60 opacity-100"
-              : "text-foreground/35 opacity-70 hover:bg-foreground/[0.05] hover:text-foreground/70 hover:opacity-100",
+              : "text-foreground/45 opacity-25 group-hover/row:opacity-100 hover:bg-foreground/[0.05] hover:text-foreground/70 hover:opacity-100",
           "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
