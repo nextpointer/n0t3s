@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   note: Note;
-  onClick: () => void;
+  onOpen: (id: string) => void;
   selecting: boolean;
   selected: boolean;
   onSelect: (id: string, shiftKey: boolean) => void;
@@ -13,7 +13,7 @@ type Props = {
 
 const NoteCard = React.memo(function NoteCard({
   note,
-  onClick,
+  onOpen,
   selecting,
   selected,
   onSelect,
@@ -40,13 +40,13 @@ const NoteCard = React.memo(function NoteCard({
       onSelect(note.id, event.shiftKey);
       return;
     }
-    onClick();
+    onOpen(note.id);
   };
 
   const active = selecting || selected;
 
   return (
-    <div className="group/row relative flex w-full items-center">
+    <div className="group/row relative flex w-full items-center [content-visibility:auto] [contain-intrinsic-size:auto_52px]">
       {/* Hangs outside-left of the note text (which aligns to logo/search),
           sitting in the scroller's gutter. Hidden at rest; row hover shows low
           opacity for this note only; hovering the tick itself shows full

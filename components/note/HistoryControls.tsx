@@ -90,7 +90,7 @@ export const HistoryControls = memo(function HistoryControls() {
         title="Undo (Ctrl/Cmd+Z)"
         className={cn(!canUndo && "opacity-35")}
       >
-        <SolarIcon icon="undo" className={cn("h-4 w-4 transition-all", canUndo ? "text-foreground opacity-100 scale-110" : "text-foreground/45 opacity-55")} />
+        <SolarIcon icon="undo" className={cn("h-4 w-4 transition-[opacity,transform,color]", canUndo ? "text-foreground opacity-100 scale-110" : "text-foreground/45 opacity-55")} />
       </Button>
       <Button
         variant="ghost"
@@ -101,7 +101,7 @@ export const HistoryControls = memo(function HistoryControls() {
         title="Redo (Ctrl/Cmd+Shift+Z)"
         className={cn(!canRedo && "opacity-35")}
       >
-        <SolarIcon icon="redo" className={cn("h-4 w-4 transition-all", canRedo ? "text-foreground opacity-100 scale-110" : "text-foreground/45 opacity-55")} />
+        <SolarIcon icon="redo" className={cn("h-4 w-4 transition-[opacity,transform,color]", canRedo ? "text-foreground opacity-100 scale-110" : "text-foreground/45 opacity-55")} />
       </Button>
     </>
   );

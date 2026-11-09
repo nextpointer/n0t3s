@@ -172,7 +172,7 @@ export default function Home() {
         {/* Bulk actions — bottom popup on phone, floating pill on desktop */}
         {selectedCount > 0 && (
           <div
-            className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex w-auto max-w-md items-center justify-between gap-2 rounded-2xl border border-border/60 bg-popover/95 px-3 py-2.5 shadow-lg backdrop-blur animate-in fade-in slide-in-from-bottom-4 duration-200 sm:inset-x-auto sm:left-1/2 sm:w-max sm:max-w-[calc(100vw-2rem)] sm:-translate-x-1/2 sm:justify-start sm:px-3"
+            className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 mx-auto flex w-auto max-w-md items-center justify-between gap-2 rounded-2xl border border-border/60 bg-popover px-3 py-2.5 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-200 sm:inset-x-auto sm:left-1/2 sm:w-max sm:max-w-[calc(100vw-2rem)] sm:-translate-x-1/2 sm:justify-start sm:px-3"
             role="region"
             aria-label="Bulk actions"
           >

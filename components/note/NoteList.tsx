@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Note } from "@/lib/types";
 import NoteCard from "./NoteCard";
 import { Skeleton } from "../ui/skeleton";
@@ -28,24 +28,30 @@ const NotesList = React.memo(function NotesList({
 }: Props) {
   const router = useRouter();
 
-  const tagsOf = useCallback((note: Note): string[] => getNoteTags(note), []);
+  const tagsCache = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const note of notes) m.set(note.id, getNoteTags(note));
+    return m;
+  }, [notes]);
 
-  const filteredNotes = notes.filter((note) => {
-    const noteTags = tagsOf(note);
-    if (tagFilter === "all") return true;
-    if (tagFilter === "untagged") return noteTags.length === 0;
-    return noteTags.includes(tagFilter);
-  });
-
-  const pinnedNotes = filteredNotes.filter((note) => tagsOf(note).includes("pin"));
-  const nonPinnedNotes = filteredNotes.filter((note) => !tagsOf(note).includes("pin"));
-
-  const sortedNonPinned = nonPinnedNotes.sort((a, b) =>
-    orderBy === "newest" ? b.createdAt - a.createdAt : a.createdAt - b.createdAt,
-  );
-
-  const sortedNotes = [...pinnedNotes, ...sortedNonPinned];
-  const orderedIds = sortedNotes.map((note) => note.id);
+  const { sortedNotes, orderedIds } = useMemo(() => {
+    const filtered = notes.filter((note) => {
+      const noteTags = tagsCache.get(note.id) ?? [];
+      if (tagFilter === "all") return true;
+      if (tagFilter === "untagged") return noteTags.length === 0;
+      return noteTags.includes(tagFilter);
+    });
+    const pinned: Note[] = [];
+    const rest: Note[] = [];
+    for (const note of filtered) {
+      const t = tagsCache.get(note.id) ?? [];
+      if (t.includes("pin")) pinned.push(note);
+      else rest.push(note);
+    }
+    rest.sort((a, b) => (orderBy === "newest" ? b.createdAt - a.createdAt : a.createdAt - b.createdAt));
+    const sorted = [...pinned, ...rest];
+    return { sortedNotes: sorted, orderedIds: sorted.map((n) => n.id) };
+  }, [notes, tagFilter, orderBy, tagsCache]);
   const selecting = selectedIds.size > 0;
 
   const lastAnchorRef = useRef<string | null>(null);
@@ -167,7 +173,7 @@ const NotesList = React.memo(function NotesList({
         <NoteCard
           key={note.id}
           note={note}
-          onClick={() => navigateToNote(note.id)}
+          onOpen={navigateToNote}
           selecting={selecting}
           selected={selectedIds.has(note.id)}
           onSelect={handleCardSelect}

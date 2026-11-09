@@ -360,13 +360,6 @@ export const NoteContent = memo(
       el.addEventListener("animationend", onEnd, { once: true });
       return () => el.removeEventListener("animationend", onEnd);
     }, [aiFadeKey]);
-    // Remember selection so AI actions can target it after focus moves to menus/dialogs.
-    useEffect(() => {
-      const onSelectionChange = () => rememberEditorSelection();
-      document.addEventListener("selectionchange", onSelectionChange);
-      return () => document.removeEventListener("selectionchange", onSelectionChange);
-    }, []);
-
     const syncToContent = useSetAtom(syncEditorToContentAtom);
     const externalContent = useAtomValue(contentAtom);
     const setContent = useSetAtom(contentAtom);
@@ -457,18 +450,21 @@ export const NoteContent = memo(
       return () => host.removeEventListener("contextmenu", onContextMenu);
     }, [aiEnabled]);
 
-    // Phone (no right-click): show a lightweight menu when a selection is made.
+    // Track selection for AI targeting; on phone, surface the selection menu.
     useEffect(() => {
-      if (!isPhone || !aiEnabled) return;
-      let timer: number | undefined;
+      let phoneTimer: number | undefined;
       const onSelectionChange = () => {
-        if (timer) window.clearTimeout(timer);
-        timer = window.setTimeout(() => {
+        const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+        // Only do work when the selection involves our editor.
+        if (ta && (document.activeElement === ta || ta.selectionStart !== ta.selectionEnd)) {
+          rememberEditorSelection();
+        }
+        if (!isPhone || !aiEnabled) return;
+        if (phoneTimer) window.clearTimeout(phoneTimer);
+        phoneTimer = window.setTimeout(() => {
           const active = document.activeElement as HTMLElement | null;
           if (active?.closest?.("[data-ai-ctx-menu]")) return;
-          const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
           if (!ta) { setCtxMenu({ open: false }); return; }
-          // Only react to selections within our editor.
           if (document.activeElement !== ta && !wrapperRef.current?.contains(document.activeElement)) return;
           const sel = captureEditorSelection();
           if (sel && sel.text.trim() && document.activeElement === ta) {
@@ -480,7 +476,7 @@ export const NoteContent = memo(
       };
       document.addEventListener("selectionchange", onSelectionChange);
       return () => {
-        if (timer) window.clearTimeout(timer);
+        if (phoneTimer) window.clearTimeout(phoneTimer);
         document.removeEventListener("selectionchange", onSelectionChange);
       };
     }, [isPhone, aiEnabled]);
@@ -1072,7 +1068,7 @@ export const NoteContent = memo(
             <div
               role="menu"
               aria-label="Selection actions"
-              className={`mx-auto max-w-md rounded-2xl border border-foreground/[0.06] bg-background/95 p-1 shadow-none backdrop-blur-sm ${ctxMenu.anchor === "pointer" ? "max-h-[70vh] overflow-y-auto [scrollbar-width:thin]" : ""}`}
+              className={`mx-auto max-w-md rounded-2xl border border-foreground/[0.06] bg-background p-1 shadow-none ${ctxMenu.anchor === "pointer" ? "max-h-[70vh] overflow-y-auto [scrollbar-width:thin]" : ""}`}
             >
               {!ctxMenu.prompting ? (
                 <div className={ctxMenu.anchor === "bottom" ? "flex flex-wrap items-center justify-center gap-0.5" : "flex flex-col gap-0.5"}>
