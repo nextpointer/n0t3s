@@ -16,6 +16,7 @@ import NotesList from "@/components/note/NoteList";
 import { CommandMenu } from "@/components/CommandMenu";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { SolarIcon } from "@/lib/icons";
+import { StarIcon } from "@/components/ui/star";
 import { transitionPush } from "@/lib/view-transition";
 import {
   AlertDialog,
@@ -153,7 +154,7 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <SolarIcon icon="github" className="size-4 text-yellow-400" />
+                  <StarIcon size={16} className="text-yellow-400" aria-hidden="true" />
                 </Link>
               </Button>
               {isPhone ? (
