@@ -104,7 +104,7 @@ export default function Home() {
   return (
     <>
       <title>n0t3s</title>
-      <div className="md:w-3xl w-full h-screen flex flex-col justify-start items-start p-4 pt-8">
+      <div className="md:w-3xl w-full h-screen flex flex-col justify-start items-start p-4 pt-8 md:mx-auto">
         {/* Top bar */}
         <div className="flex flex-row justify-end items-center gap-2 md:fixed md:top-0 left-0 w-full  md:w-3xl md:left-1/2 md:-translate-x-1/2 z-50 sm:p-4">
           <h1 className="mr-auto text-2xl font-semibold">N0T3S</h1>
@@ -155,7 +155,7 @@ export default function Home() {
 
         {/* Content: gutter for outside-left tick; -mx-4/pr-4 aligns the right
             edge exactly to the New Note button / filter selects. */}
-        <div className={cn("w-full overflow-y-auto py-2 pl-6 pr-4 -ml-4 -mr-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
+        <div className={cn("w-full overflow-y-auto py-2 pl-14 pr-4 -ml-4 -mr-4", !loading && notes.length > 0 ? "mt-4" : "mt-6")}>
           <NotesList
             notes={notes}
             orderBy={orderBy}
