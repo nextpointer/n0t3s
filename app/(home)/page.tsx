@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-import NotesFilters from "@/components/note/NoteFilters";
+import NotesFilters, { type NotesView } from "@/components/note/NoteFilters";
 import NotesList from "@/components/note/NoteList";
 import { CommandMenu } from "@/components/CommandMenu";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -49,6 +49,7 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [orderBy, setOrderBy] = useState<"newest" | "oldest">("newest");
   const [tagFilter, setTagFilter] = useState<string>("all");
+  const [view, setView] = useState<NotesView>("list");
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
 
   // Bulk selection (Notion-style): an empty set means normal browsing; any
@@ -216,9 +217,9 @@ export default function Home() {
                         <SolarIcon icon="chevronDown" className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-xl">
+                    <DropdownMenuContent align="end" sideOffset={6} collisionPadding={12} className="rounded-xl">
                       <DropdownMenuItem onSelect={() => void handleNewTempNote()} className="gap-2 rounded-lg">
-                        <SolarIcon icon="temp" className="size-4" />
+                        <SolarIcon icon="temp" className="size-4 text-muted-foreground/70" />
                         New temp note
                         <span className="ml-auto text-[10px] text-muted-foreground/60">24h</span>
                       </DropdownMenuItem>
@@ -240,6 +241,8 @@ export default function Home() {
                 tagFilter={tagFilter}
                 setTagFilter={setTagFilter}
                 setSearchOpen={setSearchOpen}
+                view={view}
+                setView={setView}
               />
             </div>
           )}
@@ -262,6 +265,7 @@ export default function Home() {
               orderBy={orderBy}
               tagFilter={tagFilter}
               loading={loading}
+              view={view}
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
               scrollRef={listScrollRef}

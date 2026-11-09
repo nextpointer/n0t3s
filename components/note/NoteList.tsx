@@ -5,6 +5,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import type { VirtualItem } from "@tanstack/react-virtual";
 import { Note } from "@/lib/types";
 import NoteCard from "./NoteCard";
+import type { NoteCardView } from "./NoteCard";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
 import { createNote } from "@/lib/storage";
@@ -16,6 +17,7 @@ type Props = {
   orderBy: "newest" | "oldest";
   tagFilter: string;
   loading: boolean;
+  view?: NoteCardView;
   selectedIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
   scrollRef?: React.RefObject<HTMLDivElement | null>;
@@ -26,6 +28,7 @@ const NotesList = React.memo(function NotesList({
   orderBy,
   tagFilter,
   loading,
+  view = "list",
   selectedIds,
   onSelectionChange,
   scrollRef,
@@ -165,6 +168,42 @@ const NotesList = React.memo(function NotesList({
             Create new Note : )
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (view === "grid") {
+    return (
+      <div className="grid grid-cols-1 gap-3 px-4 pb-3 sm:grid-cols-2 sm:px-1 lg:grid-cols-3">
+        {sortedNotes.map((note) => (
+          <NoteCard
+            key={note.id}
+            note={note}
+            view="grid"
+            onOpen={navigateToNote}
+            selecting={selecting}
+            selected={selectedIds.has(note.id)}
+            onSelect={handleCardSelect}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (view === "masonry") {
+    return (
+      <div className="px-4 pb-3 sm:columns-2 sm:px-1 lg:columns-3">
+        {sortedNotes.map((note) => (
+          <NoteCard
+            key={note.id}
+            note={note}
+            view="masonry"
+            onOpen={navigateToNote}
+            selecting={selecting}
+            selected={selectedIds.has(note.id)}
+            onSelect={handleCardSelect}
+          />
+        ))}
       </div>
     );
   }
