@@ -159,7 +159,7 @@ export const ConfigMenu = memo(function ConfigMenu() {
         >
           <SolarIcon icon="config" className="size-[15px] pointer-events-none" />
         </button>
-        <SheetLite open={sheetOpen} onClose={() => setSheetOpen(false)} className="pb-1">
+        <SheetLite open={sheetOpen} onClose={() => setSheetOpen(false)} className="pb-1 shadow-none">
           {rows}
         </SheetLite>
       </>
@@ -179,7 +179,7 @@ export const ConfigMenu = memo(function ConfigMenu() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56 rounded-xl border-border/60 p-1 shadow-lg"
+        className="w-56 rounded-xl border-border/60 p-1 shadow-none dark:shadow-none"
         align="end"
         side="top"
         sideOffset={10}
