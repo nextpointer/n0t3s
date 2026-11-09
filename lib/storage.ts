@@ -27,7 +27,15 @@ function isNote(record: unknown): record is Note {
 export async function getNotes(): Promise<Note[]> {
   try {
     const records = await dbGetAll<unknown>();
-    return records.filter(isNote);
+    const notes = records.filter(isNote);
+    const expired = notes.filter((n) => isExpiredTemp(n));
+    if (expired.length > 0) {
+      // Only delete notes explicitly marked temporary and expired.
+      await Promise.all(expired.map((n) => dbDelete(n.id).catch(() => {})));
+      const expiredIds = new Set(expired.map((n) => n.id));
+      return notes.filter((n) => !expiredIds.has(n.id));
+    }
+    return notes;
   } catch {
     return [];
   }
@@ -58,7 +66,12 @@ export const NEW_NOTE_CONTENT = "";
 /** Set when a note is created, consumed once by the note page. */
 const NEW_NOTE_FLAG = "n0t3s:new-note";
 
-export async function createNote(title = ""): Promise<Note> {
+export const TEMP_NOTE_MS = 24 * 60 * 60 * 1000;
+
+export async function createNote(
+  title = "",
+  opts?: { temp?: boolean },
+): Promise<Note> {
   const now = Date.now();
   const note: Note = {
     id: crypto.randomUUID(),
@@ -67,6 +80,7 @@ export async function createNote(title = ""): Promise<Note> {
     tags: [],
     createdAt: now,
     updatedAt: now,
+    ...(opts?.temp ? { expiresAt: now + TEMP_NOTE_MS } : {}),
   };
   await addNote(note);
   try {
@@ -94,12 +108,24 @@ export async function deleteNote(id: string): Promise<void> {
 
 export async function getNote(id: string): Promise<Note | undefined> {
   const record = await dbGet<unknown>(id);
-  return isNote(record) ? record : undefined;
+  if (!isNote(record)) return undefined;
+  if (isExpiredTemp(record)) {
+    await dbDelete(id).catch(() => {});
+    return undefined;
+  }
+  return record;
+}
+
+function isExpiredTemp(record: unknown): record is Note & { expiresAt: number } {
+  if (!isNote(record)) return false;
+  const exp = (record as Partial<Note>).expiresAt;
+  return typeof exp === "number" && Number.isFinite(exp) && exp > 0 && exp <= Date.now();
 }
 
 /** Fill in any missing text fields so persisted notes stay renderable. */
 function normalizeNote(note: Note): Note {
   const now = Date.now();
+  const exp = note.expiresAt;
   return {
     ...note,
     title: typeof note.title === "string" ? note.title : "",
@@ -107,6 +133,8 @@ function normalizeNote(note: Note): Note {
     tags: Array.isArray(note.tags) ? note.tags : [],
     createdAt: typeof note.createdAt === "number" ? note.createdAt : now,
     updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : now,
+    expiresAt:
+      typeof exp === "number" && Number.isFinite(exp) && exp > 0 ? exp : undefined,
   };
 }
 

@@ -168,10 +168,10 @@ export default function Page() {
       className={`relative w-full h-dvh flex flex-col p-4 gap-4 ${!zen ? "xl:w-5xl md:border-l-1 md:border-r-1 md:border-dashed" : "xl:w-[72rem]"}`}
     >
       {/* Note header with actions */}
-      {!zen && <NoteHeader />}
+      {!zen && <NoteHeader temp={!!loadedNote?.expiresAt} />}
 
       {/* Note title editor */}
-      <NoteTitle />
+      <NoteTitle temp={!!loadedNote?.expiresAt} />
 
       {/* Node Editor */}
       <div className="flex-1 min-h-0 overflow-y-auto pb-14 sm:pb-0">

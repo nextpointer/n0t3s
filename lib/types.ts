@@ -5,6 +5,8 @@ export interface Note {
   tags?: string[];
   createdAt: number;
   updatedAt: number;
+  /** When set, the note is temporary and auto-deletes after this timestamp. */
+  expiresAt?: number;
 }
 
 export type AIAction =

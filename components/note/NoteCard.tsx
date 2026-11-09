@@ -111,9 +111,18 @@ const NoteCard = React.memo(function NoteCard({
         onPointerCancel={clearPress}
         onPointerLeave={clearPress}
       >
-        <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium tracking-tight text-foreground/90 sm:text-[13.5px]">
-          {note.title || "Untitled"}
-        </h3>
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          {note.expiresAt ? (
+            <SolarIcon
+              icon="temp"
+              className="size-3.5 shrink-0 text-amber-500/80"
+              title="Temporary note (auto-deletes in 24 hours)"
+            />
+          ) : null}
+          <h3 className="min-w-0 truncate text-[14px] font-medium tracking-tight text-foreground/90 sm:text-[13.5px]">
+            {note.title || "Untitled"}
+          </h3>
+        </div>
         <div className="ml-3 flex shrink-0 items-center justify-end gap-2 text-right text-[11px] tabular-nums text-muted-foreground/50 sm:gap-3">
           <span className="hidden whitespace-nowrap sm:inline">{(note.content?.length ?? 0).toLocaleString()} chars</span>
           <span aria-hidden className="hidden text-muted-foreground/25 sm:inline">·</span>

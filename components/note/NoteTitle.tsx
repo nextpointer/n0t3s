@@ -4,8 +4,9 @@ import { memo, useCallback, useEffect, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { titleAtom, checkUnsavedAtom, zenMode } from "@/store/noteAtom";
 import { consumeNewNoteFlag } from "@/lib/storage";
+import { SolarIcon } from "@/lib/icons";
 
-export const NoteTitle = memo(function NoteTitle() {
+export const NoteTitle = memo(function NoteTitle({ temp }: { temp?: boolean }) {
   const [title, setTitle] = useAtom(titleAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
   // refs the for the input
@@ -53,6 +54,17 @@ export const NoteTitle = memo(function NoteTitle() {
     <div
       className={`sticky top-0 z-40 w-full bg-transparent ${zen ? "pt-4" : "pt-13"} pb-2`}
     >
+      {zen && temp ? (
+        <div className="mb-1.5">
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+            title="Temporary note — auto-deletes in 24 hours"
+          >
+            <SolarIcon icon="temp" className="size-3" />
+            Temp
+          </span>
+        </div>
+      ) : null}
       <input
         className={`text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none bg-transparent border-none`}
         ref={titleInputRef}

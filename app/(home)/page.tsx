@@ -28,11 +28,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
   const setAllTags = useSetAtom(allTagsAtom);
+  const isPhone = useIsPhone();
   // The list may render the content the tag migration is writing, so wait
   // for boot-time storage maintenance.
   const storageReady = useAtomValue(storageReadyAtom);
@@ -85,6 +93,22 @@ export default function Home() {
     transitionPush(router, `/note/${note.id}`);
   }, [router]);
 
+  const handleNewTempNote = useCallback(async () => {
+    const note = await createNote("", { temp: true });
+    transitionPush(router, `/note/${note.id}`);
+  }, [router]);
+
+  // Phone: hold the create button to create a temp note.
+  const createHoldRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const createLongPressRef = useRef(false);
+  const clearCreateHold = useCallback(() => {
+    if (createHoldRef.current) {
+      clearTimeout(createHoldRef.current);
+      createHoldRef.current = null;
+    }
+  }, []);
+  useEffect(() => clearCreateHold, [clearCreateHold]);
+
   const selectedCount = selectedIds.size;
 
   const visibleIds = useMemo(() => {
@@ -131,10 +155,77 @@ export default function Home() {
                   <SolarIcon icon="github" className="size-4" />
                 </Link>
               </Button>
-              <Button onClick={handleNewNote} className="h-9 rounded-xl px-3 sm:px-4" aria-label="New note" title="New note">
-                <SolarIcon icon="add" className="size-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">New Note</span>
-              </Button>
+              {isPhone ? (
+                <Button
+                  onClick={() => {
+                    if (createLongPressRef.current) {
+                      createLongPressRef.current = false;
+                      return;
+                    }
+                    void handleNewNote();
+                  }}
+                  onPointerDown={(e) => {
+                    if (e.pointerType !== "touch") return;
+                    clearCreateHold();
+                    createLongPressRef.current = false;
+                    createHoldRef.current = setTimeout(() => {
+                      createHoldRef.current = null;
+                      createLongPressRef.current = true;
+                      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+                        try {
+                          navigator.vibrate(12);
+                        } catch {
+                          /* noop */
+                        }
+                      }
+                      void handleNewTempNote();
+                    }, 450);
+                  }}
+                  onPointerUp={clearCreateHold}
+                  onPointerCancel={clearCreateHold}
+                  onPointerLeave={clearCreateHold}
+                  onContextMenu={(e) => {
+                    if (createLongPressRef.current || createHoldRef.current) e.preventDefault();
+                  }}
+                  className="h-9 rounded-xl px-3"
+                  aria-label="New note (hold for temp note)"
+                  title="New note (hold for temp note)"
+                  style={{ WebkitTouchCallout: "none" }}
+                >
+                  <SolarIcon icon="add" className="size-4" />
+                </Button>
+              ) : (
+                <div className="flex items-center">
+                  <Button
+                    onClick={handleNewNote}
+                    className="h-9 rounded-l-xl rounded-r-none px-3 sm:px-4"
+                    aria-label="New note"
+                    title="New note"
+                  >
+                    <SolarIcon icon="add" className="size-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">New Note</span>
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="default"
+                        className="h-9 rounded-l-none rounded-r-xl border-l border-primary-foreground/20 px-2"
+                        aria-label="More note options"
+                        title="More note options"
+                      >
+                        <SolarIcon icon="chevronDown" className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-xl">
+                      <DropdownMenuItem onSelect={() => void handleNewTempNote()} className="gap-2 rounded-lg">
+                        <SolarIcon icon="temp" className="size-4" />
+                        New temp note
+                        <span className="ml-auto text-[10px] text-muted-foreground/60">24h</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </div>
           </div>
 

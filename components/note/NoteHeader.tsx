@@ -21,7 +21,7 @@ import { transitionBack } from "@/lib/view-transition";
  * (quiet-drop empty drafts, prompt on unsaved manual edits) so leaving a
  * note never loses work regardless of which control is used.
  */
-export const NoteHeader = memo(function NoteHeader() {
+export const NoteHeader = memo(function NoteHeader({ temp }: { temp?: boolean }) {
   const unsaved = useAtomValue(unsavedAtom);
   const autoSave = useAtomValue(autoSaveAtom);
   const setShowPrompt = useSetAtom(savePromptDialogOpenAtom);
@@ -44,15 +44,26 @@ export const NoteHeader = memo(function NoteHeader() {
 
   return (
     <div className="fixed top-0 left-0 w-screen xl:w-5xl md:left-1/2 md:-translate-x-1/2 z-50 md:border-b-1 md:border-dashed flex justify-between items-center gap-2 p-2">
-      <button
-        type="button"
-        onClick={() => void handleBack()}
-        aria-label="Back to notes"
-        title="All notes"
-        className="rounded-md p-1.5 text-foreground/45 transition-colors hover:text-foreground/90"
-      >
-        <SolarIcon icon="back" className="size-[15px]" />
-      </button>
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => void handleBack()}
+          aria-label="Back to notes"
+          title="All notes"
+          className="rounded-md p-1.5 text-foreground/45 transition-colors hover:text-foreground/90"
+        >
+          <SolarIcon icon="back" className="size-[15px]" />
+        </button>
+        {temp ? (
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+            title="Temporary note — auto-deletes in 24 hours"
+          >
+            <SolarIcon icon="temp" className="size-3" />
+            Temp
+          </span>
+        ) : null}
+      </div>
       <div className="flex items-center gap-2">
         <HistoryControls />
         <SettingsMenu />

@@ -66,6 +66,7 @@ interface Item {
 
 const COMMANDS: Item[] = [
   { id: "new", label: "New note", shortcut: "", kind: "action", scope: "global", keywords: "create add" },
+  { id: "new-temp", label: "New temp note", shortcut: "", kind: "action", scope: "global", keywords: "temporary expires auto delete 1 day 24h" },
   { id: "save", label: "Save", shortcut: "⌘S", kind: "action", scope: "note", keywords: "store write disk" },
   { id: "ins:date", label: "Insert current date", shortcut: "", kind: "insert", scope: "note", keywords: "today today's" },
   { id: "ins:time", label: "Insert current time", shortcut: "", kind: "insert", scope: "note", keywords: "clock now" },
@@ -308,6 +309,13 @@ export const CommandMenu = React.memo(function CommandMenu({
         case "new": {
           import("@/lib/storage").then(async ({ createNote }) => {
             const note = await createNote();
+            transitionPush(router, `/note/${note.id}`);
+          });
+          break;
+        }
+        case "new-temp": {
+          import("@/lib/storage").then(async ({ createNote }) => {
+            const note = await createNote("", { temp: true });
             transitionPush(router, `/note/${note.id}`);
           });
           break;

@@ -84,6 +84,7 @@ export const UI = {
   check: "solar:check-square-line-duotone",
   // note cards (home page)
   pin: "solar:pin-bold-duotone",
+  temp: "solar:clock-circle-bold-duotone",
   chevronDown: "solar:alt-arrow-down-bold-duotone",
 } as const;
 
