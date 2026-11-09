@@ -1125,7 +1125,7 @@ export const NoteContent = memo(
             <div
               role="menu"
               aria-label="Selection actions"
-              className={`mx-auto max-w-md rounded-2xl border border-foreground/[0.06] bg-background p-1 shadow-none ${ctxMenu.anchor === "pointer" ? "max-h-[70vh] overflow-y-auto [scrollbar-width:thin]" : ""}`}
+              className={`mx-auto max-w-md rounded-2xl border border-border/60 bg-popover p-1 text-popover-foreground shadow-lg dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_12px_40px_rgba(0,0,0,0.35)] ${ctxMenu.anchor === "pointer" ? "max-h-[70vh] overflow-y-auto [scrollbar-width:thin]" : ""}`}
             >
               {!ctxMenu.prompting ? (
                 <div className={ctxMenu.anchor === "bottom" ? "flex flex-wrap items-center justify-center gap-0.5" : "flex flex-col gap-0.5"}>
