@@ -9,6 +9,7 @@ import {
   aiEnabledAtom,
   previewColorsAtom,
   editorFontSizeAtom,
+  spellCheckAtom,
   storageReadyAtom,
   loadPersistedSettings,
 } from "@/store/noteAtom";
@@ -21,6 +22,7 @@ export function StorageInit() {
   const setAiEnabled = useSetAtom(aiEnabledAtom);
   const setPreviewColors = useSetAtom(previewColorsAtom);
   const setEditorFontSize = useSetAtom(editorFontSizeAtom);
+  const setSpellCheck = useSetAtom(spellCheckAtom);
   const setStorageReady = useSetAtom(storageReadyAtom);
 
   useEffect(() => {
@@ -35,6 +37,7 @@ export function StorageInit() {
       setAiEnabled,
       setPreviewColors,
       setEditorFontSize,
+      setSpellCheck,
     );
   }, [
     setAutoSave,
@@ -43,6 +46,7 @@ export function StorageInit() {
     setAiEnabled,
     setPreviewColors,
     setEditorFontSize,
+    setSpellCheck,
     setStorageReady,
   ]);
 

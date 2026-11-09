@@ -28,6 +28,9 @@ export const previewColorsAtom = atom<boolean>(true);
 /** Editor font size in px, applied to both desktop and mobile. */
 export const editorFontSizeAtom = atom<number>(15);
 
+/** Native browser spellcheck in the note editor. */
+export const spellCheckAtom = atom<boolean>(false);
+
 /** Editor view mode. Shared so the toolbar and the bottom bar stay in sync. */
 export type ViewMode = "edit" | "plain" | "preview";
 export const viewModeAtom = atom<ViewMode>("edit");
@@ -41,6 +44,7 @@ export async function loadPersistedSettings(
   setAiEnabled: (v: boolean) => void,
   setPreviewColors: (v: boolean) => void,
   setEditorFontSize: (v: number) => void,
+  setSpellCheck: (v: boolean) => void,
 ) {
   try {
     const autoSave = await dbGet<{ id: string; value: boolean }>("autoSave");
@@ -78,6 +82,12 @@ export async function loadPersistedSettings(
   } catch {
     // ignore
   }
+  try {
+    const sc = await dbGet<{ id: string; value: boolean }>("spellCheck");
+    if (sc) setSpellCheck(sc.value);
+  } catch {
+    // ignore
+  }
 }
 
 // Persist helpers — fire and forget writes to IndexedDB
@@ -103,6 +113,10 @@ export function persistPreviewColors(value: boolean) {
 
 export function persistEditorFontSize(value: number) {
   dbPut({ id: "editorFontSize", value }).catch(() => {});
+}
+
+export function persistSpellCheck(value: boolean) {
+  dbPut({ id: "spellCheck", value }).catch(() => {});
 }
 
 //for search pallate state

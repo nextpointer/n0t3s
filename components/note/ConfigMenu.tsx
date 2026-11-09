@@ -21,11 +21,13 @@ import {
   previewColorsAtom,
   editorFontSizeAtom,
   toolbarEnabledAtom,
+  spellCheckAtom,
   persistAutoSave,
   persistAiEnabled,
   persistPreviewColors,
   persistEditorFontSize,
   persistToolbarEnabled,
+  persistSpellCheck,
 } from "@/store/noteAtom";
 
 /**
@@ -38,6 +40,7 @@ export const ConfigMenu = memo(function ConfigMenu() {
   const [previewColors, setPreviewColors] = useAtom(previewColorsAtom);
   const [fontSize, setFontSize] = useAtom(editorFontSizeAtom);
   const [toolbarEnabled, setToolbarEnabled] = useAtom(toolbarEnabledAtom);
+  const [spellCheck, setSpellCheck] = useAtom(spellCheckAtom);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const isPhone = useIsPhone();
@@ -69,6 +72,11 @@ export const ConfigMenu = memo(function ConfigMenu() {
     setToolbarEnabled(value);
     persistToolbarEnabled(value);
   }, [setToolbarEnabled]);
+
+  const handleSpellCheck = useCallback((value: boolean) => {
+    setSpellCheck(value);
+    persistSpellCheck(value);
+  }, [setSpellCheck]);
 
   const dark = mounted && resolvedTheme === "dark";
 
@@ -119,6 +127,10 @@ export const ConfigMenu = memo(function ConfigMenu() {
       <div className="flex items-center justify-between gap-6 px-2.5 py-2.5">
         <Label htmlFor="show-toolbar" className="text-sm">Show toolbar</Label>
         <Switch id="show-toolbar" checked={toolbarEnabled} onCheckedChange={handleToolbarToggle} />
+      </div>
+      <div className="flex items-center justify-between gap-6 px-2.5 py-2.5">
+        <Label htmlFor="config-spell-check" className="text-sm">Spell check</Label>
+        <Switch id="config-spell-check" checked={spellCheck} onCheckedChange={handleSpellCheck} />
       </div>
       <div className="flex items-center justify-between gap-6 px-2.5 py-2.5">
         <Label htmlFor="config-auto-save" className="text-sm">Auto Save</Label>
