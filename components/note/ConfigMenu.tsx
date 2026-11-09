@@ -81,7 +81,7 @@ export const ConfigMenu = memo(function ConfigMenu() {
   const dark = mounted && resolvedTheme === "dark";
 
   const rows = (
-    <div className="px-1.5 pt-3 pb-1 min-w-[220px]">
+    <div className="px-1 pt-2.5 pb-1 min-w-0">
       <div className="px-2.5 pb-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/40">
         Appearance
       </div>
@@ -179,7 +179,7 @@ export const ConfigMenu = memo(function ConfigMenu() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-64 rounded-xl border-border/60 p-1.5 shadow-lg"
+        className="w-56 rounded-xl border-border/60 p-1 shadow-lg"
         align="end"
         side="top"
         sideOffset={10}
