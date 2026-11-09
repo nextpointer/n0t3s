@@ -1,30 +1,23 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SolarIcon } from "@/lib/icons";
 import { getNoteEditor } from "@/lib/editor-registry";
+import { cn } from "@/lib/utils";
 
-/**
- * Walk the browser's native undo/redo stack — the same one Ctrl+Z and the
- * OS edit menu drive. Keeping one stack for typing, formatting and these
- * buttons is what lets Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z and this toolbar behave
- * identically; the app-level snapshot history it replaces rebuilt unedited
- * documents on a parallel stack and its programmatic `setValue` wiped the
- * native one on every press.
- *
- * No toasts on purpose: undo and redo state is visible in the document
- * itself, and a "Nothing to undo" flash over a plain no-op is noise. Like
- * every OS edit menu the buttons stay enabled and simply do nothing when the
- * stack is empty.
- */
+function canDo(command: "undo" | "redo"): boolean {
+  try {
+    // Best-effort: reflects the focused editable's history in supporting browsers.
+    return document.queryCommandEnabled(command);
+  } catch {
+    return false;
+  }
+}
+
 function nativeHistory(command: "undo" | "redo"): void {
   const textarea = getNoteEditor()?.textarea;
   if (!textarea) return;
-
-  // execCommand targets the editable that has focus; the button click moves
-  // focus to the button, so return it to the textarea first. If the document
-  // was never focused this no-ops harmlessly.
   if (document.activeElement !== textarea) {
     textarea.focus({ preventScroll: true });
   }
@@ -32,10 +25,58 @@ function nativeHistory(command: "undo" | "redo"): void {
 }
 
 export const HistoryControls = memo(function HistoryControls() {
-  // Native engine state (stack depth) is not observable, so the buttons rely
-  // on the same affordance as browser edit menus: enabled, no-op when spent.
-  const handleUndo = useCallback(() => nativeHistory("undo"), []);
-  const handleRedo = useCallback(() => nativeHistory("redo"), []);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  const refresh = useCallback(() => {
+    const ta = getNoteEditor()?.textarea;
+    const active = document.activeElement === ta;
+    // queryCommandEnabled is most reliable when the textarea has focus.
+    if (ta && !active) {
+      setCanUndo((v) => v); // keep current heuristic
+      setCanRedo((v) => v);
+      return;
+    }
+    setCanUndo(canDo("undo"));
+    setCanRedo(canDo("redo"));
+  }, []);
+
+  useEffect(() => {
+    const onInput = () => {
+      // A new edit enables undo and clears redo (native behavior).
+      setCanUndo(true);
+      setCanRedo(false);
+    };
+    const onHistoryKey = () => setTimeout(refresh, 0);
+    const onFocus = () => setTimeout(refresh, 0);
+    const onExternal = () => {
+      setCanUndo(true);
+      setCanRedo(false);
+      setTimeout(refresh, 0);
+    };
+    document.addEventListener("input", onInput, true);
+    document.addEventListener("keyup", onHistoryKey);
+    document.addEventListener("focusin", onFocus);
+    window.addEventListener("note:history", onExternal as EventListener);
+    const id = window.setInterval(refresh, 1200);
+    refresh();
+    return () => {
+      document.removeEventListener("input", onInput, true);
+      document.removeEventListener("keyup", onHistoryKey);
+      document.removeEventListener("focusin", onFocus);
+      window.removeEventListener("note:history", onExternal as EventListener);
+      window.clearInterval(id);
+    };
+  }, [refresh]);
+
+  const handleUndo = useCallback(() => {
+    nativeHistory("undo");
+    setTimeout(refresh, 0);
+  }, [refresh]);
+  const handleRedo = useCallback(() => {
+    nativeHistory("redo");
+    setTimeout(refresh, 0);
+  }, [refresh]);
 
   const keepFocus = (e: React.MouseEvent) => e.preventDefault();
   return (
@@ -47,8 +88,9 @@ export const HistoryControls = memo(function HistoryControls() {
         onClick={handleUndo}
         aria-label="Undo"
         title="Undo (Ctrl/Cmd+Z)"
+        className={cn(!canUndo && "opacity-35")}
       >
-        <SolarIcon icon="undo" className="w-4 h-4" />
+        <SolarIcon icon="undo" className={cn("h-4 w-4 transition-all", canUndo ? "text-foreground opacity-100 scale-110" : "text-foreground/45 opacity-55")} />
       </Button>
       <Button
         variant="ghost"
@@ -57,8 +99,9 @@ export const HistoryControls = memo(function HistoryControls() {
         onClick={handleRedo}
         aria-label="Redo"
         title="Redo (Ctrl/Cmd+Shift+Z)"
+        className={cn(!canRedo && "opacity-35")}
       >
-        <SolarIcon icon="redo" className="w-4 h-4" />
+        <SolarIcon icon="redo" className={cn("h-4 w-4 transition-all", canRedo ? "text-foreground opacity-100 scale-110" : "text-foreground/45 opacity-55")} />
       </Button>
     </>
   );

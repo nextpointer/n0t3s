@@ -9,7 +9,8 @@ import {
   aiEnabledAtom,
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
-import { captureEditorSelection, applyToSelection } from "@/lib/ai-selection";
+import { captureEditorSelection, applyToSelection, applyReplacementToEditor } from "@/lib/ai-selection";
+import { getNoteEditor } from "@/lib/editor-registry";
 import toast from "react-hot-toast";
 
 export function UseAIShortcuts() {
@@ -30,10 +31,26 @@ export function UseAIShortcuts() {
         return;
       }
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      const result = await executeAction(action as any, target);
+      const result = await executeAction(action as any, target, undefined, sel ? { noteContext: sel.base } : undefined);
       if (result) {
-        setContent(sel ? applyToSelection(sel, result) : result);
-        checkUnsaved();
+        if (sel) {
+          const next = applyReplacementToEditor(sel, result);
+          if (next != null) {
+            setContent(next);
+            checkUnsaved();
+          } else {
+            const ta = getNoteEditor()?.textarea as HTMLTextAreaElement | undefined;
+            if (ta && ta.value !== sel.base) {
+              toast.error("Selection changed — try again");
+            } else {
+              setContent(applyToSelection(sel, result));
+              checkUnsaved();
+            }
+          }
+        } else {
+          setContent(result);
+          checkUnsaved();
+        }
       }
     },
     [content, executeAction, setContent, checkUnsaved],
@@ -52,7 +69,7 @@ export function UseAIShortcuts() {
       "Control+Shift+r": "rewrite",
       "Control+Shift+g": "grammar",
       "Control+Shift+e": "expand",
-      "Control+Shift+i": "simplify",
+      "Control+Shift+m": "simplify",
       "Control+Shift+q": "todo",
     };
 
@@ -81,10 +98,7 @@ export function UseAIShortcuts() {
 
       const action = SHORTCUTS[key];
       if (action) {
-        // Don't preventDefault for Ctrl+Shift+I (browser DevTools)
-        if (key !== "Control+Shift+i" && key !== "Meta+Shift+i") {
-          e.preventDefault();
-        }
+        e.preventDefault();
         handleAIActionRef.current(action);
       }
     };

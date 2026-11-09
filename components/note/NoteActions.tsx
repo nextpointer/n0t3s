@@ -17,7 +17,6 @@ import {
   contentAtom,
 } from "@/store/noteAtom";
 import { SolarIcon } from "@/lib/icons";
-import { AIMenu } from "./AIMenu";
 import { ConfigMenu } from "./ConfigMenu";
 import { transitionPush } from "@/lib/view-transition";
 
@@ -131,8 +130,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         </button>
       )}
 
-      {/* leaving a note · finding · reading · focus · assist · prefs · save */}
-      {!zen && <AIMenu trigger="bar" />}
+      {/* leaving a note · finding · reading · focus · prefs · save */}
 
       {!zen && (
         <button

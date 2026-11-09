@@ -10,6 +10,9 @@ import {
   previewColorsAtom,
   editorFontSizeAtom,
   viewModeAtom,
+  aiEnabledAtom,
+  checkUnsavedAtom,
+  spellCheckAtom,
   type ViewMode,
 } from "@/store/noteAtom";
 import { shikiPool } from "@/lib/shiki-worker-pool";
@@ -19,7 +22,11 @@ import { useTheme } from "next-themes";
 import { EditorToolbar, type ToolbarEditor } from "./EditorToolbar";
 import { TagAutocomplete } from "./TagAutocomplete";
 import { registerNoteEditor } from "@/lib/editor-registry";
-import { rememberEditorSelection } from "@/lib/ai-selection";
+import { rememberEditorSelection, captureEditorSelection, applyToSelection, applyReplacementToEditor, type EditorSelection } from "@/lib/ai-selection";
+import { UseAIActions } from "@/hooks/useAIActions";
+import { useIsPhone } from "@/hooks/use-is-phone";
+import { SolarIcon, type IconId } from "@/lib/icons";
+import toast from "react-hot-toast";
 
 interface NoteContentProps {
   initialContent: string;
@@ -294,6 +301,7 @@ export const NoteContent = memo(
     const toolbarEnabled = useAtomValue(toolbarEnabledAtom);
     const previewColorsOn = useAtomValue(previewColorsAtom);
     const fontSize = useAtomValue(editorFontSizeAtom);
+    const spellCheck = useAtomValue(spellCheckAtom);
 
     // Read by the init effect without becoming one of its dependencies, so
     // toggling a setting never rebuilds the editor.
@@ -301,6 +309,8 @@ export const NoteContent = memo(
     previewColorsRef.current = previewColorsOn;
     const fontSizeRef = useRef(fontSize);
     fontSizeRef.current = fontSize;
+    const spellCheckRef = useRef(spellCheck);
+    spellCheckRef.current = spellCheck;
 
     // Records in IndexedDB are not runtime-validated, so a malformed/legacy
     // note can hand us undefined here and crash every derived value below.
@@ -359,6 +369,121 @@ export const NoteContent = memo(
 
     const syncToContent = useSetAtom(syncEditorToContentAtom);
     const externalContent = useAtomValue(contentAtom);
+    const setContent = useSetAtom(contentAtom);
+    const aiEnabled = useAtomValue(aiEnabledAtom);
+    const checkUnsaved = useSetAtom(checkUnsavedAtom);
+    const { executeAction } = UseAIActions();
+    const isPhone = useIsPhone();
+
+    const [ctxMenu, setCtxMenu] = useState<
+      | { open: false }
+      | { open: true; x: number; y: number; anchor: "pointer" | "bottom"; sel: EditorSelection; prompting: boolean; prompt: string }
+    >({ open: false });
+
+    const closeCtxMenu = useCallback(() => setCtxMenu({ open: false }), []);
+
+    const runSelectionAI = useCallback(
+      async (action: string, sel: EditorSelection, instruction?: string) => {
+        closeCtxMenu();
+        // Keep selection visible while running.
+        const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+        if (ta) {
+          try {
+            ta.focus({ preventScroll: true });
+            ta.setSelectionRange(sel.start, sel.end);
+          } catch {}
+        }
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        const result = await executeAction(action as any, sel.text, instruction, { noteContext: sel.base });
+        if (result) {
+          const next = applyReplacementToEditor(sel, result);
+          if (next != null) {
+            contentRef.current = next;
+            setContent(next);
+            checkUnsaved();
+          } else {
+            const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+            if (ta && ta.value !== sel.base) {
+              toast.error("Selection changed — try again");
+            } else {
+              const full = applyToSelection(sel, result);
+              contentRef.current = full;
+              setContent(full);
+              checkUnsaved();
+            }
+          }
+        }
+      },
+      [closeCtxMenu, executeAction, setContent, checkUnsaved],
+    );
+
+    useEffect(() => {
+      if (!ctxMenu.open) return;
+      const onDown = (e: Event) => {
+        const t = e.target as HTMLElement | null;
+        if (t?.closest?.("[data-ai-ctx-menu]")) return;
+        closeCtxMenu();
+      };
+      const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeCtxMenu(); };
+      const onScroll = (e: Event) => {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest?.("[data-ai-ctx-menu]")) return;
+        if ((document.activeElement as HTMLElement | null)?.closest?.("[data-ai-ctx-menu]")) return;
+        closeCtxMenu();
+      };
+      window.addEventListener("mousedown", onDown);
+      window.addEventListener("touchstart", onDown, { passive: true });
+      window.addEventListener("keydown", onKey);
+      window.addEventListener("scroll", onScroll, true);
+      return () => {
+        window.removeEventListener("mousedown", onDown);
+        window.removeEventListener("touchstart", onDown);
+        window.removeEventListener("keydown", onKey);
+        window.removeEventListener("scroll", onScroll, true);
+      };
+    }, [ctxMenu.open, closeCtxMenu]);
+
+    useEffect(() => {
+      const host = wrapperRef.current;
+      if (!host) return;
+      const onContextMenu = (e: MouseEvent) => {
+        if (!aiEnabled) return; // AI off => normal browser menu
+        const sel = captureEditorSelection();
+        if (!sel || !sel.text.trim()) return; // no selection => browser menu
+        e.preventDefault();
+        setCtxMenu({ open: true, x: e.clientX, y: e.clientY, anchor: "pointer", sel, prompting: false, prompt: "" });
+      };
+      host.addEventListener("contextmenu", onContextMenu);
+      return () => host.removeEventListener("contextmenu", onContextMenu);
+    }, [aiEnabled]);
+
+    // Phone (no right-click): show a lightweight menu when a selection is made.
+    useEffect(() => {
+      if (!isPhone || !aiEnabled) return;
+      let timer: number | undefined;
+      const onSelectionChange = () => {
+        if (timer) window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          const active = document.activeElement as HTMLElement | null;
+          if (active?.closest?.("[data-ai-ctx-menu]")) return;
+          const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+          if (!ta) { setCtxMenu({ open: false }); return; }
+          // Only react to selections within our editor.
+          if (document.activeElement !== ta && !wrapperRef.current?.contains(document.activeElement)) return;
+          const sel = captureEditorSelection();
+          if (sel && sel.text.trim() && document.activeElement === ta) {
+            setCtxMenu({ open: true, x: 0, y: 0, anchor: "bottom", sel, prompting: false, prompt: "" });
+          } else if (!sel) {
+            setCtxMenu((m) => (m.open && m.anchor === "bottom" && !m.prompting ? { open: false } : m));
+          }
+        }, 320);
+      };
+      document.addEventListener("selectionchange", onSelectionChange);
+      return () => {
+        if (timer) window.clearTimeout(timer);
+        document.removeEventListener("selectionchange", onSelectionChange);
+      };
+    }, [isPhone, aiEnabled]);
 
     const debouncedSync = useCallback(
       (content: string) => {
@@ -471,6 +596,7 @@ export const NoteContent = memo(
           fontSize: `${size}px`,
           mobile: { fontSize: `${Math.max(12, size - 3)}px`, lineHeight: 1.5 },
         });
+        if (instance.textarea) (instance.textarea as HTMLTextAreaElement).spellcheck = spellCheckRef.current;
 
         if (ta) {
           ta.setSelectionRange(start, end);
@@ -485,6 +611,12 @@ export const NoteContent = memo(
       }, 120);
       return () => clearTimeout(id);
     }, [fontSize]);
+
+    // Apply spellcheck to the live editor textarea without rebuilding.
+    useEffect(() => {
+      const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+      if (ta) ta.spellcheck = spellCheck;
+    }, [spellCheck]);
 
     // Drive the editor whenever the shared mode changes (toolbar dropdown,
     // Ctrl+/, the bottom-bar button). The init effect handles the first value,
@@ -727,7 +859,7 @@ export const NoteContent = memo(
           mobile: { fontSize: `${Math.max(12, fontSizeRef.current - 3)}px`, lineHeight: 1.5 },
           theme: { name: "minimal-hierarchy", colors, previewColors },
           smartLists: true,
-          textareaProps: { spellCheck: false },
+          spellcheck: spellCheckRef.current,
           onRender: (previewEl: HTMLElement, mode: string) => {
             if (mode === "preview") stampTaskIndices(previewEl);
           },
@@ -834,12 +966,11 @@ export const NoteContent = memo(
     // Sync atom-driven content changes back into the editor. Fires for AI
     // rewrites only — note switches remount this component via `key`.
     useEffect(() => {
-      if (!editorRef.current || isTypingRef.current) return;
+      if (!editorRef.current) return;
       const currentEditorValue = editorRef.current.getValue();
       if (externalContent === currentEditorValue) return;
 
       const instance = editorRef.current;
-      const textarea = instance.textarea as HTMLTextAreaElement;
       isExternalUpdateRef.current = true;
 
       // Splice the rewrite into the textarea through the browser's editing
@@ -848,23 +979,47 @@ export const NoteContent = memo(
       // from the AI output — same stack the toolbar and the OS menu use.
       // A plain `.value` assignment would discard that stack and strand the
       // caret wherever the engine parks it after the swap.
-      try {
-        textarea.focus({ preventScroll: true });
-        textarea.setSelectionRange(0, textarea.value.length);
-        const replaced =
-          externalContent === ""
-            ? document.execCommand("delete")
-            : document.execCommand("insertText", false, externalContent);
-        if (!replaced) throw new Error("execCommand unavailable");
-      } catch {
-        // Fallback: direct write through OverType. The preview still
-        // re-renders; the native undo stack resets — pre-existing behaviour.
-        instance.setValue(externalContent);
-      }
+      const applyExternal = () => {
+        const ta = instance.textarea as HTMLTextAreaElement | undefined;
+        if (!ta) {
+          instance.setValue(externalContent);
+          return;
+        }
+        try { ta.focus({ preventScroll: true }); } catch {}
+        try { ta.setSelectionRange(0, ta.value.length); } catch {}
+        let ok = false;
+        try {
+          ok =
+            externalContent === ""
+              ? document.execCommand("delete")
+              : document.execCommand("insertText", false, externalContent);
+        } catch {
+          ok = false;
+        }
+        if (!ok) {
+          try {
+            ta.setRangeText(externalContent, 0, ta.value.length, "end");
+            ta.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: externalContent }));
+            ok = true;
+          } catch {
+            ok = false;
+          }
+        }
+        if (!ok) {
+          // Last resort only: keeps content correct but native undo is lost.
+          ta.value = externalContent;
+          ta.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        // Keep OverType's internal state/preview in sync with the textarea.
+        try { instance.updatePreview?.(); } catch {}
+      };
+      applyExternal();
       contentRef.current = externalContent;
-      setAiFadeKey((k) => k + 1);
+      // Let OverType/native stack settle, then refresh undo/redo affordance.
+      requestAnimationFrame(() => setAiFadeKey((k) => k + 1));
       requestAnimationFrame(() => {
         isExternalUpdateRef.current = false;
+        window.dispatchEvent(new CustomEvent("note:history"));
       });
     }, [externalContent]);
 
@@ -896,6 +1051,113 @@ export const NoteContent = memo(
         {/* #tag completion; anchored to this wrapper so the popover keeps
             position when the page around it scrolls. */}
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
+        {ctxMenu.open && (
+          <div
+            data-ai-ctx-menu
+            className={
+              ctxMenu.anchor === "bottom"
+                ? "fixed inset-x-3 z-[100] animate-in fade-in slide-in-from-bottom-2 duration-150"
+                : "fixed z-[100] min-w-[200px] max-w-[min(22rem,calc(100vw-1rem))] animate-in fade-in zoom-in-95 duration-100"
+            }
+            style={
+              ctxMenu.anchor === "bottom"
+                ? { bottom: "calc(var(--ot-bottom-inset, 48px) + env(safe-area-inset-bottom, 0px) + 8px)" }
+                : {
+                    left: Math.max(8, Math.min(ctxMenu.x, (typeof window !== "undefined" ? window.innerWidth : ctxMenu.x) - 216)),
+                    top: Math.max(8, Math.min(ctxMenu.y, (typeof window !== "undefined" ? window.innerHeight : ctxMenu.y) - 160)),
+                  }
+            }
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <div
+              role="menu"
+              aria-label="Selection actions"
+              className={`mx-auto max-w-md rounded-2xl border border-foreground/[0.06] bg-background/95 p-1 shadow-none backdrop-blur-sm ${ctxMenu.anchor === "pointer" ? "max-h-[70vh] overflow-y-auto [scrollbar-width:thin]" : ""}`}
+            >
+              {!ctxMenu.prompting ? (
+                <div className={ctxMenu.anchor === "bottom" ? "flex flex-wrap items-center justify-center gap-0.5" : "flex flex-col gap-0.5"}>
+                  {(() => {
+                    const item = ctxMenu.anchor === "bottom"
+                      ? "inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[13px] text-foreground/80 transition-colors active:bg-foreground/[0.06] sm:hover:bg-foreground/[0.05]"
+                      : "flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-[13px] text-foreground/80 transition-colors hover:bg-foreground/[0.05]";
+                    const icon = "size-[14px] shrink-0 text-foreground/55";
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={item}
+                          onClick={async () => {
+                            try { await navigator.clipboard.writeText(ctxMenu.sel.text); toast.success("Copied", { duration: 1200 }); } catch {}
+                            closeCtxMenu();
+                          }}
+                        >
+                          <SolarIcon icon="copy" className={icon} />
+                          <span>Copy</span>
+                        </button>
+                        {([
+                          ["summarize", "Summarize", "summarize"],
+                          ["rewrite", "Rewrite", "rewrite"],
+                          ["grammar", "Fix grammar", "grammar"],
+                        ] as const).map(([action, label, iconId]) => (
+                          <button
+                            key={action}
+                            type="button"
+                            role="menuitem"
+                            className={item}
+                            onClick={() => void runSelectionAI(action, ctxMenu.sel)}
+                          >
+                            <SolarIcon icon={iconId as IconId} className={icon} />
+                            <span>{label}</span>
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={item}
+                          onClick={() => setCtxMenu((m) => (m.open ? { ...m, prompting: true } : m))}
+                        >
+                          <SolarIcon icon="prompt" className={icon} />
+                          <span>Prompt</span>
+                        </button>
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <form
+                  className="flex min-w-0 flex-col gap-1.5 p-0.5"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const inst = ctxMenu.prompt.trim();
+                    if (!inst) return;
+                    void runSelectionAI("edit", ctxMenu.sel, inst);
+                  }}
+                >
+                  <textarea
+                    autoFocus
+                    rows={2}
+                    value={ctxMenu.prompt}
+                    onChange={(e) => setCtxMenu((m) => (m.open ? { ...m, prompt: e.target.value } : m))}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        const inst = ctxMenu.prompt.trim();
+                        if (inst) void runSelectionAI("edit", ctxMenu.sel, inst);
+                      }
+                    }}
+                    placeholder={isPhone ? "Edit selection…" : "Edit selection… (Ctrl+Enter to run)"}
+                    className="max-h-40 min-h-[2.75rem] w-full min-w-0 resize-none overflow-y-auto rounded-xl bg-foreground/[0.04] px-2.5 py-2 text-[13px] leading-relaxed outline-none placeholder:text-muted-foreground/35 [field-sizing:content]"
+                  />
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button type="button" className="shrink-0 rounded-xl px-2.5 py-1.5 text-[12px] text-muted-foreground/70 transition-colors hover:bg-foreground/[0.05]" onClick={() => setCtxMenu((m) => (m.open ? { ...m, prompting: false, prompt: "" } : m))}>Back</button>
+                    <button type="submit" className="shrink-0 rounded-xl bg-foreground/[0.08] px-2.5 py-1.5 text-[12px] text-foreground/85 transition-colors hover:bg-foreground/[0.12]">Run</button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   },

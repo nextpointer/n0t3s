@@ -12,9 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SolarIcon, type IconId } from "@/lib/icons";
-import { autoSaveAtom, aiEnabledAtom, zenMode, persistZenMode, search } from "@/store/noteAtom";
+import { autoSaveAtom, zenMode, persistZenMode, search } from "@/store/noteAtom";
 import { cn } from "@/lib/utils";
-import { AIMenu } from "./AIMenu";
 
 /** Minimal shape of the OverType instance this toolbar drives. */
 export interface ToolbarEditor {
@@ -92,7 +91,6 @@ export const EditorToolbar = memo(function EditorToolbar({
   const activeRef = useRef<string[]>([]);
   const [showFormats, setShowFormats] = useState(false);
   const autoSave = useAtomValue(autoSaveAtom);
-  const aiEnabled = useAtomValue(aiEnabledAtom);
   const [zen, setZenMode] = useAtom(zenMode);
   const setSearchOpen = useSetAtom(search);
 
@@ -334,13 +332,6 @@ export const EditorToolbar = memo(function EditorToolbar({
       >
         <SolarIcon icon={viewMode === "preview" ? "edit" : "read"} className="size-[16px]" />
       </button>
-      {aiEnabled && (
-        <AIMenu
-          trigger="bar"
-          className={cn(actionBtn, "p-0 md:mt-0 md:p-0")}
-          iconClassName="size-[16px]"
-        />
-      )}
     </>
   );
 

@@ -130,25 +130,34 @@ export async function performAIAction(
   content: string,
   action: AIAction,
   instruction?: string,
+  options?: { noteContext?: string },
 ): Promise<string> {
   if (!content?.trim()) throw new Error("Not able to edit");
   if (!(action in ACTION_INSTRUCTIONS))
     throw new Error(`Invalid action: ${action}`);
   const inst = (instruction || "").trim();
   if (action === "edit" && !inst) throw new Error("Instruction is required");
+  const noteContext = (options?.noteContext || "").trim();
 
-  // Cache key includes model + action + content (+ instruction for edit)
+  // Cache key includes model + action + content + context (+ instruction)
   const cacheKey = createHash("sha256")
-    .update(`${MODEL_NAME}::${action}::${inst}::${content}`)
+    .update(`${MODEL_NAME}::${action}::${inst}::${content}::${noteContext}`)
     .digest("hex");
 
   const cached = responseCache.get(cacheKey);
   if (cached) return cached;
 
+  const contextBlock = noteContext && noteContext !== content
+    ? `\n\nFull note context (for reference; do not return this):\n${noteContext}`
+    : "";
+  const selectionNote = noteContext && noteContext !== content
+    ? "\nReturn ONLY the transformed selection (not the full note)."
+    : "";
+
   const userContent =
     action === "edit"
-      ? `${ACTION_INSTRUCTIONS[action]}\n\nInstruction:\n${inst}\n\n---\nNote:\n${content}`
-      : `${ACTION_INSTRUCTIONS[action]}\n\n---\n\n${content}`;
+      ? `${ACTION_INSTRUCTIONS[action]}${selectionNote}\n\nInstruction:\n${inst}${contextBlock}\n\n---\nSelection/Note to edit:\n${content}`
+      : `${ACTION_INSTRUCTIONS[action]}${selectionNote}${contextBlock}\n\n---\n\n${content}`;
 
   try {
     const { text } = await generateText({

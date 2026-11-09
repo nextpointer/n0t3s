@@ -43,6 +43,7 @@ export function UseAIActions() {
       action: AIAction,
       content: string,
       instruction?: string,
+      options?: { noteContext?: string },
     ): Promise<string | null> => {
       if (!aiEnabled) {
         toast.error("AI is turned off in Settings");
@@ -60,7 +61,7 @@ export function UseAIActions() {
         const response = await fetch("/api/ai", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content, action, instruction }),
+          body: JSON.stringify({ content, action, instruction, noteContext: options?.noteContext }),
           signal: controller.signal,
         });
 
