@@ -78,6 +78,7 @@ export const UI = {
   selectAll: "solar:checklist-minimalistic-bold-duotone",
   selectNone: "solar:close-square-bold-duotone",
   // shared primitives
+  copy: "solar:clipboard-bold-duotone",
   close: "solar:close-circle-bold-duotone",
   checkCircle: "solar:check-circle-bold-duotone",
   check: "solar:check-square-line-duotone",
