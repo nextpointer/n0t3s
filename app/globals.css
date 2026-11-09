@@ -448,9 +448,10 @@
             top: auto;
             left: 0;
             right: 0;
-            bottom: var(--ot-bottom-inset, 72px);
+            bottom: var(--ot-bottom-inset, 48px);
             width: auto;
             z-index: 40;
+            min-height: 44px;
             /* Opaque: with the keyboard up this row sits over the keyboard,
                so a transparent bar would let the keys show through the labels. */
             background: var(--background);
@@ -458,6 +459,12 @@
             border-radius: 0;
             box-shadow: 0 -1px 0 0 color-mix(in srgb, var(--editor-text) 12%, transparent);
             backdrop-filter: none;
+        }
+
+        /* Keyboard open: the toolbar above the keyboard is the active strip;
+           hide the bottom action bar so it never shows behind/under it. */
+        html[data-keyboard="open"] .note-actions-bar {
+            display: none !important;
         }
 
         /* Reserve room for the on-screen keyboard so the caret and the last

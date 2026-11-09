@@ -37,11 +37,13 @@ export const HistoryControls = memo(function HistoryControls() {
   const handleUndo = useCallback(() => nativeHistory("undo"), []);
   const handleRedo = useCallback(() => nativeHistory("redo"), []);
 
+  const keepFocus = (e: React.MouseEvent) => e.preventDefault();
   return (
     <>
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={keepFocus}
         onClick={handleUndo}
         aria-label="Undo"
         title="Undo (Ctrl/Cmd+Z)"
@@ -51,6 +53,7 @@ export const HistoryControls = memo(function HistoryControls() {
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={keepFocus}
         onClick={handleRedo}
         aria-label="Redo"
         title="Redo (Ctrl/Cmd+Shift+Z)"

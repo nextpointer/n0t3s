@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { markdownActions } from "overtype";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,9 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SolarIcon, type IconId } from "@/lib/icons";
-import { HistoryControls } from "./HistoryControls";
-import { AIMenu } from "./AIMenu";
-import { SettingsMenu } from "./SettingsMenu";
+import { autoSaveAtom, zenMode, persistZenMode, search } from "@/store/noteAtom";
 import { cn } from "@/lib/utils";
 
 /** Minimal shape of the OverType instance this toolbar drives. */
@@ -91,6 +90,11 @@ export const EditorToolbar = memo(function EditorToolbar({
   const [activeFormats, setActiveFormats] = useState<string[]>([]);
   const activeRef = useRef<string[]>([]);
   const [showFormats, setShowFormats] = useState(false);
+  const autoSave = useAtomValue(autoSaveAtom);
+  const [zen, setZenMode] = useAtom(zenMode);
+  const setSearchOpen = useSetAtom(search);
+
+  const keepFocus = (e: React.SyntheticEvent) => e.preventDefault();
 
   const refreshActiveFormats = useCallback(() => {
     if (!editor?.textarea) return;
@@ -274,31 +278,80 @@ export const EditorToolbar = memo(function EditorToolbar({
     </>
   );
 
+  // Phone actions: no repeats of top/bottom chrome (no undo/redo). Save only
+  // when autosave is off; plus command palette, zen, preview/read.
   const actionButtons = (
     <>
-      <Button
+      {!autoSave && (
+        <button
+          type="button"
+          title="Save"
+          aria-label="Save"
+          onMouseDown={keepFocus}
+          onClick={() => window.dispatchEvent(new CustomEvent("note:save"))}
+          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <SolarIcon icon="save" className="size-[17px]" />
+        </button>
+      )}
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
-        title="Save (Ctrl/Cmd+S)"
-        aria-label="Save"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => window.dispatchEvent(new CustomEvent("note:save"))}
-        className="size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        title="Commands"
+        aria-label="Command palette"
+        onMouseDown={keepFocus}
+        onClick={() => setSearchOpen("commands")}
+        className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
       >
-        <SolarIcon icon="save" className="size-4" />
-      </Button>
-      <HistoryControls />
-      <AIMenu />
-      <SettingsMenu />
+        <SolarIcon icon="search" className="size-[17px]" />
+      </button>
+      <button
+        type="button"
+        title={zen ? "Exit zen mode" : "Zen mode"}
+        aria-label={zen ? "Exit zen mode" : "Zen mode"}
+        aria-pressed={zen}
+        onMouseDown={keepFocus}
+        onClick={() => {
+          const next = !zen;
+          setZenMode(next);
+          persistZenMode(next);
+        }}
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-accent hover:text-foreground",
+          zen ? "text-foreground" : "text-muted-foreground/70",
+        )}
+      >
+        <SolarIcon icon={zen ? "zenExit" : "zen"} className="size-[17px]" />
+      </button>
+      <button
+        type="button"
+        title={viewMode === "preview" ? "Edit" : "Read mode"}
+        aria-label={viewMode === "preview" ? "Edit" : "Read mode"}
+        aria-pressed={viewMode === "preview"}
+        onMouseDown={keepFocus}
+        onClick={() => switchView(viewMode === "preview" ? "edit" : "preview")}
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-accent hover:text-foreground",
+          viewMode === "preview" ? "text-foreground" : "text-muted-foreground/70",
+        )}
+      >
+        <SolarIcon icon={viewMode === "preview" ? "edit" : "read"} className="size-[17px]" />
+      </button>
     </>
   );
+
+  // Prevent focus leaving the textarea when tapping toolbar controls on
+  // phones (keeps the virtual keyboard up and the action working).
+  const stopBlur = (e: React.SyntheticEvent) => {
+    const t = e.target as HTMLElement | null;
+    if (t?.closest("button,[role='button'],a")) e.preventDefault();
+  };
 
   return (
     <div
       role="toolbar"
       aria-label="Formatting toolbar"
       data-mobile-visible={mobileVisible || undefined}
+      onMouseDown={stopBlur}
       className="note-toolbar w-full px-2 py-1.5"
     >
       {/* Desktop: single row, format tools + view (actions live in headers/bars). */}

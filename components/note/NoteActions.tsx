@@ -57,7 +57,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
   }, [save]);
 
   return (
-    <div className="md:relative fixed inset-x-0 bottom-0 md:inset-x-auto md:right-8 md:left-0 flex flex-row h-14 md:h-auto pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-1 gap-1 md:gap-3 items-center justify-evenly md:justify-between bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none border-t border-border/40 md:border-0 z-30">
+    <div className="note-actions-bar md:relative fixed inset-x-0 bottom-0 md:inset-x-auto md:right-8 md:left-0 flex flex-row h-11 md:h-auto pb-[max(0.35rem,env(safe-area-inset-bottom))] md:pb-1 gap-1 md:gap-3 items-center justify-evenly md:justify-between bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none border-t border-border/40 md:border-0 z-30">
       {/* Desktop: word/char counter, vertically middle-aligned with the bottom
           icons (shares their md:mt-10 offset). Hidden on phone. */}
       <div
@@ -150,14 +150,14 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
       {!zen && !autoSave && (
         <Button
           variant={unsaved ? "default" : "ghost"}
-          className="text-xs sm:text-sm rounded-full h-8 px-3 md:mt-10"
+          className="h-8 min-w-[4.5rem] justify-center rounded-full px-3 text-xs sm:text-sm md:mt-10"
           onClick={handleSave}
           disabled={!unsaved || loading}
         >
           {loading ? (
-            <>
-              <Loader className="text-background mr-2" /> ...
-            </>
+            <span className="inline-flex items-center gap-2">
+              <Loader className="text-background" /> Saving
+            </span>
           ) : (
             "Save"
           )}

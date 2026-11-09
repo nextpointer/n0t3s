@@ -616,7 +616,8 @@ export const NoteContent = memo(
         const keyboard = layoutShrank ? 0 : overlay;
 
         // With no keyboard up, keep clear of the fixed action bar instead.
-        const reserved = overlay > 24 ? 0 : 72;
+        // 48 ~= toolbar/bottom-bar height on phones.
+        const reserved = overlay > 24 ? 0 : 48;
         host.style.setProperty("--ot-bottom-inset", `${keyboard + reserved}px`);
 
         // Only pad by what actually sits under the keyboard. Derived from the
@@ -629,12 +630,15 @@ export const NoteContent = memo(
         host.style.setProperty("--ot-keyboard", `${covered}px`);
 
         // Follow focus: the keyboard is opened to type. Keep the toolbar up
-        // while a dropdown/menu is open (focus moves to a Radix portal) so it
-        // doesn't collapse and mis-anchor the menu on phones.
+        // while a dropdown/menu is open (Radix portal) or a toolbar interaction
+        // is in progress, so taps on toolbar actions don't collapse it.
         const typing =
           editorRef.current?.textarea === document.activeElement;
         const menuOpen = !!document.querySelector('[data-radix-popper-content-wrapper]');
-        setKeyboardOpen((typing || menuOpen) && overlay > 24);
+        const toolbarActive = !!document.activeElement?.closest(".note-toolbar");
+        const open = (typing || menuOpen || toolbarActive) && overlay > 24;
+        setKeyboardOpen(open);
+        document.documentElement.dataset.keyboard = open ? "open" : "closed";
       };
 
       // The keyboard is laid out after the focus change that asked for it, so
@@ -658,6 +662,7 @@ export const NoteContent = memo(
         window.removeEventListener("orientationchange", onFocusChange);
         document.removeEventListener("focusin", onFocusChange);
         document.removeEventListener("focusout", onFocusChange);
+        delete document.documentElement.dataset.keyboard;
       };
     }, []);
 
