@@ -70,7 +70,7 @@ export const NoteActions = memo(function NoteActions({ save }: NoteActionsProps)
         <span aria-hidden className="text-foreground/20">·</span>
         <span>{stats.chars.toLocaleString()} chars</span>
       </div>
-      <div className="flex flex-row items-center justify-evenly md:justify-end gap-1 md:gap-3 w-full md:w-auto">
+      <div className="flex w-full flex-row items-center justify-between px-4 md:w-auto md:justify-end md:gap-3 md:px-0">
       {!zen && (
         <button
           type="button"
