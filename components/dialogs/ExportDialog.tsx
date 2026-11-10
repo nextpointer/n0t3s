@@ -37,8 +37,14 @@ const FORMAT_TILES: { id: ExportFormat; label: string; icon: IconId }[] = [
   { id: "image", label: "Picture", icon: "image" },
 ];
 
+type ShareNavigator = Navigator & {
+  share?: (data?: ShareData) => Promise<void>;
+  canShare?: (data?: ShareData) => boolean;
+};
+
 function canUseWebShare(): boolean {
-  return typeof navigator !== "undefined" && typeof (navigator as any).share === "function";
+  if (typeof navigator === "undefined") return false;
+  return typeof (navigator as ShareNavigator).share === "function";
 }
 
 export const ExportDialog = memo(function ExportDialog() {
@@ -51,7 +57,7 @@ export const ExportDialog = memo(function ExportDialog() {
   const title = note?.title || "Untitled";
   const content = note?.content || "";
   const markdown = useMemo(() => getMarkdown(title, content), [title, content]);
-  const plainText = useMemo(() => getPlainText(content), [content, open]);
+  const plainText = useMemo(() => getPlainText(content), [content]);
   const noteIsEmpty = !((note?.title || "").trim() || (note?.content || "").trim());
   const copyAllowed = canCopyText(plainText || markdown);
   const shareAvailable = canUseWebShare();
@@ -129,14 +135,14 @@ export const ExportDialog = memo(function ExportDialog() {
     if (!note || busy || noteIsEmpty) return;
     setBusy("share");
     try {
-      const nav: any = navigator;
+      const nav = navigator as ShareNavigator;
       if (typeof nav.share === "function") {
         await nav.share({ title, text: plainText || markdown });
         toast.success("Shared");
         setOpen(false);
       }
-    } catch (error: any) {
-      if (error && error.name === "AbortError") return;
+    } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
       console.error("Share failed:", error);
       toast.error("Couldn't share note");
     } finally {

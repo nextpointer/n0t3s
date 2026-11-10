@@ -3,9 +3,15 @@
 import { toBlob, toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { marked } from "marked";
-import { getNoteEditor } from "@/lib/editor-registry";
 import { normalizeLang } from "@/lib/shiki-langs";
 import { shikiPool } from "@/lib/shiki-worker-pool";
+
+type ImageRenderOptions = NonNullable<Parameters<typeof toBlob>[1]>;
+type ShareNavigator = Navigator & {
+  share?: (data?: ShareData) => Promise<void>;
+  canShare?: (data?: ShareData) => boolean;
+};
+type PdfWithSetPage = jsPDF & { setPage?: (pageNumber: number) => jsPDF };
 
 marked.setOptions({
   gfm: true,
@@ -149,18 +155,6 @@ function sanitizeExportHtml(html: string): string {
   }
 
   return root.innerHTML;
-}
-
-function getCleanHtmlFromEditor(): string | null {
-  const editor = getNoteEditor() as any;
-  if (!editor) return null;
-  try {
-    let html: string | null = null;
-    if (typeof editor.getCleanHTML === "function") html = editor.getCleanHTML();
-    else if (typeof editor.getRenderedHTML === "function") html = editor.getRenderedHTML({ cleanHTML: true });
-    if (typeof html === "string" && html.trim()) return sanitizeExportHtml(html);
-  } catch {}
-  return null;
 }
 
 function markdownToBasicHtml(markdown: string): string {
@@ -418,21 +412,21 @@ export async function exportAsImageBlob(title: string, content: string, mode: Th
     const width = Math.max(320, Math.min(rawW, 1600));
     const height = Math.max(200, rawH);
     const pixelRatio = height > 12000 ? 1 : 2;
-    const opts = {
+    const opts: ImageRenderOptions = {
       cacheBust: true,
       pixelRatio,
       backgroundColor: getTheme(mode).bg,
       width,
       height,
       style: { margin: "0", transform: "none" },
-    } as const;
+    };
 
     try {
-      const blob = await toBlob(article, opts as any);
+      const blob = await toBlob(article, opts);
       if (blob && blob.size > 0) return blob;
     } catch {}
 
-    const dataUrl = await toPng(article, opts as any);
+    const dataUrl = await toPng(article, opts);
     if (!dataUrl || dataUrl === "data:,") throw new Error("Failed to render image");
     const res = await fetch(dataUrl);
     const blob = await res.blob();
@@ -516,15 +510,15 @@ export async function exportAsPdfBlob(title: string, content: string, mode: Them
     const width = Math.max(320, Math.min(rawW, 1600));
     const height = Math.max(200, rawH);
     const pixelRatio = height > 12000 ? 1 : 2;
-    const opts = {
+    const opts: ImageRenderOptions = {
       cacheBust: true,
       pixelRatio,
       backgroundColor: getTheme(mode).bg,
       width,
       height,
       style: { margin: "0", transform: "none" },
-    } as const;
-    const dataUrl = await toPng(article, opts as any);
+    };
+    const dataUrl = await toPng(article, opts);
     if (!dataUrl || dataUrl === "data:,") throw new Error("Failed to render PDF");
 
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -604,8 +598,9 @@ export async function exportAsPdfBlob(title: string, content: string, mode: Them
         const linkW = Math.max(footerWidthImg * pxToPt, 80);
         const linkH = Math.max(footerHeightImg * pxToPt, 12);
 
-        if (typeof (pdf as any).setPage === "function") {
-          (pdf as any).setPage(pageIndex + 1);
+        const pdfWithPage = pdf as PdfWithSetPage;
+        if (typeof pdfWithPage.setPage === "function") {
+          pdfWithPage.setPage(pageIndex + 1);
         }
         pdf.link(linkX, linkY, linkW, linkH, { url: NOTE_BRAND_URL });
       }
@@ -620,13 +615,13 @@ export async function exportAsPdfBlob(title: string, content: string, mode: Them
 export async function shareBlob(blob: Blob, filename: string, title: string): Promise<"shared" | "unsupported" | "cancelled"> {
   try {
     const file = new File([blob], filename, { type: blob.type || "application/octet-stream" });
-    const nav: any = navigator;
+    const nav = navigator as ShareNavigator;
     if (typeof nav.share !== "function") return "unsupported";
     if (typeof nav.canShare === "function" && !nav.canShare({ files: [file] })) return "unsupported";
     await nav.share({ files: [file], title: title || "Note" });
     return "shared";
-  } catch (e: any) {
-    if (e && (e.name === "AbortError" || e.name === "NotAllowedError")) return "cancelled";
+  } catch (e: unknown) {
+    if (e instanceof DOMException && (e.name === "AbortError" || e.name === "NotAllowedError")) return "cancelled";
     return "unsupported";
   }
 }
