@@ -24,12 +24,10 @@ import {
   zenMode,
   persistZenMode,
   search,
-  aiEnabledAtom,
   exportDialogOpenAtom,
   deleteDialogOpenAtom,
 } from "@/store/noteAtom";
 import { cn } from "@/lib/utils";
-import { AIMenu } from "./AIMenu";
 import { ConfigMenu } from "./ConfigMenu";
 import { transitionPush } from "@/lib/view-transition";
 import { useIsPhone } from "@/hooks/use-is-phone";
@@ -113,7 +111,6 @@ export const EditorToolbar = memo(function EditorToolbar({
   const [zen, setZenMode] = useAtom(zenMode);
   const setSearchOpen = useSetAtom(search);
   const router = useRouter();
-  const aiEnabled = useAtomValue(aiEnabledAtom);
   const setExportOpen = useSetAtom(exportDialogOpenAtom);
   const setDeleteOpen = useSetAtom(deleteDialogOpenAtom);
   const [viewPickerOpen, setViewPickerOpen] = useState(false);
@@ -416,11 +413,6 @@ export const EditorToolbar = memo(function EditorToolbar({
       >
         <SolarIcon icon={zen ? "zenExit" : "zen"} className="size-[16px]" />
       </button>
-      {aiEnabled && (
-        <span onMouseDown={keepFocus} className="shrink-0">
-          <AIMenu trigger="bar" className="!p-0 !md:mt-0 !mt-0 flex size-8 items-center justify-center rounded-md text-muted-foreground/65 hover:bg-accent hover:text-foreground/90" iconClassName="!size-[16px]" />
-        </span>
-      )}
       <button
         type="button"
         title="Help"
