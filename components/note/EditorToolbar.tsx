@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import { markdownActions } from "overtype";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
@@ -26,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { AIMenu } from "./AIMenu";
 import { ConfigMenu } from "./ConfigMenu";
 import { transitionPush } from "@/lib/view-transition";
+import { useIsPhone } from "@/hooks/use-is-phone";
 
 /** Minimal shape of the OverType instance this toolbar drives. */
 export interface ToolbarEditor {
@@ -109,6 +116,8 @@ export const EditorToolbar = memo(function EditorToolbar({
   const aiEnabled = useAtomValue(aiEnabledAtom);
   const setExportOpen = useSetAtom(exportDialogOpenAtom);
   const setDeleteOpen = useSetAtom(deleteDialogOpenAtom);
+  const [viewPickerOpen, setViewPickerOpen] = useState(false);
+  const isPhone = useIsPhone();
 
   const keepFocus = (e: React.SyntheticEvent) => e.preventDefault();
 
@@ -261,8 +270,8 @@ export const EditorToolbar = memo(function EditorToolbar({
         </div>
       ))}
       <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-border" />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      {isPhone ? (
+        <>
           <Button
             type="button"
             variant="ghost"
@@ -270,27 +279,77 @@ export const EditorToolbar = memo(function EditorToolbar({
             title={`View: ${VIEW_MODES[viewMode].label}`}
             aria-label={`View mode: ${VIEW_MODES[viewMode].label}`}
             onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setViewPickerOpen(true)}
             className="size-8 shrink-0 rounded-md text-muted-foreground/55 transition-colors hover:bg-accent hover:text-foreground/90"
           >
             <CurrentIcon className="size-[15px]" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="top" sideOffset={8} collisionPadding={12} className="w-32 rounded-xl">
-          <DropdownMenuRadioGroup value={viewMode} onValueChange={(v) => switchView(v as ViewMode)}>
-            {(Object.keys(VIEW_MODES) as ViewMode[]).map((mode) => {
-              const { label, Icon } = VIEW_MODES[mode];
-              return (
-                <DropdownMenuRadioItem key={mode} value={mode} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="flex items-center gap-2">
-                    <Icon className="size-4" />
-                    {label}
-                  </span>
-                </DropdownMenuRadioItem>
-              );
-            })}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          <Dialog open={viewPickerOpen} onOpenChange={setViewPickerOpen}>
+            <DialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-xs">
+              <DialogHeader className="pb-1">
+                <DialogTitle className="text-center text-base">View mode</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-1 gap-2">
+                {(Object.keys(VIEW_MODES) as ViewMode[]).map((mode) => {
+                  const { label, Icon } = VIEW_MODES[mode];
+                  const active = viewMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        switchView(mode);
+                        setViewPickerOpen(false);
+                      }}
+                      className={cn(
+                        "flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors",
+                        active
+                          ? "border-border bg-accent text-foreground"
+                          : "border-border/60 bg-background text-foreground/80 hover:bg-accent/60",
+                      )}
+                    >
+                      <Icon className="size-4" />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title={`View: ${VIEW_MODES[viewMode].label}`}
+              aria-label={`View mode: ${VIEW_MODES[viewMode].label}`}
+              onMouseDown={(e) => e.preventDefault()}
+              className="size-8 shrink-0 rounded-md text-muted-foreground/55 transition-colors hover:bg-accent hover:text-foreground/90"
+            >
+              <CurrentIcon className="size-[15px]" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" sideOffset={8} collisionPadding={12} className="w-32 rounded-xl">
+            <DropdownMenuRadioGroup value={viewMode} onValueChange={(v) => switchView(v as ViewMode)}>
+              {(Object.keys(VIEW_MODES) as ViewMode[]).map((mode) => {
+                const { label, Icon } = VIEW_MODES[mode];
+                return (
+                  <DropdownMenuRadioItem key={mode} value={mode} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="flex items-center gap-2">
+                      <Icon className="size-4" />
+                      {label}
+                    </span>
+                  </DropdownMenuRadioItem>
+                );
+              })}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </>
   );
 
