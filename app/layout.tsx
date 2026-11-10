@@ -77,7 +77,6 @@ export default function RootLayout({
         >
           <StorageInit />
           <PwaInit />
-          <InstallPrompt />
           <main
             className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 overflow-hidden ${sg.className} `}
           >
