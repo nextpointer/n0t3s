@@ -24,23 +24,34 @@ export const ExportDialog = memo(function ExportDialog() {
   const note = useAtomValue(currentNoteAtom);
 
   const handleExport = useCallback(
-    async (format: "pdf" | "json" | "markdown") => {
+    (format: "pdf" | "json" | "markdown") => {
       if (!note) return;
       try {
         if (format === "pdf") {
           toast.error("PDF export coming soon");
           return;
         }
+        let blob: Blob;
+        let filename: string;
         if (format === "json") {
-          const blob = new Blob([JSON.stringify(note, null, 2)], { type: "application/json" });
-          downloadBlob(blob, `${sanitizeFilename(note.title)}.json`);
+          blob = new Blob([JSON.stringify(note, null, 2)], { type: "application/json;charset=utf-8" });
+          filename = `${sanitizeFilename(note.title)}.json`;
         } else {
           const markdown = `# ${note.title || "Untitled"}\n\n${note.content || ""}`;
-          const blob = new Blob([markdown], { type: "text/markdown" });
-          downloadBlob(blob, `${sanitizeFilename(note.title)}.md`);
+          blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+          filename = `${sanitizeFilename(note.title)}.md`;
         }
-        toast.success(`Exported as ${format.toUpperCase()}`);
+        // Close first so dialog focus/overlay cleanup can't interfere with the download.
         setOpen(false);
+        window.setTimeout(() => {
+          try {
+            downloadBlob(blob, filename);
+            toast.success(`Exported as ${format.toUpperCase()}`);
+          } catch (err) {
+            console.error("Export failed:", err);
+            toast.error("Failed to export note");
+          }
+        }, 0);
       } catch (error) {
         console.error("Export failed:", error);
         toast.error("Failed to export note");
@@ -83,8 +94,10 @@ function downloadBlob(blob: Blob, filename: string): void {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  anchor.rel = "noopener";
+  anchor.style.display = "none";
   document.body.appendChild(anchor);
   anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }

@@ -108,12 +108,12 @@ export const SettingsMenu = memo(function SettingsMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56 rounded-xl border-border/60 p-1.5 shadow-lg"
+        className="w-42 rounded-xl border-border/60 p-1.5 shadow-lg"
         align="end"
       >
         <DropdownMenuItem
           onClick={handleExport}
-          className="flex justify-center items-center gap-2 rounded-lg py-2"
+          className="flex justify-center items-center gap-2 rounded-b-none py-2"
         >
           <SolarIcon icon="export" className="w-4 h-4" />
           Export Note
@@ -121,7 +121,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleDelete}
-          className="text-destructive focus:text-destructive flex justify-center items-center gap-2 rounded-lg py-2"
+          className="text-destructive focus:text-destructive flex justify-center items-center gap-2 rounded-t-none py-2"
         >
           <SolarIcon icon="delete" className="w-4 h-4" />
           Delete Note

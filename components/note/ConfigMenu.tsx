@@ -82,7 +82,7 @@ export const ConfigMenu = memo(function ConfigMenu() {
 
   const rows = (
     <div className="px-1 pt-2.5 pb-1 min-w-0">
-      <div className="px-2.5 pb-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/40">
+      <div className="px-2.5 pb-1 text-[10px] font-medium capitalize  tracking-widest text-muted-foreground/40">
         Appearance
       </div>
       <div className="mx-1.5 mb-2 flex items-center gap-1 rounded-lg bg-muted/40 p-1">
@@ -110,7 +110,7 @@ export const ConfigMenu = memo(function ConfigMenu() {
         </button>
       </div>
 
-      <div className="px-2.5 pt-1 pb-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/40">
+      <div className="px-2.5 pt-1 pb-1 text-[10px] font-medium capitalize tracking-widest text-muted-foreground/40">
         Editor
       </div>
       <div className="px-2.5 pt-1 pb-4">
