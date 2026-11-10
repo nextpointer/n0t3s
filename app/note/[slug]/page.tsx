@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSetAtom, useAtomValue, useAtom } from "jotai";
 import { Loader } from "@/components/ui/loader";
@@ -46,6 +46,8 @@ export default function Page() {
   const [searchOpen, setSearchOpen] = useAtom(search);
   const [notes, setNotes] = useState<Note[]>([]);
   const zen = useAtomValue(zenMode);
+  const editorScrollRef = useRef<HTMLDivElement | null>(null);
+  const [scrollMask, setScrollMask] = useState({ top: false, bottom: false });
 
   // Read-only atoms
   const pageLoading = useAtomValue(pageLoadingAtom);
@@ -138,6 +140,37 @@ export default function Page() {
     };
   }, [id, discardIfEmpty]);
 
+  useEffect(() => {
+    const el = editorScrollRef.current;
+    if (!el) {
+      setScrollMask({ top: false, bottom: false });
+      return;
+    }
+    const update = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const max = Math.max(0, scrollHeight - clientHeight);
+      const hasOverflow = max > 2;
+      const atTop = scrollTop <= 1;
+      const atBottom = scrollTop >= max - 1;
+      setScrollMask({
+        top: hasOverflow && !atTop,
+        bottom: hasOverflow && !atBottom,
+      });
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    const child = el.firstElementChild as Element | null;
+    if (child) ro.observe(child);
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [loadedNote, id, notFound, pageLoading]);
+
   if (pageLoading || (!loadedNote && !notFound)) {
     return (
       <div className="w-full h-[100dvh] flex items-center justify-center">
@@ -177,19 +210,32 @@ export default function Page() {
       <NoteTitle temp={!!loadedNote?.expiresAt} />
 
       {/* Node Editor */}
-      <div className="flex-1 min-h-0 overflow-y-auto pb-14 sm:pb-0">
-        {tooLarge ? (
-          <div className="flex h-full min-h-[40vh] flex-col items-center justify-center gap-2 px-4 text-center">
-            <h2 className="text-base font-medium text-foreground">
-              {loadedNote?.title?.trim() || "Untitled"}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Note is too large to open safely. Limit: {formatCharLimit(MAX_NOTE_CHARS)}.
-            </p>
-          </div>
-        ) : (
-          <NoteContent key={id} initialContent={loadedNote?.content ?? ""} />
-        )}
+      <div className="relative flex-1 min-h-0">
+        <div
+          ref={editorScrollRef}
+          className="h-full overflow-y-auto pb-14 sm:pb-0"
+        >
+          {tooLarge ? (
+            <div className="flex h-full min-h-[40vh] flex-col items-center justify-center gap-2 px-4 text-center">
+              <h2 className="text-base font-medium text-foreground">
+                {loadedNote?.title?.trim() || "Untitled"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Note is too large to open safely. Limit: {formatCharLimit(MAX_NOTE_CHARS)}.
+              </p>
+            </div>
+          ) : (
+            <NoteContent key={id} initialContent={loadedNote?.content ?? ""} />
+          )}
+        </div>
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-x-0 top-0 z-20 h-8 bg-gradient-to-b from-background to-transparent transition-opacity duration-200 ${scrollMask.top ? "opacity-100" : "opacity-0"}`}
+        />
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-x-0 bottom-0 z-20 h-10 bg-gradient-to-t from-background to-transparent transition-opacity duration-200 ${scrollMask.bottom ? "opacity-100" : "opacity-0"}`}
+        />
       </div>
 
       {/* Footer actions (save, delete, etc.) */}

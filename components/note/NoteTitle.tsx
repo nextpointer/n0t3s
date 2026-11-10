@@ -22,14 +22,16 @@ export const NoteTitle = memo(function NoteTitle({ temp }: { temp?: boolean }) {
   // A brand new note opens on the empty title input, ready to type.
   const isNewNoteRef = useRef(false);
 
-  // first load focus and select
+  // For new notes, focus/select the title. For existing notes, do not steal focus.
   useEffect(() => {
     const titleInput = titleInputRef.current;
     if (!titleInput) return;
-    titleInput.focus();
     if (consumeNewNoteFlag()) {
       isNewNoteRef.current = true;
-      titleInput.select();
+      try {
+        titleInput.focus();
+        titleInput.select();
+      } catch {}
     }
   }, []);
 
