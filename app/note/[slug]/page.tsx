@@ -28,6 +28,7 @@ import { Note } from "@/lib/types";
 import { ExportDialog } from "@/components/dialogs/ExportDialog";
 import { UseAIShortcuts } from "@/hooks/useAIshortcuts";
 import { CommandMenu } from "@/components/CommandMenu";
+import { isNoteTooLarge, MAX_NOTE_CHARS, formatCharLimit } from "@/lib/limits";
 
 export default function Page() {
   // Get note ID from URL
@@ -163,6 +164,8 @@ export default function Page() {
     );
   }
 
+  const tooLarge = loadedNote ? isNoteTooLarge(loadedNote.content, loadedNote.title) : false;
+
   return (
     <div
       className={`relative w-full h-dvh flex flex-col p-4 gap-4 ${!zen ? "xl:w-5xl md:border-l-1 md:border-r-1 md:border-dashed" : "xl:w-[72rem]"}`}
@@ -175,7 +178,18 @@ export default function Page() {
 
       {/* Node Editor */}
       <div className="flex-1 min-h-0 overflow-y-auto pb-14 sm:pb-0">
-        <NoteContent key={id} initialContent={loadedNote?.content ?? ""} />
+        {tooLarge ? (
+          <div className="flex h-full min-h-[40vh] flex-col items-center justify-center gap-2 px-4 text-center">
+            <h2 className="text-base font-medium text-foreground">
+              {loadedNote?.title?.trim() || "Untitled"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Note is too large to open safely. Limit: {formatCharLimit(MAX_NOTE_CHARS)}.
+            </p>
+          </div>
+        ) : (
+          <NoteContent key={id} initialContent={loadedNote?.content ?? ""} />
+        )}
       </div>
 
       {/* Footer actions (save, delete, etc.) */}

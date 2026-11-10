@@ -3,6 +3,7 @@ import { useCallback, createElement } from "react";
 import { aiEnabledAtom, aiLoadingAtom } from "@/store/noteAtom";
 import toast from "react-hot-toast";
 import { AIAction } from "@/lib/types";
+import { MAX_AI_SELECTION_CHARS } from "@/lib/limits";
 
 function showProcessingToast(onCancel: () => void): string {
   return toast.custom(
@@ -52,6 +53,10 @@ export function UseAIActions() {
       if (!content?.trim()) {
         const msg = "Not able to edit";
         if (action !== "edit") toast.error(msg);
+        return null;
+      }
+      if (content.length > MAX_AI_SELECTION_CHARS) {
+        toast.error("too large note");
         return null;
       }
       const controller = new AbortController();

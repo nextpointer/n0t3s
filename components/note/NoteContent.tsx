@@ -26,6 +26,7 @@ import { rememberEditorSelection, captureEditorSelection, applyToSelection, appl
 import { UseAIActions } from "@/hooks/useAIActions";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { SolarIcon, type IconId } from "@/lib/icons";
+import { MAX_AI_SELECTION_CHARS, MAX_NOTE_CHARS } from "@/lib/limits";
 import toast from "react-hot-toast";
 
 interface NoteContentProps {
@@ -445,6 +446,10 @@ export const NoteContent = memo(
     const runSelectionAI = useCallback(
       async (action: string, sel: EditorSelection, instruction?: string) => {
         closeCtxMenu();
+        if (sel.text.length > MAX_AI_SELECTION_CHARS) {
+          toast.error("too large note");
+          return;
+        }
         // Keep selection visible while running.
         const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
         if (ta) {
@@ -576,6 +581,17 @@ export const NoteContent = memo(
     const handleChange = useCallback(
       (newValue: string) => {
         if (isExternalUpdateRef.current) return;
+        if (newValue.length > MAX_NOTE_CHARS) {
+          toast("Note limit reached: no input accepted", { icon: "⚠️" });
+          const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+          const safe = contentRef.current;
+          if (ta && ta.value !== safe) {
+            isExternalUpdateRef.current = true;
+            try { ta.value = safe; ta.dispatchEvent(new Event("input", { bubbles: true })); } catch {}
+            requestAnimationFrame(() => { isExternalUpdateRef.current = false; });
+          }
+          return;
+        }
         isTypingRef.current = true;
         contentRef.current = newValue;
         debouncedSync(newValue);
@@ -1058,11 +1074,14 @@ export const NoteContent = memo(
       // caret wherever the engine parks it after the swap.
       const applyExternal = () => {
         const ta = instance.textarea as HTMLTextAreaElement | undefined;
+        const titleFocused = (document.activeElement as HTMLElement | null)?.id === "note-title-field";
         if (!ta) {
           try { instance.setValue(externalContent); } catch {}
           return;
         }
-        try { ta.focus({ preventScroll: true }); } catch {}
+        if (!titleFocused) {
+          try { ta.focus({ preventScroll: true }); } catch {}
+        }
         try { ta.setSelectionRange(0, ta.value.length); } catch {}
         let ok = false;
         try {
