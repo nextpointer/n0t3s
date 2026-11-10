@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { SolarIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Funnel, ArrowUpDown } from "lucide-react";
 
 export type NotesView = "list" | "grid" | "masonry";
 
@@ -79,8 +80,7 @@ const NotesFilters = React.memo(function NotesFilters({
     return (
       <div className="flex w-full items-center gap-1.5 sm:gap-2">
         <div className="h-9 w-9 shrink-0 rounded-full bg-muted animate-pulse sm:h-10 sm:w-auto sm:flex-1" />
-        <div className="h-9 min-w-0 flex-1 rounded-full bg-muted animate-pulse sm:h-10" />
-        <div className="h-9 min-w-0 flex-1 rounded-full bg-muted animate-pulse sm:h-10" />
+        <div className="h-9 w-[5.25rem] shrink-0 rounded-full bg-muted animate-pulse sm:h-10 sm:w-auto sm:flex-1" />
         <div className="h-9 w-[5.75rem] shrink-0 rounded-full bg-muted animate-pulse sm:h-10 sm:w-[7.25rem]" />
       </div>
     );
@@ -102,35 +102,55 @@ const NotesFilters = React.memo(function NotesFilters({
         </span>
       </Button>
 
-      <Select value={tagFilter} onValueChange={setTagFilter}>
-        <SelectTrigger className="h-9 min-w-0 flex-1 rounded-full px-3 text-[13px] sm:h-10 sm:text-sm [&>svg]:size-3.5 [&>svg]:opacity-50">
-          <SelectValue placeholder="Tags" />
-        </SelectTrigger>
-        <SelectContent className="shadow-none">
-          <SelectItem value="all">All tags</SelectItem>
-          <SelectItem value="untagged">Untagged</SelectItem>
-          {allTags.map((tag) => (
-            <SelectItem key={tag} value={tag}>
-              {tag}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={orderBy}
-        onValueChange={(v) => setOrderBy(v as "newest" | "oldest")}
-      >
-        <SelectTrigger className="h-9 min-w-0 flex-1 rounded-full px-3 text-[13px] sm:h-10 sm:text-sm [&>svg]:size-3.5 [&>svg]:opacity-50">
-          <SelectValue placeholder="Sort" />
-        </SelectTrigger>
-        <SelectContent className="shadow-none">
-          <SelectGroup>
-            <SelectItem value="newest">Newer first</SelectItem>
-            <SelectItem value="oldest">Oldest first</SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+      <div className="flex h-9 shrink-0 items-center rounded-full border border-input bg-transparent p-0.5 sm:h-10 sm:min-w-0 sm:flex-1 sm:p-1">
+        <Select value={tagFilter} onValueChange={setTagFilter}>
+          <SelectTrigger
+            aria-label="Filter by tag"
+            title="Filter by tag"
+            className="h-full w-9 justify-center gap-0 rounded-full border-0 bg-transparent px-0 shadow-none focus:ring-0 sm:w-auto sm:min-w-0 sm:flex-1 sm:justify-between sm:gap-2 sm:px-2.5 [&>svg]:hidden sm:[&>svg]:block [&>svg]:size-3.5 [&>svg]:opacity-50"
+          >
+            <span className="flex items-center gap-1.5 min-w-0">
+              <Funnel className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+              <span className="hidden truncate text-[13px] sm:inline sm:text-sm">
+                <SelectValue placeholder="Tags" />
+              </span>
+            </span>
+          </SelectTrigger>
+          <SelectContent className="shadow-none">
+            <SelectItem value="all">All tags</SelectItem>
+            <SelectItem value="untagged">Untagged</SelectItem>
+            {allTags.map((tag) => (
+              <SelectItem key={tag} value={tag}>
+                {tag}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-border/70" />
+        <Select
+          value={orderBy}
+          onValueChange={(v) => setOrderBy(v as "newest" | "oldest")}
+        >
+          <SelectTrigger
+            aria-label="Sort notes"
+            title="Sort notes"
+            className="h-full w-9 justify-center gap-0 rounded-full border-0 bg-transparent px-0 shadow-none focus:ring-0 sm:w-auto sm:min-w-0 sm:flex-1 sm:justify-between sm:gap-2 sm:px-2.5 [&>svg]:hidden sm:[&>svg]:block [&>svg]:size-3.5 [&>svg]:opacity-50"
+          >
+            <span className="flex items-center gap-1.5 min-w-0">
+              <ArrowUpDown className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+              <span className="hidden truncate text-[13px] sm:inline sm:text-sm">
+                <SelectValue placeholder="Sort" />
+              </span>
+            </span>
+          </SelectTrigger>
+          <SelectContent className="shadow-none">
+            <SelectGroup>
+              <SelectItem value="newest">Newer first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="flex h-9 shrink-0 items-center gap-0.5 rounded-full border border-input bg-transparent p-1 sm:h-10" role="group" aria-label="View mode">
         {VIEW_OPTIONS.map((opt) => (

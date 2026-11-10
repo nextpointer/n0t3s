@@ -7,9 +7,24 @@ import { SolarIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 function Dialog({
+  open,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+  React.useEffect(() => {
+    if (open === false) {
+      // Radix scroll-lock/focus handling can occasionally leave body pointer events disabled after close.
+      const clear = () => {
+        try {
+          document.body.style.pointerEvents = "";
+          document.documentElement.style.pointerEvents = "";
+        } catch {}
+      };
+      clear();
+      const t = window.setTimeout(clear, 350);
+      return () => window.clearTimeout(t);
+    }
+  }, [open]);
+  return <DialogPrimitive.Root open={open} data-slot="dialog" {...props} />;
 }
 
 function DialogTrigger({

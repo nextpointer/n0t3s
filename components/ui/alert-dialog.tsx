@@ -7,9 +7,23 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 function AlertDialog({
+  open,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
-  return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
+  React.useEffect(() => {
+    if (open === false) {
+      const clear = () => {
+        try {
+          document.body.style.pointerEvents = "";
+          document.documentElement.style.pointerEvents = "";
+        } catch {}
+      };
+      clear();
+      const t = window.setTimeout(clear, 350);
+      return () => window.clearTimeout(t);
+    }
+  }, [open]);
+  return <AlertDialogPrimitive.Root open={open} data-slot="alert-dialog" {...props} />;
 }
 
 function AlertDialogTrigger({
