@@ -164,7 +164,7 @@ const NotesList = React.memo(function NotesList({
           <Button variant="outline" onClick={() => transitionPush(router, "/help")} className="w-auto shadow-none">
             Help : ?
           </Button>
-          <Button onClick={handleNewNote} className="w-auto transition-shadow sm:w-auto shadow-primary/20 hover:shadow-primary/40">
+          <Button onClick={handleNewNote} className="w-auto transition-shadow sm:w-auto ">
             Create new Note : )
           </Button>
         </div>

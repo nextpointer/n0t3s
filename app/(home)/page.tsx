@@ -226,7 +226,7 @@ export default function Home() {
                         <SolarIcon icon="chevronDown" className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" sideOffset={6} collisionPadding={12} className="rounded-xl">
+                    <DropdownMenuContent align="center" alignOffset={-40} sideOffset={6} collisionPadding={12} className="rounded-xl">
                       <DropdownMenuItem onSelect={() => void handleNewTempNote()} className="justify-center gap-2 rounded-lg text-center">
                         <SolarIcon icon="temp" className="size-4 text-muted-foreground/70" />
                         New temp note
