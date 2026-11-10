@@ -11,6 +11,7 @@ import {
   editorFontSizeAtom,
   spellCheckAtom,
   storageReadyAtom,
+  notesViewAtom,
   loadPersistedSettings,
 } from "@/store/noteAtom";
 import { migrateFromLocalStorage, migrateTagsToInline } from "@/lib/storage";
@@ -24,6 +25,7 @@ export function StorageInit() {
   const setEditorFontSize = useSetAtom(editorFontSizeAtom);
   const setSpellCheck = useSetAtom(spellCheckAtom);
   const setStorageReady = useSetAtom(storageReadyAtom);
+  const setNotesView = useSetAtom(notesViewAtom);
 
   useEffect(() => {
     migrateFromLocalStorage();
@@ -38,6 +40,7 @@ export function StorageInit() {
       setPreviewColors,
       setEditorFontSize,
       setSpellCheck,
+      setNotesView,
     );
   }, [
     setAutoSave,
@@ -48,6 +51,7 @@ export function StorageInit() {
     setEditorFontSize,
     setSpellCheck,
     setStorageReady,
+    setNotesView,
   ]);
 
   return null;

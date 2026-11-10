@@ -35,6 +35,10 @@ export const spellCheckAtom = atom<boolean>(false);
 export type ViewMode = "edit" | "plain" | "preview";
 export const viewModeAtom = atom<ViewMode>("edit");
 
+/** Home notes view layout. Persisted so the chosen view reopens next time. */
+export type NotesView = "list" | "grid" | "masonry";
+export const notesViewAtom = atom<NotesView>("list");
+
 // Load persisted settings from IndexedDB into atoms on mount.
 // Call once from the root layout's useEffect.
 export async function loadPersistedSettings(
@@ -45,6 +49,7 @@ export async function loadPersistedSettings(
   setPreviewColors: (v: boolean) => void,
   setEditorFontSize: (v: number) => void,
   setSpellCheck: (v: boolean) => void,
+  setNotesView?: (v: NotesView) => void,
 ) {
   try {
     const autoSave = await dbGet<{ id: string; value: boolean }>("autoSave");
@@ -88,6 +93,14 @@ export async function loadPersistedSettings(
   } catch {
     // ignore
   }
+  try {
+    const nv = await dbGet<{ id: string; value: NotesView }>("notesView");
+    if (nv && (nv.value === "list" || nv.value === "grid" || nv.value === "masonry")) {
+      setNotesView?.(nv.value);
+    }
+  } catch {
+    // ignore
+  }
 }
 
 // Persist helpers — fire and forget writes to IndexedDB
@@ -117,6 +130,10 @@ export function persistEditorFontSize(value: number) {
 
 export function persistSpellCheck(value: boolean) {
   dbPut({ id: "spellCheck", value }).catch(() => {});
+}
+
+export function persistNotesView(value: NotesView) {
+  dbPut({ id: "notesView", value }).catch(() => {});
 }
 
 //for search pallate state

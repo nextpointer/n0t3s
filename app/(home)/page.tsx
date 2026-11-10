@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
-import { allTagsAtom, storageReadyAtom } from "@/store/noteAtom";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { allTagsAtom, storageReadyAtom, notesViewAtom, persistNotesView } from "@/store/noteAtom";
 import { getNotes, createNote, deleteNote } from "@/lib/storage";
 import { getNoteTags } from "@/lib/tag-syntax";
 import { Note } from "@/lib/types";
@@ -50,8 +50,16 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [orderBy, setOrderBy] = useState<"newest" | "oldest">("newest");
   const [tagFilter, setTagFilter] = useState<string>("all");
-  const [view, setView] = useState<NotesView>("list");
+  const [view, setView] = useAtom(notesViewAtom);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
+
+  const handleViewChange = useCallback(
+    (v: NotesView) => {
+      setView(v);
+      persistNotesView(v);
+    },
+    [setView],
+  );
 
   // Bulk selection (Notion-style): an empty set means normal browsing; any
   // entry turns the list into selection mode.
@@ -243,7 +251,7 @@ export default function Home() {
                 setTagFilter={setTagFilter}
                 setSearchOpen={setSearchOpen}
                 view={view}
-                setView={setView}
+                setView={handleViewChange}
               />
             </div>
           )}
