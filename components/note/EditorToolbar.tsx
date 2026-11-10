@@ -366,7 +366,7 @@ export const EditorToolbar = memo(function EditorToolbar({
           )}
           aria-hidden={showFormats}
         >
-          {!showFormats && <div className="flex w-full items-center justify-between px-2">{actionButtons}</div>}
+          {!showFormats && <div className="flex w-full items-center justify-evenly px-1">{actionButtons}</div>}
         </div>
 
         {/* Format layer slides in from the right, overlapping actions. */}
