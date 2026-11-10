@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import type { Viewport } from "next";
 import { StorageInit } from "@/components/StorageInit";
 import { PwaInit } from "@/components/PwaInit";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const metadata: Metadata = {
   title: "N0T3S",
@@ -77,6 +78,7 @@ export default function RootLayout({
         >
           <StorageInit />
           <PwaInit />
+          <InstallPrompt />
           <main
             className={`flex h-[100dvh] w-full justify-center items-center flex-col gap-2 overflow-hidden ${sg.className} `}
           >
