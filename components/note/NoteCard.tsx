@@ -60,7 +60,6 @@ const NoteCard = React.memo(function NoteCard({
     onOpen(note.id);
   };
 
-  const active = selecting || selected;
   const preview = useMemo(
     () => (view === "list" ? "" : previewText(note.content || "", view === "masonry" ? 220 : 120)),
     [note.content, view],
@@ -111,8 +110,10 @@ const NoteCard = React.memo(function NoteCard({
       <div
         {...interactiveProps}
         className={cn(
-          "group/row relative flex cursor-pointer touch-pan-y select-none flex-col rounded-xl border border-border/50 bg-card p-3 transition-colors hover:border-border hover:bg-accent/40 data-[selected=true]:border-primary/30 data-[selected=true]:bg-primary/[0.04] sm:p-3.5 dark:border-white/[0.07] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
-          view === "masonry" ? "mb-2 break-inside-avoid sm:mb-3" : "h-full",
+          "group/row relative flex cursor-pointer touch-pan-y select-none flex-col overflow-hidden rounded-xl border border-border/50 bg-card p-3 transition-colors hover:border-border hover:bg-accent/40 data-[selected=true]:border-primary/30 data-[selected=true]:bg-primary/[0.04] sm:p-3.5 dark:border-white/[0.07] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
+          view === "masonry"
+            ? "mb-2 max-h-72 break-inside-avoid sm:mb-3 sm:max-h-80"
+            : "h-full max-h-56 sm:max-h-64",
         )}
       >
         <button
@@ -125,17 +126,19 @@ const NoteCard = React.memo(function NoteCard({
             onSelect(note.id, e.shiftKey);
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          className={cn(
-            "absolute right-2 top-2 hidden h-7 w-7 items-center justify-center rounded-md transition-opacity sm:flex",
-            selected
-              ? "text-primary opacity-100"
-              : active
-                ? "text-foreground/60 opacity-100"
-                : "text-foreground/45 opacity-0 group-hover/row:opacity-100 hover:bg-foreground/[0.05] hover:text-foreground/70",
-            "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
-          )}
+          className="absolute right-2 top-2 hidden h-7 w-7 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex"
         >
-          <SolarIcon icon="check" className="size-4" />
+          <span
+            className={cn(
+              "flex size-4 items-center justify-center rounded-[4px] border bg-transparent transition-all",
+              selected
+                ? "border-transparent text-foreground/70 opacity-100"
+                : "border-foreground/40 text-transparent opacity-0 group-hover/row:opacity-30 group-focus-within/row:opacity-100",
+            )}
+            aria-hidden="true"
+          >
+            <SolarIcon icon="check" className="size-3" />
+          </span>
         </button>
         <div className="flex min-w-0 items-start gap-1.5 pr-8">
           {note.expiresAt ? (
@@ -145,12 +148,17 @@ const NoteCard = React.memo(function NoteCard({
               title="Temporary note (auto-deletes in 24 hours)"
             />
           ) : null}
-          <h3 className="min-w-0 text-[14px] font-medium leading-snug tracking-tight text-foreground/90">
+          <h3 className="min-w-0 line-clamp-2 break-words text-[14px] font-medium leading-snug tracking-tight text-foreground/90">
             {note.title || "Untitled"}
           </h3>
         </div>
         {preview ? (
-          <p className={cn("mt-2 text-[12.5px] leading-relaxed text-muted-foreground/70", view === "grid" ? "line-clamp-4" : "")}>
+          <p
+            className={cn(
+              "mt-2 break-words text-[12.5px] leading-relaxed text-muted-foreground/70",
+              view === "grid" ? "line-clamp-4" : "line-clamp-6",
+            )}
+          >
             {preview}
           </p>
         ) : null}
@@ -174,17 +182,19 @@ const NoteCard = React.memo(function NoteCard({
           onSelect(note.id, e.shiftKey);
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        className={cn(
-          "mr-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-md transition-opacity sm:flex",
-          selected
-            ? "text-primary opacity-100"
-            : active
-              ? "text-foreground/60 opacity-100"
-              : "text-foreground/45 opacity-0 group-hover/row:opacity-100 hover:bg-foreground/[0.05] hover:text-foreground/70 hover:opacity-100",
-          "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
-        )}
+        className="mr-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex"
       >
-        <SolarIcon icon="check" className="size-[18px]" />
+        <span
+          className={cn(
+            "flex size-[18px] items-center justify-center rounded-[5px] border bg-transparent transition-all",
+            selected
+              ? "border-transparent text-foreground/70 opacity-100"
+              : "border-foreground/40 text-transparent opacity-0 group-hover/row:opacity-30 group-focus-within/row:opacity-100",
+          )}
+          aria-hidden="true"
+        >
+          <SolarIcon icon="check" className="size-3.5" />
+        </span>
       </button>
 
       <div
