@@ -23,7 +23,7 @@ import {
 } from "@/store/noteAtom";
 import { UseAIActions } from "@/hooks/useAIActions";
 import { getNoteEditor } from "@/lib/editor-registry";
-import { captureEditorSelection, applyToSelection } from "@/lib/ai-selection";
+import { captureEditorSelection, applyToSelection, applyReplacementToEditor } from "@/lib/ai-selection";
 import toast from "react-hot-toast";
 
 const AI_ACTIONS: {
@@ -77,12 +77,40 @@ export const AIMenu = memo(function AIMenu({
           ta.setSelectionRange(sel.start, sel.end);
         } catch {}
       }
+      const preserveSelectionEdges = (original: string, next: string) => {
+        const lead = original.match(/^\s*/)?.[0] ?? "";
+        const trail = original.match(/\s*$/)?.[0] ?? "";
+        const core = next.replace(/^\s+/, "").replace(/\s+$/, "");
+        return `${lead}${core}${trail}`;
+      };
 
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      const result = await executeAction(action as any, target);
+      const result = await executeAction(action as any, target, undefined, sel ? { noteContext: sel.base } : undefined);
       if (result) {
-        setContent(sel ? applyToSelection(sel, result) : result);
-        checkUnsaved();
+        if (sel) {
+          const replacement = preserveSelectionEdges(sel.text, result);
+          const next = applyReplacementToEditor(sel, replacement);
+          if (next != null) {
+            setContent(next);
+            checkUnsaved();
+          } else {
+            const ta2 = getNoteEditor()?.textarea;
+            if (ta2 && ta2.value !== sel.base) {
+              toast.error("Selection changed — try again");
+            } else {
+              setContent(applyToSelection(sel, replacement));
+              checkUnsaved();
+            }
+          }
+        } else {
+          setContent(result);
+          checkUnsaved();
+        }
+        // Restore focus to the editor so native Ctrl/Cmd+Z works immediately
+        // (menus/dialogs may move focus when they close).
+        window.setTimeout(() => {
+          try { getNoteEditor()?.textarea?.focus({ preventScroll: true }); } catch {}
+        }, 0);
       }
     },
     [content, executeAction, setContent, checkUnsaved],

@@ -16,4 +16,5 @@ export type AIAction =
   | "expand"
   | "simplify"
   | "todo"
-  | "edit";
+  | "edit"
+  | "title";

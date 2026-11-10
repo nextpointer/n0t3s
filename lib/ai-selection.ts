@@ -48,10 +48,11 @@ export function applyReplacementToEditor(sel: EditorSelection, replacement: stri
   // Positions are only valid against the same base content.
   if (ta.value !== sel.base) return null;
   try {
-    ta.focus({ preventScroll: true });
+    try { ta.focus({ preventScroll: true }); } catch {}
     ta.setSelectionRange(sel.start, sel.end);
     let ok = false;
     try {
+      // Native command keeps the browser/textarea undo stack intact.
       ok = document.execCommand("insertText", false, replacement);
     } catch {
       ok = false;
@@ -66,6 +67,7 @@ export function applyReplacementToEditor(sel: EditorSelection, replacement: stri
       }
     }
     if (!ok) return null;
+    try { ta.focus({ preventScroll: true }); } catch {}
     try { (editor as unknown as { updatePreview?: () => void } | null)?.updatePreview?.(); } catch {}
     window.dispatchEvent(new CustomEvent("note:history"));
     window.dispatchEvent(new CustomEvent("note:ai-applied"));

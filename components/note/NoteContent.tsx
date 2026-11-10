@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, memo, useCallback, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, memo, useCallback, useState } from "react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { OverType } from "overtype";
 import {
@@ -422,8 +422,25 @@ export const NoteContent = memo(
       | { open: false }
       | { open: true; x: number; y: number; anchor: "pointer" | "bottom"; sel: EditorSelection; prompting: boolean }
     >({ open: false });
+    const ctxMenuRef = useRef<HTMLDivElement>(null);
 
     const closeCtxMenu = useCallback(() => setCtxMenu({ open: false }), []);
+
+    useLayoutEffect(() => {
+      if (!ctxMenu.open || ctxMenu.anchor !== "pointer") return;
+      const el = ctxMenuRef.current;
+      if (!el) return;
+      const pad = 8;
+      const rect = el.getBoundingClientRect();
+      let left = ctxMenu.x;
+      let top = ctxMenu.y;
+      if (left + rect.width > window.innerWidth - pad) left = window.innerWidth - pad - rect.width;
+      if (left < pad) left = pad;
+      if (top + rect.height > window.innerHeight - pad) top = window.innerHeight - pad - rect.height;
+      if (top < pad) top = pad;
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    }, [ctxMenu]);
 
     const runSelectionAI = useCallback(
       async (action: string, sel: EditorSelection, instruction?: string) => {
@@ -436,10 +453,17 @@ export const NoteContent = memo(
             ta.setSelectionRange(sel.start, sel.end);
           } catch {}
         }
+        const preserveSelectionEdges = (original: string, next: string) => {
+          const lead = original.match(/^\s*/)?.[0] ?? "";
+          const trail = original.match(/\s*$/)?.[0] ?? "";
+          const core = next.replace(/^\s+/, "").replace(/\s+$/, "");
+          return `${lead}${core}${trail}`;
+        };
         /* eslint-disable @typescript-eslint/no-explicit-any */
         const result = await executeAction(action as any, sel.text, instruction, { noteContext: sel.base });
         if (result) {
-          const next = applyReplacementToEditor(sel, result);
+          const replacement = preserveSelectionEdges(sel.text, result);
+          const next = applyReplacementToEditor(sel, replacement);
           if (next != null) {
             contentRef.current = next;
             setContent(next);
@@ -449,7 +473,7 @@ export const NoteContent = memo(
             if (ta && ta.value !== sel.base) {
               toast.error("Selection changed — try again");
             } else {
-              const full = applyToSelection(sel, result);
+              const full = applyToSelection(sel, replacement);
               contentRef.current = full;
               setContent(full);
               checkUnsaved();
@@ -1035,7 +1059,7 @@ export const NoteContent = memo(
       const applyExternal = () => {
         const ta = instance.textarea as HTMLTextAreaElement | undefined;
         if (!ta) {
-          instance.setValue(externalContent);
+          try { instance.setValue(externalContent); } catch {}
           return;
         }
         try { ta.focus({ preventScroll: true }); } catch {}
@@ -1049,20 +1073,24 @@ export const NoteContent = memo(
         } catch {
           ok = false;
         }
-        if (!ok) {
+        if (!ok || ta.value !== externalContent) {
+          // Retry via range replacement (adds to undo stack in modern browsers).
           try {
+            ta.focus({ preventScroll: true });
+            ta.setSelectionRange(0, ta.value.length);
             ta.setRangeText(externalContent, 0, ta.value.length, "end");
             ta.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: externalContent }));
-            ok = true;
+            ok = ta.value === externalContent;
           } catch {
-            ok = false;
+            ok = ta.value === externalContent;
           }
         }
-        if (!ok) {
+        if (ta.value !== externalContent) {
           // Last resort only: keeps content correct but native undo is lost.
           ta.value = externalContent;
           ta.dispatchEvent(new Event("input", { bubbles: true }));
         }
+        try { ta.focus({ preventScroll: true }); } catch {}
         // Keep OverType's internal state/preview in sync with the textarea.
         try { instance.updatePreview?.(); } catch {}
       };
@@ -1072,6 +1100,7 @@ export const NoteContent = memo(
       requestAnimationFrame(() => window.dispatchEvent(new CustomEvent("note:ai-applied")));
       requestAnimationFrame(() => {
         isExternalUpdateRef.current = false;
+        try { editorRef.current?.textarea?.focus({ preventScroll: true }); } catch {}
         window.dispatchEvent(new CustomEvent("note:history"));
       });
     }, [externalContent]);
@@ -1080,7 +1109,7 @@ export const NoteContent = memo(
       <div
         ref={wrapperRef}
         data-keyboard={keyboardOpen ? "open" : "closed"}
-        className="relative flex flex-col w-full h-full"
+        className="relative flex flex-col w-full h-full sm:gap-4"
       >
         {toolbarEnabled && viewMode !== "preview" && (
           <EditorToolbar
@@ -1106,6 +1135,7 @@ export const NoteContent = memo(
         <TagAutocomplete editor={editor} viewMode={viewMode} anchor={wrapperRef} />
         {ctxMenu.open && (
           <div
+            ref={ctxMenuRef}
             data-ai-ctx-menu
             className={
               ctxMenu.anchor === "bottom"
@@ -1115,10 +1145,7 @@ export const NoteContent = memo(
             style={
               ctxMenu.anchor === "bottom"
                 ? { bottom: "calc(var(--ot-bottom-inset, 48px) + env(safe-area-inset-bottom, 0px) + 8px)" }
-                : {
-                    left: Math.max(8, Math.min(ctxMenu.x, (typeof window !== "undefined" ? window.innerWidth : ctxMenu.x) - 216)),
-                    top: Math.max(8, Math.min(ctxMenu.y, (typeof window !== "undefined" ? window.innerHeight : ctxMenu.y) - 160)),
-                  }
+                : { left: ctxMenu.x, top: ctxMenu.y }
             }
             onContextMenu={(e) => e.preventDefault()}
           >

@@ -34,7 +34,14 @@ export function UseAIShortcuts() {
       const result = await executeAction(action as any, target, undefined, sel ? { noteContext: sel.base } : undefined);
       if (result) {
         if (sel) {
-          const next = applyReplacementToEditor(sel, result);
+          const preserveSelectionEdges = (original: string, next: string) => {
+            const lead = original.match(/^\s*/)?.[0] ?? "";
+            const trail = original.match(/\s*$/)?.[0] ?? "";
+            const core = next.replace(/^\s+/, "").replace(/\s+$/, "");
+            return `${lead}${core}${trail}`;
+          };
+          const replacement = preserveSelectionEdges(sel.text, result);
+          const next = applyReplacementToEditor(sel, replacement);
           if (next != null) {
             setContent(next);
             checkUnsaved();
@@ -43,7 +50,7 @@ export function UseAIShortcuts() {
             if (ta && ta.value !== sel.base) {
               toast.error("Selection changed — try again");
             } else {
-              setContent(applyToSelection(sel, result));
+              setContent(applyToSelection(sel, replacement));
               checkUnsaved();
             }
           }
@@ -51,6 +58,9 @@ export function UseAIShortcuts() {
           setContent(result);
           checkUnsaved();
         }
+        window.setTimeout(() => {
+          try { getNoteEditor()?.textarea?.focus({ preventScroll: true }); } catch {}
+        }, 0);
       }
     },
     [content, executeAction, setContent, checkUnsaved],

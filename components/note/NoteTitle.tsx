@@ -2,15 +2,21 @@
 
 import { memo, useCallback, useEffect, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { titleAtom, checkUnsavedAtom, zenMode } from "@/store/noteAtom";
+import { titleAtom, checkUnsavedAtom, zenMode, contentAtom, aiEnabledAtom, aiLoadingAtom } from "@/store/noteAtom";
 import { consumeNewNoteFlag } from "@/lib/storage";
 import { SolarIcon } from "@/lib/icons";
+import { UseAIActions } from "@/hooks/useAIActions";
+import toast from "react-hot-toast";
 
 export const NoteTitle = memo(function NoteTitle({ temp }: { temp?: boolean }) {
   const [title, setTitle] = useAtom(titleAtom);
+  const content = useAtomValue(contentAtom);
+  const aiEnabled = useAtomValue(aiEnabledAtom);
+  const aiLoading = useAtomValue(aiLoadingAtom);
   const checkUnsaved = useSetAtom(checkUnsavedAtom);
-  // refs the for the input
-  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const { executeAction } = UseAIActions();
+  // refs the for the title field (single-line textarea to avoid mobile password autofill)
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
   // zen mode state
   const zen = useAtomValue(zenMode);
   // A brand new note opens on the empty title input, ready to type.
@@ -28,7 +34,7 @@ export const NoteTitle = memo(function NoteTitle({ temp }: { temp?: boolean }) {
   }, []);
 
   // Enter leaves the title and drops into the note body.
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== "Enter") return;
     const textarea = document.querySelector<HTMLTextAreaElement>(
       ".note-editor-container textarea.overtype-input",
@@ -42,17 +48,42 @@ export const NoteTitle = memo(function NoteTitle({ temp }: { temp?: boolean }) {
   }, []);
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setTitle(e.target.value);
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const next = e.target.value.replace(/[\r\n]+/g, " ");
+      setTitle(next);
       isNewNoteRef.current = false;
       checkUnsaved();
     },
     [setTitle, checkUnsaved],
   );
 
+  const canGenerateTitle = aiEnabled && !aiLoading && content.trim().length > 0;
+
+  const handleGenerateTitle = useCallback(async () => {
+    if (!content.trim()) {
+      toast.error("Write a note first");
+      return;
+    }
+    const result = await executeAction("title", content);
+    if (!result) return;
+    const firstLine = (result.split(/\r?\n/).find((l) => l.trim()) || result).trim();
+    const clean = firstLine
+      .replace(/^[-*_>\s]+/, "")
+      .replace(/^(?:title|heading)\s*[:\-–—]\s*/i, "")
+      .replace(/^#{1,6}\s*/, "")
+      .replace(/^["'`]+|["'`.,:;!?]+$/g, "")
+      .replace(/^[-–—:|\s]+|[-–—:|\s]+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!clean) return;
+    setTitle(clean);
+    isNewNoteRef.current = false;
+    checkUnsaved();
+  }, [content, executeAction, setTitle, checkUnsaved]);
+
   return (
     <div
-      className={`sticky top-0 z-40 w-full bg-transparent ${zen ? "pt-4" : "pt-13"} pb-2`}
+      className={`sticky top-0 z-40 w-full bg-transparent ${zen ? "pt-4" : "pt-13"} pb-1 sm:pb-0`}
     >
       {zen && temp ? (
         <div className="mb-1.5">
@@ -65,23 +96,40 @@ export const NoteTitle = memo(function NoteTitle({ temp }: { temp?: boolean }) {
           </span>
         </div>
       ) : null}
-      <input
-        className={`text-xl sm:text-2xl font-semibold w-full p-0 focus-visible:outline-none bg-transparent border-none`}
-        ref={titleInputRef}
-        value={title}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Title..."
-        name="note-title"
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="sentences"
-        spellCheck={false}
-        enterKeyHint="next"
-        data-1p-ignore
-        data-lpignore="true"
-        data-form-type="other"
-      />
+      <div className="flex items-center gap-2">
+        <textarea
+          className="text-xl sm:text-2xl font-semibold w-full min-w-0 p-0 resize-none overflow-hidden whitespace-nowrap focus-visible:outline-none bg-transparent border-none leading-tight"
+          ref={titleInputRef}
+          value={title}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Title..."
+          name="note-title-field"
+          id="note-title-field"
+          rows={1}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="sentences"
+          spellCheck={false}
+          enterKeyHint="next"
+          inputMode="text"
+          data-1p-ignore="true"
+          data-lpignore="true"
+          data-bwignore="true"
+          data-form-type="other"
+          aria-label="Note title"
+        />
+        <button
+          type="button"
+          onClick={() => void handleGenerateTitle()}
+          disabled={!canGenerateTitle}
+          aria-label="Generate title with AI"
+          title={canGenerateTitle ? "Generate title with AI" : aiEnabled ? "Write a note to generate a title" : "AI is turned off"}
+          className="shrink-0 rounded-md p-1.5 text-muted-foreground/50 transition-colors hover:bg-foreground/[0.05] hover:text-foreground/80 disabled:pointer-events-none disabled:opacity-30"
+        >
+          <SolarIcon icon="ai" className="size-4" />
+        </button>
+      </div>
     </div>
   );
 });
