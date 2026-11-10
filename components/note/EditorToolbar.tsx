@@ -56,9 +56,9 @@ const GROUPS: ToolbarButtonSpec[][] = [
     { name: "code", label: "Inline code", Icon: boundIcon("code"), actionId: "toggleCode" },
   ],
   [
-    { name: "h1", label: "Heading 1", Icon: () => <span className="text-[13px] font-semibold leading-none">H1</span>, actionId: "toggleH1", format: "header" },
-    { name: "h2", label: "Heading 2", Icon: () => <span className="text-[13px] font-semibold leading-none">H2</span>, actionId: "toggleH2", format: "header-2" },
-    { name: "h3", label: "Heading 3", Icon: () => <span className="text-[13px] font-semibold leading-none">H3</span>, actionId: "toggleH3", format: "header-3" },
+    { name: "h1", label: "Heading 1", Icon: () => <span className="inline-flex size-[15px] items-center justify-center text-[10px] font-semibold leading-none">H1</span>, actionId: "toggleH1", format: "header" },
+    { name: "h2", label: "Heading 2", Icon: () => <span className="inline-flex size-[15px] items-center justify-center text-[10px] font-semibold leading-none">H2</span>, actionId: "toggleH2", format: "header-2" },
+    { name: "h3", label: "Heading 3", Icon: () => <span className="inline-flex size-[15px] items-center justify-center text-[10px] font-semibold leading-none">H3</span>, actionId: "toggleH3", format: "header-3" },
   ],
   [
     { name: "bulletList", label: "Bullet list", Icon: boundIcon("bulletList"), actionId: "toggleBulletList", format: "bullet-list" },
@@ -388,13 +388,13 @@ export const EditorToolbar = memo(function EditorToolbar({
           onClick={() => setShowFormats((v) => !v)}
           className={cn(
             "ml-1 flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground/70 transition-all duration-200 hover:bg-accent hover:text-foreground",
-            showFormats && "rotate-0 text-foreground",
+            showFormats && "text-foreground",
           )}
         >
           {showFormats ? (
-            <SolarIcon icon="close" className="size-4" />
+            <SolarIcon icon="close" className="size-[16px]" />
           ) : (
-            <span className="text-[13px] font-bold leading-none">T</span>
+            <span className="inline-flex size-[16px] items-center justify-center text-[13px] font-semibold leading-none">T</span>
           )}
         </button>
       </div>
