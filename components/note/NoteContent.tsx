@@ -523,11 +523,40 @@ export const NoteContent = memo(
         const sel = captureEditorSelection();
         if (!sel || !sel.text.trim()) return; // no selection => browser menu
         e.preventDefault();
-        setCtxMenu({ open: true, x: e.clientX, y: e.clientY, anchor: "pointer", sel, prompting: false });
+        setCtxMenu({
+          open: true,
+          x: e.clientX,
+          y: e.clientY,
+          anchor: isPhone ? "bottom" : "pointer",
+          sel,
+          prompting: false,
+        });
       };
       host.addEventListener("contextmenu", onContextMenu);
       return () => host.removeEventListener("contextmenu", onContextMenu);
-    }, [aiEnabled]);
+    }, [aiEnabled, isPhone]);
+
+    // Block paste/input that would exceed the note size limit.
+    useEffect(() => {
+      const host = wrapperRef.current;
+      if (!host) return;
+      const onPaste = (e: ClipboardEvent) => {
+        const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+        if (!ta) return;
+        const text = e.clipboardData?.getData("text") ?? "";
+        const start = ta.selectionStart ?? 0;
+        const end = ta.selectionEnd ?? 0;
+        const base = ta.value ?? contentRef.current ?? "";
+        const nextLen = base.length - (end - start) + text.length;
+        if (nextLen > MAX_NOTE_CHARS) {
+          e.preventDefault();
+          e.stopPropagation();
+          toast("Note limit reached: no input accepted", { icon: "⚠️" });
+        }
+      };
+      host.addEventListener("paste", onPaste, true);
+      return () => host.removeEventListener("paste", onPaste, true);
+    }, []);
 
     // Track selection for AI targeting; on phone, surface the selection menu.
     useEffect(() => {
@@ -1177,13 +1206,17 @@ export const NoteContent = memo(
             <div
               role="menu"
               aria-label="Selection actions"
-              className={`mx-auto max-w-md rounded-2xl border border-border/60 bg-popover p-1 text-popover-foreground shadow-lg dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_12px_40px_rgba(0,0,0,0.35)] ${ctxMenu.anchor === "pointer" ? "max-h-[70vh] overflow-y-auto [scrollbar-width:thin]" : ""}`}
+              className={
+                ctxMenu.anchor === "bottom" && !ctxMenu.prompting
+                  ? "mx-auto flex max-w-md flex-wrap items-center justify-center gap-1.5"
+                  : `mx-auto max-w-md rounded-2xl border border-border/60 bg-popover p-1 text-popover-foreground shadow-lg dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_12px_40px_rgba(0,0,0,0.35)] ${ctxMenu.anchor === "pointer" ? "max-h-[70vh] overflow-y-auto [scrollbar-width:thin]" : ""}`
+              }
             >
               {!ctxMenu.prompting ? (
-                <div className={ctxMenu.anchor === "bottom" ? "flex flex-wrap items-center justify-center gap-0.5" : "flex flex-col gap-0.5"}>
+                <div className={ctxMenu.anchor === "bottom" ? "contents" : "flex flex-col gap-0.5"}>
                   {(() => {
                     const item = ctxMenu.anchor === "bottom"
-                      ? "inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[13px] text-foreground/80 transition-colors active:bg-foreground/[0.06] sm:hover:bg-foreground/[0.05]"
+                      ? "inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-popover/95 px-3 py-1.5 text-[13px] text-foreground/90 shadow-md backdrop-blur-sm transition-colors active:bg-accent dark:border-white/[0.08]"
                       : "flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-[13px] text-foreground/80 transition-colors hover:bg-foreground/[0.05]";
                     const icon = "size-[14px] shrink-0 text-foreground/55";
                     return (
@@ -1199,6 +1232,55 @@ export const NoteContent = memo(
                         >
                           <SolarIcon icon="copy" className={icon} />
                           <span>Copy</span>
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={item}
+                          onClick={async () => {
+                            const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+                            if (!ta) { closeCtxMenu(); return; }
+                            try {
+                              const text = await navigator.clipboard.readText();
+                              const start = ctxMenu.sel.start ?? ta.selectionStart ?? 0;
+                              const end = ctxMenu.sel.end ?? ta.selectionEnd ?? start;
+                              const base = ta.value ?? "";
+                              if (base.length - (end - start) + text.length > MAX_NOTE_CHARS) {
+                                toast("Note limit reached: no input accepted", { icon: "⚠️" });
+                                closeCtxMenu();
+                                return;
+                              }
+                              ta.focus();
+                              ta.setSelectionRange(start, end);
+                              const ok = document.execCommand("insertText", false, text);
+                              if (!ok) {
+                                ta.setRangeText(text, start, end, "end");
+                                ta.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertFromPaste", data: text }));
+                              }
+                            } catch {
+                              toast.error("Couldn't paste");
+                            }
+                            closeCtxMenu();
+                          }}
+                        >
+                          <SolarIcon icon="copy" className={icon} />
+                          <span>Paste</span>
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={item}
+                          onClick={() => {
+                            const ta = editorRef.current?.textarea as HTMLTextAreaElement | undefined;
+                            if (ta) {
+                              ta.focus();
+                              ta.setSelectionRange(0, ta.value.length);
+                            }
+                            closeCtxMenu();
+                          }}
+                        >
+                          <SolarIcon icon="selectAll" className={icon} />
+                          <span>Select all</span>
                         </button>
                         {([
                           ["summarize", "Summarize", "summarize"],
