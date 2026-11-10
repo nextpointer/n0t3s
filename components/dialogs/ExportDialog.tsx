@@ -23,7 +23,6 @@ import {
   getMarkdown,
   getPlainText,
   sanitizeFilename,
-  shareBlob,
   type ExportFormat,
 } from "@/lib/export-note";
 
@@ -64,18 +63,10 @@ export const ExportDialog = memo(function ExportDialog() {
 
   const doShareOrDownload = useCallback(
     async (blob: Blob, filename: string) => {
-      if (shareAvailable) {
-        const res = await shareBlob(blob, filename, title);
-        if (res === "shared") {
-          toast.success("Shared");
-          return;
-        }
-        if (res === "cancelled") return;
-      }
       downloadBlob(blob, filename);
       toast.success("Exported");
     },
-    [shareAvailable, title],
+    [],
   );
 
   const handleExport = useCallback(
