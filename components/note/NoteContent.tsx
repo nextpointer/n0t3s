@@ -1076,7 +1076,9 @@ export const NoteContent = memo(
         if (!ok || ta.value !== externalContent) {
           // Retry via range replacement (adds to undo stack in modern browsers).
           try {
-            ta.focus({ preventScroll: true });
+            if (!titleFocused) {
+              try { ta.focus({ preventScroll: true }); } catch {}
+            }
             ta.setSelectionRange(0, ta.value.length);
             ta.setRangeText(externalContent, 0, ta.value.length, "end");
             ta.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: externalContent }));
@@ -1090,7 +1092,9 @@ export const NoteContent = memo(
           ta.value = externalContent;
           ta.dispatchEvent(new Event("input", { bubbles: true }));
         }
-        try { ta.focus({ preventScroll: true }); } catch {}
+        if (!titleFocused) {
+          try { ta.focus({ preventScroll: true }); } catch {}
+        }
         // Keep OverType's internal state/preview in sync with the textarea.
         try { instance.updatePreview?.(); } catch {}
       };
@@ -1100,7 +1104,9 @@ export const NoteContent = memo(
       requestAnimationFrame(() => window.dispatchEvent(new CustomEvent("note:ai-applied")));
       requestAnimationFrame(() => {
         isExternalUpdateRef.current = false;
-        try { editorRef.current?.textarea?.focus({ preventScroll: true }); } catch {}
+        if ((document.activeElement as HTMLElement | null)?.id !== "note-title-field") {
+          try { editorRef.current?.textarea?.focus({ preventScroll: true }); } catch {}
+        }
         window.dispatchEvent(new CustomEvent("note:history"));
       });
     }, [externalContent]);
