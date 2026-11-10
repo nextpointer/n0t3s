@@ -86,6 +86,10 @@ export const UI = {
   pin: "solar:pin-bold-duotone",
   temp: "solar:clock-circle-bold-duotone",
   chevronDown: "solar:alt-arrow-down-bold-duotone",
+  // export
+  share: "solar:link-bold-duotone",
+  image: "solar:document-bold-duotone",
+  text: "solar:document-text-bold-duotone",
 } as const;
 
 export type IconId = keyof typeof UI;
