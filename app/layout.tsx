@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import type { Viewport } from "next";
 import { StorageInit } from "@/components/StorageInit";
 import { PwaInit } from "@/components/PwaInit";
-import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const metadata: Metadata = {
   title: "N0T3S",
