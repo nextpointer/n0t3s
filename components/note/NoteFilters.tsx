@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { SolarIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { Funnel, ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Funnel } from "lucide-react";
 
 export type NotesView = "list" | "grid" | "masonry";
 
@@ -78,43 +78,67 @@ const NotesFilters = React.memo(function NotesFilters({
 }: Props) {
   if (loading)
     return (
-      <div className="flex w-full items-center gap-1.5 sm:gap-2">
-        <div className="h-9 w-9 shrink-0 rounded-full bg-muted animate-pulse sm:h-10 sm:w-auto sm:flex-1" />
-        <div className="h-9 w-[5.25rem] shrink-0 rounded-full bg-muted animate-pulse sm:h-10 sm:w-auto sm:flex-1" />
-        <div className="h-9 w-[5.75rem] shrink-0 rounded-full bg-muted animate-pulse sm:h-10 sm:w-[7.25rem]" />
-      </div>
+      <>
+        <div className="flex w-full items-center gap-2 sm:hidden">
+          <div className="h-9 min-w-0 flex-1 rounded-full bg-muted animate-pulse" />
+          <div className="h-9 w-9 shrink-0 rounded-full bg-muted animate-pulse" />
+          <div className="h-9 w-9 shrink-0 rounded-full bg-muted animate-pulse" />
+          <div className="h-9 w-[5.75rem] shrink-0 rounded-full bg-muted animate-pulse" />
+        </div>
+        <div className="hidden w-full items-center gap-2 sm:flex">
+          <div className="h-10 w-auto flex-1 rounded-full bg-muted animate-pulse" />
+          <div className="h-10 min-w-0 flex-1 rounded-full bg-muted animate-pulse" />
+          <div className="h-10 min-w-0 flex-1 rounded-full bg-muted animate-pulse" />
+          <div className="h-10 w-[7.25rem] shrink-0 rounded-full bg-muted animate-pulse" />
+        </div>
+      </>
     );
-  return (
-    <div className="flex w-full items-center gap-1.5 sm:gap-2">
-      <Button
-        onClick={() => setSearchOpen(true)}
-        variant={"outline"}
-        className="h-9 w-9 shrink-0 rounded-full p-0 sm:h-10 sm:w-auto sm:flex-1 sm:px-3"
-        aria-label="Search notes"
-        title="Search notes"
-      >
-        <SolarIcon icon="search" className="size-4 shrink-0" />
-        <span className="ml-1.5 hidden items-center gap-2 md:flex">
-          Search
-          <kbd className="rounded-md border border-border/50 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-            Ctrl+P
-          </kbd>
-        </span>
-      </Button>
 
-      <div className="flex h-9 shrink-0 items-center rounded-full border border-input bg-transparent p-0.5 sm:h-10 sm:min-w-0 sm:flex-1 sm:p-1">
+  const viewGroup = (
+    <div className="flex h-9 shrink-0 items-center gap-0.5 rounded-full border border-input bg-transparent p-1 sm:h-10" role="group" aria-label="View mode">
+      {VIEW_OPTIONS.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => setView(opt.id)}
+          aria-label={opt.label}
+          aria-pressed={view === opt.id}
+          title={opt.label}
+          className={cn(
+            "flex h-full w-7 items-center justify-center rounded-full transition-colors sm:w-8",
+            view === opt.id
+              ? "bg-foreground/[0.09] text-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.03)]"
+              : "text-muted-foreground/55 hover:text-foreground",
+          )}
+        >
+          <ViewIcon view={opt.id} className="size-[15px] sm:size-4" />
+        </button>
+      ))}
+    </div>
+  );
+
+  return (
+    <>
+      {/* Phone: one row - large search, two filter icon buttons (view-like), view buttons */}
+      <div className="flex w-full items-center gap-2 sm:hidden">
+        <Button
+          onClick={() => setSearchOpen(true)}
+          variant="outline"
+          className="h-9 min-w-0 flex-1 justify-start rounded-full px-3"
+          aria-label="Search notes"
+          title="Search notes"
+        >
+          <SolarIcon icon="search" className="size-4 shrink-0" />
+          <span className="ml-1.5 truncate text-[13px] text-muted-foreground">Search</span>
+        </Button>
+
         <Select value={tagFilter} onValueChange={setTagFilter}>
           <SelectTrigger
             aria-label="Filter by tag"
             title="Filter by tag"
-            className="h-full w-9 justify-center gap-0 rounded-full border-0 bg-transparent px-0 shadow-none focus:ring-0 sm:w-auto sm:min-w-0 sm:flex-1 sm:justify-between sm:gap-2 sm:px-2.5 [&>svg]:hidden sm:[&>svg]:block [&>svg]:size-3.5 [&>svg]:opacity-50"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-input bg-transparent p-1 text-foreground/70 shadow-none [&>svg:last-child]:hidden"
           >
-            <span className="flex items-center gap-1.5 min-w-0">
-              <Funnel className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
-              <span className="hidden truncate text-[13px] sm:inline sm:text-sm">
-                <SelectValue placeholder="Tags" />
-              </span>
-            </span>
+            <Funnel className="size-[15px]" aria-hidden="true" />
           </SelectTrigger>
           <SelectContent className="shadow-none">
             <SelectItem value="all">All tags</SelectItem>
@@ -126,7 +150,7 @@ const NotesFilters = React.memo(function NotesFilters({
             ))}
           </SelectContent>
         </Select>
-        <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-border/70" />
+
         <Select
           value={orderBy}
           onValueChange={(v) => setOrderBy(v as "newest" | "oldest")}
@@ -134,14 +158,9 @@ const NotesFilters = React.memo(function NotesFilters({
           <SelectTrigger
             aria-label="Sort notes"
             title="Sort notes"
-            className="h-full w-9 justify-center gap-0 rounded-full border-0 bg-transparent px-0 shadow-none focus:ring-0 sm:w-auto sm:min-w-0 sm:flex-1 sm:justify-between sm:gap-2 sm:px-2.5 [&>svg]:hidden sm:[&>svg]:block [&>svg]:size-3.5 [&>svg]:opacity-50"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-input bg-transparent p-1 text-foreground/70 shadow-none [&>svg:last-child]:hidden"
           >
-            <span className="flex items-center gap-1.5 min-w-0">
-              <ArrowUpDown className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
-              <span className="hidden truncate text-[13px] sm:inline sm:text-sm">
-                <SelectValue placeholder="Sort" />
-              </span>
-            </span>
+            <ArrowUpDown className="size-[15px]" aria-hidden="true" />
           </SelectTrigger>
           <SelectContent className="shadow-none">
             <SelectGroup>
@@ -150,29 +169,80 @@ const NotesFilters = React.memo(function NotesFilters({
             </SelectGroup>
           </SelectContent>
         </Select>
+
+        {viewGroup}
       </div>
 
-      <div className="flex h-9 shrink-0 items-center gap-0.5 rounded-full border border-input bg-transparent p-1 sm:h-10" role="group" aria-label="View mode">
-        {VIEW_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            onClick={() => setView(opt.id)}
-            aria-label={opt.label}
-            aria-pressed={view === opt.id}
-            title={opt.label}
-            className={cn(
-              "flex h-full w-7 items-center justify-center rounded-full transition-colors sm:w-8",
-              view === opt.id
-                ? "bg-foreground/[0.09] text-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.03)]"
-                : "text-muted-foreground/55 hover:text-foreground",
-            )}
-          >
-            <ViewIcon view={opt.id} className="size-[15px] sm:size-4" />
-          </button>
-        ))}
+      {/* Desktop/tablet: previous layout */}
+      <div className="hidden w-full items-center gap-2 sm:flex">
+        <Button
+          onClick={() => setSearchOpen(true)}
+          variant={"outline"}
+          className="h-10 w-auto shrink-0 rounded-full px-3 md:flex-1"
+          aria-label="Search notes"
+          title="Search notes"
+        >
+          <SolarIcon icon="search" className="size-4 shrink-0" />
+          <span className="ml-1.5 hidden items-center gap-2 md:flex">
+            Search
+            <kbd className="rounded-md border border-border/50 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+              Ctrl+P
+            </kbd>
+          </span>
+        </Button>
+
+        <Select value={tagFilter} onValueChange={setTagFilter}>
+          <SelectTrigger className="h-10 min-w-0 flex-1 rounded-full px-3 text-sm [&>svg]:size-3.5 [&>svg]:opacity-50">
+            <SelectValue placeholder="Tags" />
+          </SelectTrigger>
+          <SelectContent className="shadow-none">
+            <SelectItem value="all">All tags</SelectItem>
+            <SelectItem value="untagged">Untagged</SelectItem>
+            {allTags.map((tag) => (
+              <SelectItem key={tag} value={tag}>
+                {tag}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={orderBy}
+          onValueChange={(v) => setOrderBy(v as "newest" | "oldest")}
+        >
+          <SelectTrigger className="h-10 min-w-0 flex-1 rounded-full px-3 text-sm [&>svg]:size-3.5 [&>svg]:opacity-50">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent className="shadow-none">
+            <SelectGroup>
+              <SelectItem value="newest">Newer first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+
+        <div className="flex h-10 shrink-0 items-center gap-0.5 rounded-full border border-input bg-transparent p-1" role="group" aria-label="View mode">
+          {VIEW_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setView(opt.id)}
+              aria-label={opt.label}
+              aria-pressed={view === opt.id}
+              title={opt.label}
+              className={cn(
+                "flex h-full w-8 items-center justify-center rounded-full transition-colors",
+                view === opt.id
+                  ? "bg-foreground/[0.09] text-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.03)]"
+                  : "text-muted-foreground/55 hover:text-foreground",
+              )}
+            >
+              <ViewIcon view={opt.id} className="size-4" />
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 });
 

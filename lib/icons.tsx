@@ -63,6 +63,8 @@ export const UI = {
   fileText: "solar:file-text-bold-duotone",
   fileCode: "solar:file-code-bold-duotone",
   fileDownload: "solar:file-download-bold-duotone",
+  filter: "solar:tuning-2-bold-duotone",
+  sort: "solar:list-ordered-bold-duotone",
   // AI menu items
   summarize: "solar:document-text-bold-duotone",
   rewrite: "solar:pen-new-round-bold-duotone",
